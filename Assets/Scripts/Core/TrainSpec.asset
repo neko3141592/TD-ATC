@@ -1,0 +1,239 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40f8a3d62b33a40abb7b2e6aae24547b, type: 3}
+  m_Name: TrainSpec
+  m_EditorClassIdentifier: Assembly-CSharp::TrainSpec
+  massKg: 280000
+  maxSpeedMS: 33.33
+  coastDeceleration: 0.05
+  maxTractionForceN: 300000
+  maxTractionPowerW: 3200000
+  motorPowerPerUnitW: 190000
+  tractionPowerSpeedFloorMS: 1
+  maxTargetAccelerationMS2: 0.83
+  accelControlEndSpeedMS: 10
+  torqueControlEndSpeedMS: 15
+  maxMotorTorqueNm: 25000
+  motorTorquePerUnitNm: 1800
+  gearRatio: 6
+  drivelineEfficiency: 0.92
+  wheelRadiusM: 0.43
+  resistanceA: 2000
+  resistanceB: 30
+  resistanceC: 3
+  maxPowerNotch: 5
+  maxBrakeNotch: 8
+  powerNotchRatios:
+  - 0.2
+  - 0.4
+  - 0.6
+  - 0.8
+  - 1
+  powerNotchGainCurves:
+  - serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.016936073
+      value: 0.26065227
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.17565177
+      value: 0.0062077558
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  - serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.007751465
+      value: 0.72872007
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.18190739
+      value: 0.72807384
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.28141266
+      value: 0.20296401
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  - serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: -0.011718072
+      value: 1.0001569
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.46563435
+      value: 1.0004174
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1.4389677
+      value: 0.5003226
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  - serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.013862321
+      value: 0.99676925
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7244858
+      value: 0.99842465
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2.0068297
+      value: 0.7024232
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  - serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: -0.00062179565
+      value: 1.0004883
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  brakeNotchDecelerations:
+  - 0.1
+  - 0.2
+  - 0.35
+  - 0.5
+  - 0.7
+  - 0.83
+  - 0.97
+  - 1.1
+  maxRegenDecelerationMS2: 1.2
+  regenRiseRateMS3: 0.17
+  regenFallRateMS3: 2
+  regenCutOutStartSpeedMS: 4.1667
+  regenCutOutEndSpeedMS: 1.3889
+  bcMinPressureDuringCooperativeKPa: 50
+  bcFillRateKPaPerSec: 300
+  bcReleaseRateKPaPerSec: 250
+  brakeFrictionBaseMu: 0.35
+  brakeFrictionOffsetKmH: 100
+  brakeFrictionSlope: 1.8
+  enableRegenFluctuation: 0
+  regenFluctuationAmplitude: 0.145
+  regenFluctuationFrequencyHz: 0.7
+  regenCapCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: -0.009134799
+      value: 0.4951724
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.12009902
+      value: 0.9074411
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
