@@ -17,7 +17,7 @@ MonoBehaviour:
   coastDeceleration: 0.05
   maxTractionForceN: 300000
   maxTractionPowerW: 3200000
-  motorPowerPerUnitW: 190000
+  motorPowerPerUnitW: 150000
   tractionPowerSpeedFloorMS: 1
   maxTargetAccelerationMS2: 0.83
   accelControlEndSpeedMS: 10

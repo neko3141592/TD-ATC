@@ -46,3 +46,6 @@
 
 # Unity crash reports
 sysinfo.txt
+
+# Local source assets (Blender/PSD originals)
+Assets/Art/Source/

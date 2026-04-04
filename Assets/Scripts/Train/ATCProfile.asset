@@ -25,4 +25,4 @@ MonoBehaviour:
     limitSpeedKmH: 110
   - startDistanceM: 550
     endDistanceM: 1000
-    limitSpeedKmH: 115
+    limitSpeedKmH: 75

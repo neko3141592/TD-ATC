@@ -8,6 +8,16 @@ public class TrainHUD : MonoBehaviour
     [SerializeField] private ATCController atc;
     [SerializeField] private TMP_Text hudText;
 
+    private string FormatBrakeNotchLabel(int notch)
+    {
+        if (train != null && notch >= train.EmergencyBrakeNotch)
+        {
+            return "EB";
+        }
+
+        return $"B{notch}";
+    }
+
     void Update()
     {
         if (train == null || hudText == null)
@@ -59,9 +69,9 @@ public class TrainHUD : MonoBehaviour
             $"Accel: {train.CurrentAccelerationMS2:+0.00;-0.00;0.00} m/s^2\n" +
             "\n" +
             "[Control]\n" +
-            $"Applied: P{train.PowerNotch} / B{train.BrakeNotch}\n" +
-            $"Manual: P{train.ManualPowerNotch} / B{train.ManualBrakeNotch}\n" +
-            $"ATC Cmd: B{train.ATCBrakeNotch}\n" +
+            $"Applied: P{train.PowerNotch} / {FormatBrakeNotchLabel(train.BrakeNotch)}\n" +
+            $"Manual: P{train.ManualPowerNotch} / {FormatBrakeNotchLabel(train.ManualBrakeNotch)}\n" +
+            $"ATC Cmd: {FormatBrakeNotchLabel(train.ATCBrakeNotch)}\n" +
             "\n" +
             "[Safety]\n" +
             $"ATC Limit: {atcLimitText}\n" +
