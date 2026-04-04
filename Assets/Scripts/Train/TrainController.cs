@@ -16,6 +16,7 @@ public class TrainController : MonoBehaviour
     public float SpeedKmH => speedMS * 3.6f;
     public float SpeedMS => speedMS;
     public float DistanceM => distance;
+    public TrainSpec Spec => trainSpec;
     public int PowerNotch => notchManager != null ? notchManager.ResolvedPowerNotch : 0;
     public int BrakeNotch => notchManager != null ? notchManager.ResolvedBrakeNotch : 0;
     public int ManualPowerNotch => notchManager != null ? notchManager.ManualPowerNotch : 0;

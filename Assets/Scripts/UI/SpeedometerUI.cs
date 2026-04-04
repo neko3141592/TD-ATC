@@ -121,8 +121,8 @@ public class SpeedometerUI : MonoBehaviour
             return;
         }
 
-        float limitSpeedKmH = atcController != null ? atcController.CurrentLimitSpeedKmH : 0f;
-        bool hasLimit = atcController != null && limitSpeedKmH > atcNoLimitThresholdKmH;
+        float patternAllowSpeedKmH = atcController != null ? atcController.CurrentPatternAllowSpeedKmH : 0f;
+        bool hasLimit = atcController != null && patternAllowSpeedKmH > atcNoLimitThresholdKmH;
 
         if (hideAtcTriangleWhenNoLimit)
         {
@@ -134,7 +134,7 @@ public class SpeedometerUI : MonoBehaviour
             return;
         }
 
-        float clampedLimitKmH = Mathf.Clamp(limitSpeedKmH, minSpeedKmH, maxSpeedKmH);
+        float clampedLimitKmH = Mathf.Floor(Mathf.Clamp(patternAllowSpeedKmH, minSpeedKmH, maxSpeedKmH));
         float t = Mathf.InverseLerp(minSpeedKmH, maxSpeedKmH, clampedLimitKmH);
         if (invertDirection)
         {
