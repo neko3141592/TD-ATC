@@ -5,7 +5,7 @@ public class ATCController : MonoBehaviour
     [SerializeField] private TrainController train;
     [SerializeField] private TrainSpec trainSpec;
     [SerializeField] private NotchManager notchManager;
-    [SerializeField] private ATCProfile profile;
+
     [SerializeField] private float currentLimitSpeedMS = 0f;
     [SerializeField] private float patternAllowSpeedMS = 0f;
     [SerializeField] private float patternTargetDistanceM = 0f;
@@ -16,6 +16,7 @@ public class ATCController : MonoBehaviour
     [SerializeField] private float fallbackPatternDecelerationMS2 = 1.8f;
     [SerializeField] private float atcReleaseMarginKmH = 3f;
     [SerializeField] private float overspeedToleranceMS = 0.1f;
+    [SerializeField] private float safetyDistance = 50f;
     [SerializeField] private int atcBrakeNotch = 7;
 
     private bool hasPreviousLimit = false;
@@ -64,7 +65,7 @@ public class ATCController : MonoBehaviour
             notchManager = train.GetComponent<NotchManager>();
         }
 
-        if (train == null || profile == null)
+        if (train == null || train.Graph == null || string.IsNullOrEmpty(train.CurrentEdgeId))
         {
             currentLimitSpeedMS = 0f;
             patternAllowSpeedMS = 0f;
@@ -76,7 +77,8 @@ public class ATCController : MonoBehaviour
             return;
         }
 
-        float nextLimitSpeedMS = profile.GetLimitSpeed(train.DistanceM);
+        TrackEdge currentEdge = train.Graph.FindEdge(train.CurrentEdgeId);
+        float nextLimitSpeedMS = currentEdge != null ? currentEdge.speedLimitMS : 0f;
 
         if (hasPreviousLimit && Mathf.Abs(nextLimitSpeedMS - previousLimitSpeedMS) > limitChangeEpsilonMS)
         {
@@ -87,7 +89,7 @@ public class ATCController : MonoBehaviour
         previousLimitSpeedMS = nextLimitSpeedMS;
         hasPreviousLimit = true;
 
-        UpdatePatternAllowSpeed();
+        UpdatePatternAllowSpeed(currentEdge);
         UpdateATCBrakeLatch();
         SendATCBrake(isATCBrakeLatched ? atcBrakeNotch : 0);
     }
@@ -134,42 +136,91 @@ public class ATCController : MonoBehaviour
         }
     }
 
-    private void UpdatePatternAllowSpeed()
+    private void UpdatePatternAllowSpeed(TrackEdge currentEdge)
     {
         patternAllowSpeedMS = currentLimitSpeedMS;
         patternTargetDistanceM = train.DistanceM;
         patternTargetSpeedMS = currentLimitSpeedMS;
 
-        if (profile == null || train == null)
+        if (train == null || train.Graph == null || currentEdge == null)
         {
             return;
         }
 
-        if (!profile.TryGetNextLowerLimitTarget(train.DistanceM, out float targetDistanceM, out float targetSpeedMS))
-        {
-            return;
-        }
-
-        float remainDistanceM = Mathf.Max(0f, targetDistanceM - train.DistanceM);
         float patternDecelerationMS2 = GetPatternDecelerationMS2();
-        float allowSpeedMS = ATCPatternCalculator.CalculateAllowSpeedMS(
-            targetSpeedMS,
-            patternDecelerationMS2,
-            remainDistanceM
-        );
+        
+        float accumulatedDistM = currentEdge.lengthM - train.DistanceOnEdgeM;
+        string edgeId = currentEdge.edgeId;
+        string nextEdgeId = train.Graph.ResolveNextEdgeId(currentEdge.toNodeId, edgeId);
+        
+        float minCalculatedAllowSpeedMS = currentLimitSpeedMS;
+        float finalTargetDistM = train.DistanceM;
+        float finalTargetSpeedMS = currentLimitSpeedMS;
+        bool foundLower = false;
 
-        // ATCで使う許容速度は、現在制限とパターン許容速度の低い方を使う
-        patternAllowSpeedMS = Mathf.Min(currentLimitSpeedMS, allowSpeedMS);
-        patternTargetDistanceM = targetDistanceM;
-        patternTargetSpeedMS = targetSpeedMS;
+        float lookaheadLimitM = 1000f; 
+        
+        while (accumulatedDistM < lookaheadLimitM)
+        {
+            float nextLimitSpeedMS;
+            if (string.IsNullOrEmpty(nextEdgeId)) {
+                nextLimitSpeedMS = 0f; 
+            } else {
+                nextLimitSpeedMS = train.Graph.FindEdge(nextEdgeId).speedLimitMS;
+            }
+
+
+            if (nextLimitSpeedMS < currentLimitSpeedMS)
+            {
+                float allowSpeedMS = ATCPatternCalculator.CalculateAllowSpeedMS(
+                    nextLimitSpeedMS,
+                    patternDecelerationMS2,
+                    accumulatedDistM - safetyDistance
+                );
+                
+                if (allowSpeedMS < minCalculatedAllowSpeedMS)
+                {
+                    minCalculatedAllowSpeedMS = allowSpeedMS;
+                    // 目標地点絶対距離
+                    finalTargetDistM = train.DistanceM + accumulatedDistM;
+                    finalTargetSpeedMS = nextLimitSpeedMS;
+                    foundLower = true;
+                }
+            }
+
+            if (string.IsNullOrEmpty(nextEdgeId)) {
+                break;
+            }
+
+            TrackEdge nextEdge = train.Graph.FindEdge(nextEdgeId);
+            accumulatedDistM += nextEdge.lengthM;
+            edgeId = nextEdgeId;
+            nextEdgeId = train.Graph.ResolveNextEdgeId(nextEdge.toNodeId, edgeId);
+        }
+
+        // 最も低いパターンを使用
+        patternAllowSpeedMS = Mathf.Min(currentLimitSpeedMS, minCalculatedAllowSpeedMS);
+        
+        if (foundLower) {
+            patternTargetDistanceM = finalTargetDistM;
+            patternTargetSpeedMS = finalTargetSpeedMS;
+        }
     }
 
     private float GetPatternDecelerationMS2()
     {
         if (trainSpec != null)
         {
-            // ATCパターンの想定減速度は TrainSpec の B4 を使う
-            return Mathf.Max(0f, trainSpec.GetBrakeDeceleration(4));
+            return Mathf.Max(0f, trainSpec.GetBrakeDeceleration(5));
+        }
+
+        return Mathf.Max(0f, fallbackPatternDecelerationMS2);
+    }
+
+    private float GetEmergencyPatternDecelerationMS2 () {
+        if (trainSpec != null)
+        {
+            return Mathf.Max(0f, trainSpec.GetBrakeDeceleration());
         }
 
         return Mathf.Max(0f, fallbackPatternDecelerationMS2);

@@ -15,14 +15,11 @@ MonoBehaviour:
   defaultLimitSpeedMS: 33.33
   blocks:
   - startDistanceM: 0
-    endDistanceM: 360
-    limitSpeedKmH: 60
-  - startDistanceM: 360
-    endDistanceM: 1000
-    limitSpeedKmH: 85
-  - startDistanceM: 1000
-    endDistanceM: 1350
-    limitSpeedKmH: 110
-  - startDistanceM: 1350
-    endDistanceM: 1500
+    endDistanceM: 990
+    limitSpeedKmH: 90
+  - startDistanceM: 990
+    endDistanceM: 1600
     limitSpeedKmH: 75
+  - startDistanceM: 1600
+    endDistanceM: 2100
+    limitSpeedKmH: 90

@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Splines; // 線路（Spline）を扱うための準備
 
 public class TrainController : MonoBehaviour
 {
@@ -7,15 +6,23 @@ public class TrainController : MonoBehaviour
     [SerializeField] private NotchManager notchManager;
     [SerializeField] private BrakeSystemController brakeSystem;
     [SerializeField] private TractionSystemController tractionSystem;
-    public SplineContainer spline; // どの線路を走るか
+    [SerializeField] private TrackGraph trackGraph;
+    [SerializeField] private string currentEdgeId;
     [SerializeField] private float speedMS = 0f; // 現在速度 (m/s)
+    [SerializeField, Min(0f)] private float distanceOnEdgeM = 0f;
     private float distance = 0f;   // スタートからの累計走行距離 (m)
 
     private float currentAccelerationMS2 = 0f;
 
+    private TrackRuntimeResolver resolver;
+
+
     public float SpeedKmH => speedMS * 3.6f;
     public float SpeedMS => speedMS;
     public float DistanceM => distance;
+    public TrackGraph Graph => trackGraph;
+    public string CurrentEdgeId => currentEdgeId;
+    public float DistanceOnEdgeM => distanceOnEdgeM;
     public TrainSpec Spec => trainSpec;
     public int PowerNotch => notchManager != null ? notchManager.ResolvedPowerNotch : 0;
     public int BrakeNotch => notchManager != null ? notchManager.ResolvedBrakeNotch : 0;
@@ -59,6 +66,17 @@ public class TrainController : MonoBehaviour
         if (tractionSystem == null)
         {
             tractionSystem = GetComponent<TractionSystemController>();
+        }
+
+        if (resolver == null)
+        {
+            resolver = new TrackRuntimeResolver();
+        }
+
+        if (trackGraph != null && string.IsNullOrEmpty(currentEdgeId) && trackGraph.edges != null && trackGraph.edges.Count > 0)
+        {
+            currentEdgeId = trackGraph.edges[0].edgeId;
+            distanceOnEdgeM = 0f;
         }
 
         notchManager.ConfigureLimits(trainSpec.maxPowerNotch, EmergencyBrakeNotch);
@@ -178,17 +196,91 @@ public class TrainController : MonoBehaviour
         speedMS += acceleration * Time.deltaTime;
         speedMS = Mathf.Clamp(speedMS, 0f, trainSpec.maxSpeedMS);
 
-        distance += speedMS * Time.deltaTime;
+        float deltaDistanceM = speedMS * Time.deltaTime;
+        distance += deltaDistanceM;
+        distanceOnEdgeM += deltaDistanceM;
+        AdvanceEdgeTransitionIfNeeded();
 
     }
     void MoveTrain()
     {
-        if (spline != null)
+        if (resolver == null)
         {
-            float length = spline.CalculateLength();
-            float t = Mathf.Repeat(distance / length, 1.0f);
-            transform.position = (Vector3)spline.EvaluatePosition(t);
-            transform.rotation = Quaternion.LookRotation((Vector3)spline.EvaluateTangent(t));
+            resolver = new TrackRuntimeResolver();
+        }
+
+        if (trackGraph == null)
+        {
+            Debug.LogError($"{nameof(TrainController)} on {name}: TrackGraph is not assigned.", this);
+            return;
+        }
+
+        if (string.IsNullOrEmpty(currentEdgeId))
+        {
+            Debug.LogError($"{nameof(TrainController)} on {name}: currentEdgeId is empty.", this);
+            return;
+        }
+
+        if (!resolver.TryResolvePose(trackGraph, currentEdgeId, distanceOnEdgeM, out Vector3 pos, out Vector3 tan))
+        {
+            Debug.LogError(
+                $"{nameof(TrainController)} on {name}: failed to resolve pose. edgeId={currentEdgeId}, distanceOnEdgeM={distanceOnEdgeM:0.###}",
+                this
+            );
+            return;
+        }
+
+        transform.position = pos;
+        if (tan.sqrMagnitude > 0.000001f)
+        {
+            transform.rotation = Quaternion.LookRotation(tan);
+        }
+    }
+
+    private void AdvanceEdgeTransitionIfNeeded()
+    {
+        if (trackGraph == null || string.IsNullOrEmpty(currentEdgeId))
+        {
+            return;
+        }
+
+        const int maxTransitionsPerFrame = 256;
+        int guard = 0;
+
+        while (guard < maxTransitionsPerFrame)
+        {
+            guard++;
+
+            TrackEdge currentEdge = trackGraph.FindEdge(currentEdgeId);
+            if (currentEdge == null)
+            {
+                break;
+            }
+
+            float edgeLengthM = Mathf.Max(0f, currentEdge.lengthM);
+            if (distanceOnEdgeM <= edgeLengthM)
+            {
+                break;
+            }
+
+            // 端を超えた分を次エッジへ繰り越す
+            float remainDistanceM = distanceOnEdgeM - edgeLengthM;
+            string nextEdgeId = trackGraph.ResolveNextEdgeId(currentEdge.toNodeId, currentEdgeId);
+
+            if (string.IsNullOrEmpty(nextEdgeId))
+            {
+                // 先が無ければ端で止める
+                distanceOnEdgeM = edgeLengthM;
+                break;
+            }
+
+            currentEdgeId = nextEdgeId;
+            distanceOnEdgeM = remainDistanceM;
+        }
+
+        if (guard >= maxTransitionsPerFrame)
+        {
+            Debug.LogWarning($"{nameof(TrainController)} on {name}: edge transition loop reached guard limit.", this);
         }
     }
 }

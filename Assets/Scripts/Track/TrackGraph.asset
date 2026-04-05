@@ -1,0 +1,248 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b3db27ee0c4d4e919384306f7e597e9, type: 3}
+  m_Name: TrackGraph
+  m_EditorClassIdentifier: Assembly-CSharp::TrackGraph
+  nodes:
+  - nodeId: N000
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 0, y: 0, z: 0}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E001
+  - nodeId: Station1_Start
+    trackNodeType: 1
+    junctionId: Station1_Start
+    worldPosition: {x: 0, y: 0, z: 550}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E002
+    - E003
+  - nodeId: Station1_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 0, y: 0, z: 1100}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E004
+  - nodeId: N003
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 451.5999, y: 0, z: 1997.8275}
+    worldRotation: {x: 0, y: 0.41232076, z: 0, w: 0.9110387}
+    outgoingEdgeIds:
+    - E005
+  - nodeId: N004
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 512.99316, y: 0, z: 2266.0667}
+    worldRotation: {x: 0, y: -0.19866934, z: 0, w: 0.98006654}
+    outgoingEdgeIds:
+    - E006
+  - nodeId: Station2_Start
+    trackNodeType: 1
+    junctionId: Station2_Start
+    worldPosition: {x: 318.284, y: 0, z: 2726.5972}
+    worldRotation: {x: 0, y: -0.19866934, z: 0, w: 0.98006654}
+    outgoingEdgeIds:
+    - E007
+    - E008
+  - nodeId: Station2_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 123.574814, y: 0, z: 3187.1277}
+    worldRotation: {x: 0, y: -0.19866934, z: 0, w: 0.98006654}
+    outgoingEdgeIds:
+    - E009
+  - nodeId: End_Terminal
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -265.84357, y: 0, z: 4108.1885}
+    worldRotation: {x: 0, y: -0.19866934, z: 0, w: 0.98006654}
+    outgoingEdgeIds: []
+  edges:
+  - edgeId: E001
+    fromNodeId: N000
+    toNodeId: Station1_Start
+    lengthM: 550
+    blockId: 
+    speedLimitMS: 33.33
+    mathCurves:
+    - trackCurveType: 0
+      lengthM: 550
+      radiusM: 0
+  - edgeId: E002
+    fromNodeId: Station1_Start
+    toNodeId: Station1_End
+    lengthM: 550
+    blockId: 
+    speedLimitMS: 33.33
+    mathCurves:
+    - trackCurveType: 0
+      lengthM: 550
+      radiusM: 0
+  - edgeId: E003
+    fromNodeId: Station1_Start
+    toNodeId: Station1_End
+    lengthM: 601.70715
+    blockId: 
+    speedLimitMS: 12.5
+    mathCurves:
+    - trackCurveType: 2
+      lengthM: 30
+      radiusM: 200
+    - trackCurveType: 3
+      lengthM: 30
+      radiusM: 200
+    - trackCurveType: 0
+      lengthM: 30
+      radiusM: 0
+    - trackCurveType: 2
+      lengthM: 30
+      radiusM: -200
+    - trackCurveType: 3
+      lengthM: 30
+      radiusM: -200
+    - trackCurveType: 0
+      lengthM: 301.70715
+      radiusM: 0
+    - trackCurveType: 2
+      lengthM: 30
+      radiusM: -200
+    - trackCurveType: 3
+      lengthM: 30
+      radiusM: -200
+    - trackCurveType: 0
+      lengthM: 30
+      radiusM: 0
+    - trackCurveType: 2
+      lengthM: 30
+      radiusM: 200
+    - trackCurveType: 3
+      lengthM: 30
+      radiusM: 200
+  - edgeId: E004
+    fromNodeId: Station1_End
+    toNodeId: N003
+    lengthM: 1080
+    blockId: 
+    speedLimitMS: 16.666668
+    mathCurves:
+    - trackCurveType: 0
+      lengthM: 300
+      radiusM: 0
+    - trackCurveType: 2
+      lengthM: 40
+      radiusM: 400
+    - trackCurveType: 1
+      lengthM: 300
+      radiusM: 400
+    - trackCurveType: 3
+      lengthM: 40
+      radiusM: 400
+    - trackCurveType: 0
+      lengthM: 400
+      radiusM: 0
+  - edgeId: E005
+    fromNodeId: N003
+    toNodeId: N004
+    lengthM: 300
+    blockId: 
+    speedLimitMS: 33.33
+    mathCurves:
+    - trackCurveType: 2
+      lengthM: 50
+      radiusM: -200
+    - trackCurveType: 1
+      lengthM: 200
+      radiusM: -200
+    - trackCurveType: 3
+      lengthM: 50
+      radiusM: -200
+  - edgeId: E006
+    fromNodeId: N004
+    toNodeId: Station2_Start
+    lengthM: 500
+    blockId: 
+    speedLimitMS: 33.33
+    mathCurves:
+    - trackCurveType: 0
+      lengthM: 500
+      radiusM: 0
+  - edgeId: E007
+    fromNodeId: Station2_Start
+    toNodeId: Station2_End
+    lengthM: 500
+    blockId: 
+    speedLimitMS: 33.33
+    mathCurves:
+    - trackCurveType: 0
+      lengthM: 500
+      radiusM: 0
+  - edgeId: E008
+    fromNodeId: Station2_Start
+    toNodeId: Station2_End
+    lengthM: 501.7076
+    blockId: 
+    speedLimitMS: 12.5
+    mathCurves:
+    - trackCurveType: 2
+      lengthM: 30
+      radiusM: 200
+    - trackCurveType: 3
+      lengthM: 30
+      radiusM: 200
+    - trackCurveType: 0
+      lengthM: 30
+      radiusM: 0
+    - trackCurveType: 2
+      lengthM: 30
+      radiusM: -200
+    - trackCurveType: 3
+      lengthM: 30
+      radiusM: -200
+    - trackCurveType: 0
+      lengthM: 201.70761
+      radiusM: 0
+    - trackCurveType: 2
+      lengthM: 30
+      radiusM: -200
+    - trackCurveType: 3
+      lengthM: 30
+      radiusM: -200
+    - trackCurveType: 0
+      lengthM: 30
+      radiusM: 0
+    - trackCurveType: 2
+      lengthM: 30
+      radiusM: 200
+    - trackCurveType: 3
+      lengthM: 30
+      radiusM: 200
+  - edgeId: E009
+    fromNodeId: Station2_End
+    toNodeId: End_Terminal
+    lengthM: 1000
+    blockId: 
+    speedLimitMS: 33.33
+    mathCurves:
+    - trackCurveType: 0
+      lengthM: 1000
+      radiusM: 0
+  turnoutStates:
+  - junctionId: Station1_Start
+    selectedOutgoingEdgeId: E003
+  - junctionId: Station2_Start
+    selectedOutgoingEdgeId: E007
+  nodeMergeDistanceM: 0.05
+  generateReverseEdge: 0
