@@ -41,6 +41,7 @@ public class TrainController : MonoBehaviour
     public float CurrentBCPressureKPa => brakeSystem != null ? brakeSystem.currentBCPressureKPa : 0f;
     public float CurrentAccelerationMS2 => currentAccelerationMS2;
     public System.Collections.Generic.IReadOnlyList<CarBrakeState> CurrentCarBrakeStates => brakeSystem != null ? brakeSystem.CarBrakeStates : null;
+    public System.Collections.Generic.IReadOnlyList<CarTractionState> CurrentCarTractionStates => tractionSystem != null ? tractionSystem.CarTractionStates : null;
 
     void Awake()
     {

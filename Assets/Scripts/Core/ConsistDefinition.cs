@@ -8,6 +8,36 @@ public class ConsistDefinition : ScriptableObject
     public List<CarSpec> cars = new List<CarSpec>();
 
     public int CarCount => cars != null ? cars.Count : 0;
+    public IReadOnlyList<CarSpec> Cars => cars;
+
+    public CarSpec GetCar(int index)
+    {
+        if (cars == null || index < 0 || index >= cars.Count)
+        {
+            return null;
+        }
+
+        return cars[index];
+    }
+
+    public CarType GetCarType(int index)
+    {
+        CarSpec car = GetCar(index);
+        return car != null ? car.carType : CarType.Trailer;
+    }
+
+    public bool TryGetCarType(int index, out CarType carType)
+    {
+        CarSpec car = GetCar(index);
+        if (car == null)
+        {
+            carType = CarType.Trailer;
+            return false;
+        }
+
+        carType = car.carType;
+        return true;
+    }
 
     public float GetTotalMassKg()
     {

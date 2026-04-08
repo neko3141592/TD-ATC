@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CarSpec_M
   m_EditorClassIdentifier: Assembly-CSharp::CarSpec
   carType: 0
-  massKg: 32000
+  massKg: 33000
   motorCount: 4
   maxRegenDecelMS2: 1.2
   bcCylinderAreaM2: 0.02

@@ -133,6 +133,21 @@ public class TrackBuilder
         lastNode = targetNode;
     }
 
+    public void AddStation(string stationId, string stationName, float offsetMFromNode = 10f)
+    {
+        // 直近のエッジ（現在ペン先が置かれているエッジ）の途中に駅を設置
+        if (targetGraph.edges.Count == 0) return;
+        
+        var station = new StationData
+        {
+            stationId = stationId,
+            stationName = stationName,
+            edgeId = $"E{targetGraph.edges.Count:000}", // 最後に作成されたエッジ
+            distanceFromEdgeStart = offsetMFromNode
+        };
+        targetGraph.stations.Add(station);
+    }
+
     private TrackNode CreateNode(Vector3 pos, Quaternion rot, string id = null)
     {
         var node = new TrackNode

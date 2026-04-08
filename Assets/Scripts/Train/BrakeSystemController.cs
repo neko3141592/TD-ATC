@@ -5,13 +5,14 @@ public class BrakeSystemController : MonoBehaviour
 {
     [SerializeField] private TrainSpec trainSpec;
     [SerializeField] private ConsistDefinition consistDefinition;
-    [SerializeField, Min(0f)] private float mtAirDistributionThresholdKmH = 20f; // この速度以下で「M回生 -> MT空気」に切替
+    [SerializeField, Min(0f)] private float mtAirDistributionThresholdKmH = 120f; // この速度以下で「M回生 -> MT空気」に切替
     private readonly BrakeControlUnit brakeControlUnit = new BrakeControlUnit();
     private readonly RegenBrakeUnit regenBrakeUnit = new RegenBrakeUnit();
     private readonly AirBrakeUnit airBrakeUnit = new AirBrakeUnit();
 
     private readonly List<CarBrakeState> carBrakeStates = new List<CarBrakeState>();
     public IReadOnlyList<CarBrakeState> CarBrakeStates => carBrakeStates;
+    public ConsistDefinition ConsistDefinition => consistDefinition;
 
     private void Awake()
     {

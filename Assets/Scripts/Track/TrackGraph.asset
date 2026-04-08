@@ -20,229 +20,142 @@ MonoBehaviour:
     worldRotation: {x: 0, y: 0, z: 0, w: 1}
     outgoingEdgeIds:
     - E001
-  - nodeId: Station1_Start
-    trackNodeType: 1
-    junctionId: Station1_Start
-    worldPosition: {x: 0, y: 0, z: 550}
+  - nodeId: N1
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 0, y: 0, z: 2360}
     worldRotation: {x: 0, y: 0, z: 0, w: 1}
     outgoingEdgeIds:
     - E002
-    - E003
-  - nodeId: Station1_End
+  - nodeId: N2
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 0, y: 0, z: 1100}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    worldPosition: {x: 510.02832, y: 0, z: 2826.5945}
+    worldRotation: {x: 0, y: 0.73782516, z: 0, w: 0.6749919}
+    outgoingEdgeIds:
+    - E003
+  - nodeId: N3
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 908.4491, y: 0, z: 2791.0857}
+    worldRotation: {x: 0, y: 0.73782516, z: 0, w: 0.6749919}
     outgoingEdgeIds:
     - E004
-  - nodeId: N003
+  - nodeId: N4
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 451.5999, y: 0, z: 1997.8275}
-    worldRotation: {x: 0, y: 0.41232076, z: 0, w: 0.9110387}
+    worldPosition: {x: 1548.1185, y: 0, z: 3187.9587}
+    worldRotation: {x: 0, y: 0.18457943, z: 0, w: 0.98281765}
     outgoingEdgeIds:
     - E005
-  - nodeId: N004
+  - nodeId: N5
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 512.99316, y: 0, z: 2266.0667}
-    worldRotation: {x: 0, y: -0.19866934, z: 0, w: 0.98006654}
+    worldPosition: {x: 2455.1582, y: 0, z: 5517.611}
+    worldRotation: {x: 0, y: 0.18457943, z: 0, w: 0.98281765}
     outgoingEdgeIds:
     - E006
-  - nodeId: Station2_Start
-    trackNodeType: 1
-    junctionId: Station2_Start
-    worldPosition: {x: 318.284, y: 0, z: 2726.5972}
-    worldRotation: {x: 0, y: -0.19866934, z: 0, w: 0.98006654}
+  - nodeId: N6
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 2430.6875, y: 0, z: 5831.6006}
+    worldRotation: {x: 0, y: -0.260386, z: 0, w: 0.96550465}
     outgoingEdgeIds:
     - E007
-    - E008
-  - nodeId: Station2_End
+  - nodeId: End
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 123.574814, y: 0, z: 3187.1277}
-    worldRotation: {x: 0, y: -0.19866934, z: 0, w: 0.98006654}
-    outgoingEdgeIds:
-    - E009
-  - nodeId: End_Terminal
-    trackNodeType: 0
-    junctionId: 
-    worldPosition: {x: -265.84357, y: 0, z: 4108.1885}
-    worldRotation: {x: 0, y: -0.19866934, z: 0, w: 0.98006654}
+    worldPosition: {x: 2304.9856, y: 0, z: 6047.7}
+    worldRotation: {x: 0, y: -0.260386, z: 0, w: 0.96550465}
     outgoingEdgeIds: []
   edges:
   - edgeId: E001
     fromNodeId: N000
-    toNodeId: Station1_Start
-    lengthM: 550
-    blockId: 
+    toNodeId: N1
+    lengthM: 2360
     speedLimitMS: 33.33
     mathCurves:
     - trackCurveType: 0
-      lengthM: 550
+      lengthM: 2360
       radiusM: 0
   - edgeId: E002
-    fromNodeId: Station1_Start
-    toNodeId: Station1_End
-    lengthM: 550
-    blockId: 
+    fromNodeId: N1
+    toNodeId: N2
+    lengthM: 786.85834
     speedLimitMS: 33.33
     mathCurves:
-    - trackCurveType: 0
-      lengthM: 550
-      radiusM: 0
-  - edgeId: E003
-    fromNodeId: Station1_Start
-    toNodeId: Station1_End
-    lengthM: 601.70715
-    blockId: 
-    speedLimitMS: 12.5
-    mathCurves:
-    - trackCurveType: 2
-      lengthM: 30
-      radiusM: 200
-    - trackCurveType: 3
-      lengthM: 30
-      radiusM: 200
-    - trackCurveType: 0
-      lengthM: 30
-      radiusM: 0
-    - trackCurveType: 2
-      lengthM: 30
-      radiusM: -200
-    - trackCurveType: 3
-      lengthM: 30
-      radiusM: -200
-    - trackCurveType: 0
-      lengthM: 301.70715
-      radiusM: 0
-    - trackCurveType: 2
-      lengthM: 30
-      radiusM: -200
-    - trackCurveType: 3
-      lengthM: 30
-      radiusM: -200
-    - trackCurveType: 0
-      lengthM: 30
-      radiusM: 0
-    - trackCurveType: 2
-      lengthM: 30
-      radiusM: 200
-    - trackCurveType: 3
-      lengthM: 30
-      radiusM: 200
-  - edgeId: E004
-    fromNodeId: Station1_End
-    toNodeId: N003
-    lengthM: 1080
-    blockId: 
-    speedLimitMS: 16.666668
-    mathCurves:
-    - trackCurveType: 0
-      lengthM: 300
-      radiusM: 0
     - trackCurveType: 2
       lengthM: 40
-      radiusM: 400
+      radiusM: 450
     - trackCurveType: 1
-      lengthM: 300
-      radiusM: 400
+      lengthM: 706.85834
+      radiusM: 450
     - trackCurveType: 3
       lengthM: 40
-      radiusM: 400
+      radiusM: 450
+  - edgeId: E003
+    fromNodeId: N2
+    toNodeId: N3
+    lengthM: 400
+    speedLimitMS: 33.33
+    mathCurves:
     - trackCurveType: 0
       lengthM: 400
       radiusM: 0
-  - edgeId: E005
-    fromNodeId: N003
-    toNodeId: N004
-    lengthM: 300
-    blockId: 
+  - edgeId: E004
+    fromNodeId: N3
+    toNodeId: N4
+    lengthM: 813.0383
     speedLimitMS: 33.33
     mathCurves:
     - trackCurveType: 2
-      lengthM: 50
-      radiusM: -200
+      lengthM: 40
+      radiusM: -600
     - trackCurveType: 1
-      lengthM: 200
-      radiusM: -200
+      lengthM: 733.0383
+      radiusM: -600
     - trackCurveType: 3
-      lengthM: 50
-      radiusM: -200
+      lengthM: 40
+      radiusM: -600
+  - edgeId: E005
+    fromNodeId: N4
+    toNodeId: N5
+    lengthM: 2500
+    speedLimitMS: 33.33
+    mathCurves:
+    - trackCurveType: 0
+      lengthM: 2500
+      radiusM: 0
   - edgeId: E006
-    fromNodeId: N004
-    toNodeId: Station2_Start
-    lengthM: 500
-    blockId: 
+    fromNodeId: N5
+    toNodeId: N6
+    lengthM: 329.4395
     speedLimitMS: 33.33
     mathCurves:
-    - trackCurveType: 0
-      lengthM: 500
-      radiusM: 0
+    - trackCurveType: 2
+      lengthM: 60
+      radiusM: -300
+    - trackCurveType: 1
+      lengthM: 209.43951
+      radiusM: -300
+    - trackCurveType: 3
+      lengthM: 60
+      radiusM: -300
   - edgeId: E007
-    fromNodeId: Station2_Start
-    toNodeId: Station2_End
-    lengthM: 500
-    blockId: 
+    fromNodeId: N6
+    toNodeId: End
+    lengthM: 250
     speedLimitMS: 33.33
     mathCurves:
     - trackCurveType: 0
-      lengthM: 500
+      lengthM: 250
       radiusM: 0
-  - edgeId: E008
-    fromNodeId: Station2_Start
-    toNodeId: Station2_End
-    lengthM: 501.7076
-    blockId: 
-    speedLimitMS: 12.5
-    mathCurves:
-    - trackCurveType: 2
-      lengthM: 30
-      radiusM: 200
-    - trackCurveType: 3
-      lengthM: 30
-      radiusM: 200
-    - trackCurveType: 0
-      lengthM: 30
-      radiusM: 0
-    - trackCurveType: 2
-      lengthM: 30
-      radiusM: -200
-    - trackCurveType: 3
-      lengthM: 30
-      radiusM: -200
-    - trackCurveType: 0
-      lengthM: 201.70761
-      radiusM: 0
-    - trackCurveType: 2
-      lengthM: 30
-      radiusM: -200
-    - trackCurveType: 3
-      lengthM: 30
-      radiusM: -200
-    - trackCurveType: 0
-      lengthM: 30
-      radiusM: 0
-    - trackCurveType: 2
-      lengthM: 30
-      radiusM: 200
-    - trackCurveType: 3
-      lengthM: 30
-      radiusM: 200
-  - edgeId: E009
-    fromNodeId: Station2_End
-    toNodeId: End_Terminal
-    lengthM: 1000
-    blockId: 
-    speedLimitMS: 33.33
-    mathCurves:
-    - trackCurveType: 0
-      lengthM: 1000
-      radiusM: 0
-  turnoutStates:
-  - junctionId: Station1_Start
-    selectedOutgoingEdgeId: E003
-  - junctionId: Station2_Start
-    selectedOutgoingEdgeId: E007
+  turnoutStates: []
+  stations:
+  - stationId: ST_End
+    stationName: "\u7D42\u70B9\u99C5"
+    edgeId: E006
+    distanceFromEdgeStart: 50
+    stopMarginM: 5
   nodeMergeDistanceM: 0.05
   generateReverseEdge: 0

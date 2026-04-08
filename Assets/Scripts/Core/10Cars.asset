@@ -15,9 +15,9 @@ MonoBehaviour:
   cars:
   - {fileID: 11400000, guid: 4efc1a5cdbc564c81bde04e43ccbe6b9, type: 2}
   - {fileID: 11400000, guid: 9be9045258ded45c48c7de6e0c97c41b, type: 2}
-  - {fileID: 11400000, guid: 9be9045258ded45c48c7de6e0c97c41b, type: 2}
   - {fileID: 11400000, guid: 4efc1a5cdbc564c81bde04e43ccbe6b9, type: 2}
   - {fileID: 11400000, guid: 9be9045258ded45c48c7de6e0c97c41b, type: 2}
+  - {fileID: 11400000, guid: 4efc1a5cdbc564c81bde04e43ccbe6b9, type: 2}
   - {fileID: 11400000, guid: 4efc1a5cdbc564c81bde04e43ccbe6b9, type: 2}
   - {fileID: 11400000, guid: 4efc1a5cdbc564c81bde04e43ccbe6b9, type: 2}
   - {fileID: 11400000, guid: 9be9045258ded45c48c7de6e0c97c41b, type: 2}

@@ -162,12 +162,19 @@ public class ATCController : MonoBehaviour
         
         while (accumulatedDistM < lookaheadLimitM)
         {
-            float nextLimitSpeedMS;
-            if (string.IsNullOrEmpty(nextEdgeId)) {
-                nextLimitSpeedMS = 0f; 
-            } else {
-                nextLimitSpeedMS = train.Graph.FindEdge(nextEdgeId).speedLimitMS;
+            if (string.IsNullOrEmpty(nextEdgeId))
+            {
+                // 終端は0km/hパターンを生成しない（1閉塞=1Edge運用では終端減速を強制しない）
+                break;
             }
+
+            TrackEdge nextEdge = train.Graph.FindEdge(nextEdgeId);
+            if (nextEdge == null)
+            {
+                break;
+            }
+
+            float nextLimitSpeedMS = nextEdge.speedLimitMS;
 
 
             if (nextLimitSpeedMS < currentLimitSpeedMS)
@@ -188,11 +195,6 @@ public class ATCController : MonoBehaviour
                 }
             }
 
-            if (string.IsNullOrEmpty(nextEdgeId)) {
-                break;
-            }
-
-            TrackEdge nextEdge = train.Graph.FindEdge(nextEdgeId);
             accumulatedDistM += nextEdge.lengthM;
             edgeId = nextEdgeId;
             nextEdgeId = train.Graph.ResolveNextEdgeId(nextEdge.toNodeId, edgeId);
@@ -220,7 +222,7 @@ public class ATCController : MonoBehaviour
     private float GetEmergencyPatternDecelerationMS2 () {
         if (trainSpec != null)
         {
-            return Mathf.Max(0f, trainSpec.GetBrakeDeceleration());
+            return Mathf.Max(0f, trainSpec.GetBrakeDeceleration(8));
         }
 
         return Mathf.Max(0f, fallbackPatternDecelerationMS2);

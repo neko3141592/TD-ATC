@@ -8,10 +8,12 @@ public class TrackGraph : ScriptableObject
     public List<TrackNode> nodes = new();
     public List<TrackEdge> edges = new();
     public List<TurnoutState> turnoutStates = new();
+    public List<StationData> stations = new();
 
     public TrackNode FindNode(string id) => nodes.Find(n => n.nodeId == id);
     public TrackEdge FindEdge(string id) => edges.Find(e => e.edgeId == id);
     public TurnoutState FindTurnoutState(string junctionId) => turnoutStates.Find(t => t.junctionId == junctionId);
+    public StationData FindStation(string id) => stations.Find(s => s.stationId == id);
 
     [Header("Generator Source")]
     [SerializeField, Min(0.001f)]
@@ -58,8 +60,7 @@ public class TrackGraph : ScriptableObject
             edgeId = edgeId,
             fromNodeId = fromNode.nodeId,
             toNodeId = toNode.nodeId,
-            lengthM = lengthM,
-            blockId = edgeId,
+            lengthM = lengthM
         };
 
         edge.mathCurves.Add(new TrackCurveData

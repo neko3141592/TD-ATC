@@ -11,6 +11,78 @@ public class TrackGraphEditor : Editor
 
         GUILayout.Space(8);
 
+        if (GUILayout.Button("Create Simple Test Track"))
+        {
+            var graph = (TrackGraph)target;
+            graph.nodes.Clear();
+            graph.edges.Clear();
+            graph.turnoutStates.Clear();
+            graph.stations.Clear(); // 駅データもリセット
+
+            TrackBuilder builder = new TrackBuilder(graph);
+
+            // スタート
+            builder.Start(Vector3.zero, Quaternion.identity);
+
+            // 1. 直線 1000m
+            builder.AddStraight(2360f);
+            
+            // ★ スタートの直線内に駅を設置（出発地点から50mの位置に駅の中心(停止目標など)を置く）
+            builder.AddStation("ST_Start", "始発駅", offsetMFromNode: 50f);
+            
+            builder.PutNode("N1");
+
+            // 2. 右カーブ (緩和曲線40m + R=200, 90度 + 緩和曲線40m)
+            float r = 450f;
+            float curveL = (2f * Mathf.PI * r) * (90f / 360f);
+            float clothoidL = 40f;
+            
+            builder.AddClothoidIn(clothoidL, r);
+            builder.AddCurve(curveL, r);
+            builder.AddClothoidOut(clothoidL, r);
+            builder.PutNode("N2");
+
+            // 3. 直線 100m
+            builder.AddStraight(400f);
+            builder.PutNode("N3");
+
+            // 4. 左カーブ (緩和曲線40m + R=-200, 90度 + 緩和曲線40m)
+            r = 600f;
+            curveL = (2f * Mathf.PI * r) * (70f / 360f);
+            clothoidL = 40f;
+            builder.AddClothoidIn(clothoidL, -r);
+            builder.AddCurve(curveL, -r);
+            builder.AddClothoidOut(clothoidL, -r);
+            builder.PutNode("N4");
+
+            // 5. 最後に直線 2500m
+            builder.AddStraight(2500f);
+
+            builder.PutNode("N5");
+
+            r = 300f;
+            curveL = (2f * Mathf.PI * r) * (40f / 360f);
+            clothoidL = 60f;
+            builder.AddClothoidIn(clothoidL, -r);
+            builder.AddCurve(curveL, -r);
+            builder.AddClothoidOut(clothoidL, -r);
+
+            builder.PutNode("N6");
+
+            builder.AddStraight(250f);
+            
+            // ★ ゴールの直線内にも駅を設置（この区間の始まりから50mの地点）
+            builder.AddStation("ST_End", "終点駅", offsetMFromNode: 50f);
+            
+            builder.PutNode("End");
+
+            graph.UpdateNodeTypesAndJunctionIds();
+            graph.SyncTurnoutStates();
+
+            EditorUtility.SetDirty(graph);
+            AssetDatabase.SaveAssets();
+        }
+
         if (GUILayout.Button("Create Endless Circle Track"))
         {
             var graph = (TrackGraph)target;

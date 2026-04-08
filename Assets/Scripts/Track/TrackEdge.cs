@@ -12,7 +12,6 @@ public class TrackEdge
 
     // エッジ情報
     [Min(0f)] public float lengthM;
-    public string blockId;
     [Min(0f)] public float speedLimitMS = 33.33f;
 
     [Header("Rail Data")]

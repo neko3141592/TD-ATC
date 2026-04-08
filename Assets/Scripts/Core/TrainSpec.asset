@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TrainSpec
   m_EditorClassIdentifier: Assembly-CSharp::TrainSpec
   massKg: 280000
-  maxSpeedMS: 33.33
+  maxSpeedMS: 40
   coastDeceleration: 0.05
   maxTractionForceN: 300000
   maxTractionPowerW: 3200000
@@ -60,8 +60,8 @@ MonoBehaviour:
       inWeight: 0.33333334
       outWeight: 0.33333334
     - serializedVersion: 3
-      time: 0.18676017
-      value: -0.0005061114
+      time: 0.18628822
+      value: 0.00897214
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -115,8 +115,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.5035982
-      value: 1.0004174
+      time: 0.2919765
+      value: 0.99959636
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -124,8 +124,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 1.5173882
-      value: 0.30931413
+      time: 1.5190972
+      value: 0.20628679
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -147,8 +147,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.6220688
-      value: 0.9979135
+      time: 0.6198309
+      value: 0.99667567
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -156,8 +156,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 2.3466685
-      value: 0.49992672
+      time: 3.4676402
+      value: 0.02067864
       inSlope: 0
       outSlope: 0
       tangentMode: 0
