@@ -28,6 +28,12 @@ public class TrackMeshGenerator : MonoBehaviour
             return;
         }
 
+        if (segmentLengthM <= 0f)
+        {
+            Debug.LogWarning("segmentLengthM must be greater than zero.", this);
+            return;
+        }
+
         // 分割数を計算
         int segments = Mathf.CeilToInt(totalLengthM / segmentLengthM);
         int vertsInShape = profilePoints.Length;

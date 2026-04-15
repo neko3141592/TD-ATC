@@ -8,7 +8,6 @@ public class EBDisplay : MonoBehaviour
     [SerializeField] private Sprite ebOn;
     [SerializeField] private Sprite ebOff;
     [SerializeField] private TrainController train;
-    [SerializeField] private bool autoFindTrain = true;
 
     [Header("Read Delay")]
     [SerializeField] private bool enableReadDelay = true;
@@ -65,11 +64,6 @@ public class EBDisplay : MonoBehaviour
 
     private bool GetRawEmergencyState()
     {
-        if (autoFindTrain && train == null)
-        {
-            train = FindFirstObjectByType<TrainController>();
-        }
-
         return train != null && train.IsEmergencyBrakeActive;
     }
 

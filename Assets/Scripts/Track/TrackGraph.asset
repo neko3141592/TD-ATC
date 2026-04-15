@@ -76,21 +76,25 @@ MonoBehaviour:
     speedLimitMS: 33.33
     mathCurves:
     - trackCurveType: 0
+      gradientPermille: 0
       lengthM: 2360
       radiusM: 0
   - edgeId: E002
     fromNodeId: N1
     toNodeId: N2
     lengthM: 786.85834
-    speedLimitMS: 33.33
+    speedLimitMS: 20.83
     mathCurves:
     - trackCurveType: 2
+      gradientPermille: 0
       lengthM: 40
       radiusM: 450
     - trackCurveType: 1
+      gradientPermille: 0
       lengthM: 706.85834
       radiusM: 450
     - trackCurveType: 3
+      gradientPermille: 0
       lengthM: 40
       radiusM: 450
   - edgeId: E003
@@ -100,21 +104,25 @@ MonoBehaviour:
     speedLimitMS: 33.33
     mathCurves:
     - trackCurveType: 0
+      gradientPermille: 0
       lengthM: 400
       radiusM: 0
   - edgeId: E004
     fromNodeId: N3
     toNodeId: N4
     lengthM: 813.0383
-    speedLimitMS: 33.33
+    speedLimitMS: 25
     mathCurves:
     - trackCurveType: 2
+      gradientPermille: 0
       lengthM: 40
       radiusM: -600
     - trackCurveType: 1
+      gradientPermille: 0
       lengthM: 733.0383
       radiusM: -600
     - trackCurveType: 3
+      gradientPermille: 0
       lengthM: 40
       radiusM: -600
   - edgeId: E005
@@ -124,6 +132,7 @@ MonoBehaviour:
     speedLimitMS: 33.33
     mathCurves:
     - trackCurveType: 0
+      gradientPermille: 0
       lengthM: 2500
       radiusM: 0
   - edgeId: E006
@@ -133,12 +142,15 @@ MonoBehaviour:
     speedLimitMS: 33.33
     mathCurves:
     - trackCurveType: 2
+      gradientPermille: 0
       lengthM: 60
       radiusM: -300
     - trackCurveType: 1
+      gradientPermille: 0
       lengthM: 209.43951
       radiusM: -300
     - trackCurveType: 3
+      gradientPermille: 0
       lengthM: 60
       radiusM: -300
   - edgeId: E007
@@ -148,6 +160,7 @@ MonoBehaviour:
     speedLimitMS: 33.33
     mathCurves:
     - trackCurveType: 0
+      gradientPermille: 0
       lengthM: 250
       radiusM: 0
   turnoutStates: []

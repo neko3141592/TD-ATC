@@ -25,82 +25,6 @@ public class TrackGraph : ScriptableObject
     public float NodeMergeDistanceM => nodeMergeDistanceM;
     public bool GenerateReverseEdge => generateReverseEdge;
 
-
-
-    private TrackNode FindOrCreateNode(Vector3 p, float mergeDist)
-    {
-        for (int i = 0; i < nodes.Count; i++)
-        {
-            TrackNode n = nodes[i];
-            if (Vector3.Distance(n.worldPosition, p) <= mergeDist)
-            {
-                return n;
-            }
-        }
-
-        // ノードが見つからない場合は新規作成
-        var newNode = new TrackNode
-        {
-            nodeId = $"N{nodes.Count + 1:000}",
-            worldPosition = p
-        };
-        nodes.Add(newNode);
-        return newNode;
-    }
-
-    private void AddEdge(
-        TrackNode fromNode,
-        TrackNode toNode,
-        float lengthM
-        )
-    {
-        string edgeId = $"E{edges.Count + 1:000}";
-        var edge = new TrackEdge
-        {
-            edgeId = edgeId,
-            fromNodeId = fromNode.nodeId,
-            toNodeId = toNode.nodeId,
-            lengthM = lengthM
-        };
-
-        edge.mathCurves.Add(new TrackCurveData
-        {
-            trackCurveType = TrackCurveType.Straight,
-            lengthM = lengthM,
-            radiusM = 0f
-        });
-
-        edges.Add(edge);
-
-        if (fromNode.outgoingEdgeIds == null)
-        {
-            fromNode.outgoingEdgeIds = new List<string>();
-        }
-
-        if (!fromNode.outgoingEdgeIds.Contains(edgeId))
-        {
-            fromNode.outgoingEdgeIds.Add(edgeId);
-        }
-    }
-
-    private static string GetHierarchyPath(Transform t)
-    {
-        if (t == null)
-        {
-            return string.Empty;
-        }
-
-        string path = t.name;
-        Transform current = t.parent;
-        while (current != null)
-        {
-            path = current.name + "/" + path;
-            current = current.parent;
-        }
-
-        return path;
-    }
-
     public string ResolveNextEdgeId(string nodeId, string incomingEdgeId = null)
     {
         TrackNode node = FindNode(nodeId);
@@ -121,6 +45,46 @@ public class TrackGraph : ScriptableObject
         }
 
         return GetDefaultOutgoingEdgeId(node, incomingEdgeId);
+    }
+
+    public string ResolvePreviousEdgeId(string nodeId, string outgoingEdgeId = null)
+    {
+        if (string.IsNullOrEmpty(nodeId) || edges == null || edges.Count == 0)
+        {
+            return null;
+        }
+
+        string nextNodeId = null;
+        if (!string.IsNullOrEmpty(outgoingEdgeId))
+        {
+            TrackEdge outgoingEdge = FindEdge(outgoingEdgeId);
+            if (outgoingEdge != null)
+            {
+                nextNodeId = outgoingEdge.toNodeId;
+            }
+        }
+
+        string fallbackEdgeId = null;
+        for (int i = 0; i < edges.Count; i++)
+        {
+            TrackEdge candidate = edges[i];
+            if (candidate == null || candidate.toNodeId != nodeId)
+            {
+                continue;
+            }
+
+            if (fallbackEdgeId == null)
+            {
+                fallbackEdgeId = candidate.edgeId;
+            }
+
+            if (string.IsNullOrEmpty(nextNodeId) || candidate.fromNodeId != nextNodeId)
+            {
+                return candidate.edgeId;
+            }
+        }
+
+        return fallbackEdgeId;
     }
 
     public void SetTurnoutSelectedEdge(string junctionId, string edgeId)

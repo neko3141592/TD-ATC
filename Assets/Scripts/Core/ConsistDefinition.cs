@@ -7,17 +7,26 @@ public class ConsistDefinition : ScriptableObject
     [Tooltip("編成順（先頭 -> 最後尾）でCarSpecを並べる")]
     public List<CarSpec> cars = new List<CarSpec>();
 
+    public bool HasCars => cars != null && cars.Count > 0;
     public int CarCount => cars != null ? cars.Count : 0;
     public IReadOnlyList<CarSpec> Cars => cars;
 
-    public CarSpec GetCar(int index)
+    public bool TryGetCar(int index, out CarSpec car)
     {
-        if (cars == null || index < 0 || index >= cars.Count)
+        if (!HasCars || index < 0 || index >= cars.Count)
         {
-            return null;
+            car = null;
+            return false;
         }
 
-        return cars[index];
+        car = cars[index];
+        return car != null;
+    }
+
+    public CarSpec GetCar(int index)
+    {
+        TryGetCar(index, out CarSpec car);
+        return car;
     }
 
     public CarType GetCarType(int index)
@@ -28,8 +37,7 @@ public class ConsistDefinition : ScriptableObject
 
     public bool TryGetCarType(int index, out CarType carType)
     {
-        CarSpec car = GetCar(index);
-        if (car == null)
+        if (!TryGetCar(index, out CarSpec car))
         {
             carType = CarType.Trailer;
             return false;
@@ -41,7 +49,7 @@ public class ConsistDefinition : ScriptableObject
 
     public float GetTotalMassKg()
     {
-        if (cars == null)
+        if (!HasCars)
         {
             return 0f;
         }
@@ -58,9 +66,20 @@ public class ConsistDefinition : ScriptableObject
         return totalMass;
     }
 
+    public float GetTotalMassKgOrFallback(float fallbackMassKg)
+    {
+        float totalMassKg = GetTotalMassKg();
+        if (totalMassKg > 0f)
+        {
+            return totalMassKg;
+        }
+
+        return Mathf.Max(1f, fallbackMassKg);
+    }
+
     public int GetTotalMotorCount()
     {
-        if (cars == null)
+        if (!HasCars)
         {
             return 0;
         }

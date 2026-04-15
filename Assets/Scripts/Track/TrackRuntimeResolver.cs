@@ -72,6 +72,7 @@ public class TrackRuntimeResolver
         x = dz * sinP - dx * cosP;
     }
 
+
     // ====== 【メインエンジン：距離から座標を割り出す】 ======
     public bool TryResolvePose(
         TrackGraph graph,
@@ -93,9 +94,13 @@ public class TrackRuntimeResolver
 
         // 1. スタート地点（ノード）のワールド座標と向きを基準にする
         Vector3 currentPos = fromNode.worldPosition;
-        Quaternion currentRot = fromNode.worldRotation;
+        // Nodeの水平方向の向きだけを抽出してベースにする
+        Vector3 forwardXZ = fromNode.worldRotation * Vector3.forward;
+        forwardXZ.y = 0;
+        Quaternion currentRot = forwardXZ.sqrMagnitude > 0.001f ? Quaternion.LookRotation(forwardXZ.normalized) : Quaternion.identity;
 
         float remainingDist = Mathf.Max(0f, distanceOnEdgeM);
+        float currentPermille = 0f;
 
         // 2. エッジが持っている「カーブレシピ（mathCurves）」を順番に計算していく
         if (edge.mathCurves == null || edge.mathCurves.Count == 0)
@@ -110,53 +115,67 @@ public class TrackRuntimeResolver
 
             if (remainingDist > curve.lengthM)
             {
-                // 電車はこのカーブ区間を「通り過ぎた（完了した）」ので、全長の姿を計算して足す
-                CalculateLocalAndAdd(curve.lengthM, curve.lengthM, curve.trackCurveType, curve.radiusM, ref currentPos, ref currentRot);
-                remainingDist -= curve.lengthM; // 残りの距離を減らして、次のカーブへ進む
+                CalculateHorizontalAndAltitude(curve.lengthM, curve.lengthM, curve.trackCurveType, curve.radiusM, curve.gradientPermille, ref currentPos, ref currentRot);
+                remainingDist -= curve.lengthM; 
             }
             else
             {
-                // 電車は「現在このカーブ区間の途中（残りの距離）」にいる！
-                CalculateLocalAndAdd(remainingDist, curve.lengthM, curve.trackCurveType, curve.radiusM, ref currentPos, ref currentRot);
-                remainingDist = 0f; // 計算完了
+                CalculateHorizontalAndAltitude(remainingDist, curve.lengthM, curve.trackCurveType, curve.radiusM, curve.gradientPermille, ref currentPos, ref currentRot);
+                currentPermille = curve.gradientPermille;
+                remainingDist = 0f; 
                 break; 
             }
         }
 
-        // もしカーブの合計距離よりも長く進んでしまった場合は、強制的に最後の向きのまま真っ直ぐ進ませる
         if (remainingDist > 0.001f)
         {
-            CalculateLocalAndAdd(remainingDist, remainingDist, TrackCurveType.Straight, 0f, ref currentPos, ref currentRot);
+            CalculateHorizontalAndAltitude(remainingDist, remainingDist, TrackCurveType.Straight, 0f, 0f, ref currentPos, ref currentRot);
+            currentPermille = 0f;
         }
 
         // 3. 最終的な計算結果をセットする
         position = currentPos;
-        tangent = currentRot * Vector3.forward; // 向いている角度の正面方向を「接線(タンジェント)」として返す
+        
+        // 接線（タンジェント）に対して、「現在乗っている勾配」のぶんだけピッチを適用する
+        float pitchDegree = -Mathf.Atan(currentPermille / 1000f) * Mathf.Rad2Deg;
+        tangent = currentRot * Quaternion.Euler(pitchDegree, 0f, 0f) * Vector3.forward;
+
         return true;
     }
 
     // --- 計算を合体させる魔法の補助関数 ---
-    private void CalculateLocalAndAdd(float l, float totalL, TrackCurveType type, float R, ref Vector3 currentPos, ref Quaternion currentRot)
+    private void CalculateHorizontalAndAltitude(float l, float totalL, TrackCurveType type, float R, float permille, ref Vector3 currentPos, ref Quaternion currentRot)
     {
+        float pitchRad = Mathf.Atan(permille / 1000f);
+        
+        // 斜辺(l) から、高さ(Y)と平面上の進み(horizontalL)を分解
+        float localY = l * Mathf.Sin(pitchRad);
+        float horizontalL = l * Mathf.Cos(pitchRad);
+        float horizontalTotalL = totalL * Mathf.Cos(pitchRad);
+
         float localX, localZ, angleDegree;
 
+        // カーブ計算には分解した水平距離(horizontalL)を使う
         if (type == TrackCurveType.Straight) {
-            CalculateStraight(l, out localX, out localZ, out angleDegree);
+            CalculateStraight(horizontalL, out localX, out localZ, out angleDegree);
         } else if (type == TrackCurveType.Curve) {
-            CalculateCircularCurve(l, R, out localX, out localZ, out angleDegree);
+            CalculateCircularCurve(horizontalL, R, out localX, out localZ, out angleDegree);
         } else if (type == TrackCurveType.TransitionIn) {
-            CalculateClothoidIn(l, totalL, R, out localX, out localZ, out angleDegree);
+            CalculateClothoidIn(horizontalL, horizontalTotalL, R, out localX, out localZ, out angleDegree);
         } else if (type == TrackCurveType.TransitionOut) {
-            CalculateClothoidOut(l, totalL, R, out localX, out localZ, out angleDegree);
+            CalculateClothoidOut(horizontalL, horizontalTotalL, R, out localX, out localZ, out angleDegree);
         } else {
-            CalculateStraight(l, out localX, out localZ, out angleDegree);
+            CalculateStraight(horizontalL, out localX, out localZ, out angleDegree);
         }
 
-        // 計算して出たローカルの移動量を、今の「基準の向き」に合わせて足し算する！
-        Vector3 offset = new Vector3(localX, 0f, localZ);
-        currentPos += currentRot * offset;
+        // 水平面での移動ベクトルを作り、現在の向いている方向(currentRot)に添わせて足す
+        Vector3 horizontalOffset = new Vector3(localX, 0f, localZ);
+        currentPos += currentRot * horizontalOffset;
+        
+        // 高さは単純にワールドのY座標に足す！（ピッチが累積して破綻するのを防ぐため）
+        currentPos.y += localY;
 
-        // 角度も、今の「基準の向き」に足して回転させる
+        // Y軸の回転（ヨー角＝左右の曲がり）だけを累積させる
         currentRot *= Quaternion.Euler(0f, angleDegree, 0f);
     }
 }

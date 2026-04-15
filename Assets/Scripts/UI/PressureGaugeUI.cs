@@ -52,14 +52,6 @@ public class PressureGaugeUI : MonoBehaviour
         }
     }
 
-    private void Awake()
-    {
-        if (train == null)
-        {
-            train = FindFirstObjectByType<TrainController>();
-        }
-    }
-
     private void OnEnable()
     {
         displayedPressureKPa = 0f;

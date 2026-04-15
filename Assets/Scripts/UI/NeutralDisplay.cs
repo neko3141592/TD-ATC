@@ -8,7 +8,6 @@ public class NeutralDisplay : MonoBehaviour
     [SerializeField] private Sprite neutralOn;
     [SerializeField] private Sprite neutralOff;
     [SerializeField] private TrainController train;
-    [SerializeField] private bool autoFindTrain = true;
 
     [Header("Read Delay")]
     [SerializeField] private bool enableReadDelay = true;
@@ -65,11 +64,6 @@ public class NeutralDisplay : MonoBehaviour
 
     private bool GetRawNeutralState()
     {
-        if (autoFindTrain && train == null)
-        {
-            train = FindFirstObjectByType<TrainController>();
-        }
-
         if (train == null)
         {
             return false;

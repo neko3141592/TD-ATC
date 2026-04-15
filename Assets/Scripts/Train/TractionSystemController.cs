@@ -8,6 +8,7 @@ public class TractionSystemController : MonoBehaviour
 
     private readonly List<CarTractionState> carTractionStates = new List<CarTractionState>();
     public IReadOnlyList<CarTractionState> CarTractionStates => carTractionStates;
+    public ConsistDefinition ConsistDefinition => consistDefinition;
 
     public float CurrentTotalTractionForceN { get; private set; } = 0f;
     public float CurrentConsistMassKg { get; private set; } = 0f;
@@ -42,8 +43,8 @@ public class TractionSystemController : MonoBehaviour
 
         float safeMassKg = CurrentConsistMassKg > 0f ? CurrentConsistMassKg : Mathf.Max(1f, trainSpec.massKg);
         float safeExternalForceN = Mathf.Max(0f, externalForceN);
-        bool hasConsist = consistDefinition != null && consistDefinition.cars != null && consistDefinition.cars.Count > 0;
-        int totalMotorCount = hasConsist ? GetTotalMotorCount() : -1;
+        bool hasConsist = consistDefinition != null && consistDefinition.HasCars;
+        int totalMotorCount = hasConsist ? consistDefinition.GetTotalMotorCount() : -1;
 
         // 編成定義があり、M車が1両もないなら力行なし
         if (hasConsist && totalMotorCount <= 0)
@@ -74,11 +75,11 @@ public class TractionSystemController : MonoBehaviour
 
         // 「単純分割」: M車のmotorCount比で総力行力を配る（T車は0）
         float distributedTractionForceN = 0f;
-        int count = Mathf.Min(carTractionStates.Count, consistDefinition.cars.Count);
+        int count = Mathf.Min(carTractionStates.Count, consistDefinition.CarCount);
         for (int i = 0; i < count; i++)
         {
             CarTractionState state = carTractionStates[i];
-            CarSpec carSpec = consistDefinition.cars[i];
+            CarSpec carSpec = GetCarSpec(i);
 
             if (state == null)
             {
@@ -108,7 +109,7 @@ public class TractionSystemController : MonoBehaviour
     private void InitializeCarTractionStates()
     {
         carTractionStates.Clear();
-        int target = consistDefinition?.cars?.Count ?? 0;
+        int target = consistDefinition != null ? consistDefinition.CarCount : 0;
         for (int i = 0; i < target; i++)
         {
             carTractionStates.Add(new CarTractionState());
@@ -119,7 +120,7 @@ public class TractionSystemController : MonoBehaviour
 
     private void EnsureCarTractionStateCount()
     {
-        int target = consistDefinition?.cars?.Count ?? 0;
+        int target = consistDefinition != null ? consistDefinition.CarCount : 0;
 
         while (carTractionStates.Count < target)
         {
@@ -137,15 +138,15 @@ public class TractionSystemController : MonoBehaviour
 
     private void ResetNullCarStates()
     {
-        if (consistDefinition == null || consistDefinition.cars == null)
+        if (consistDefinition == null || !consistDefinition.HasCars)
         {
             return;
         }
 
-        int count = Mathf.Min(carTractionStates.Count, consistDefinition.cars.Count);
+        int count = Mathf.Min(carTractionStates.Count, consistDefinition.CarCount);
         for (int i = 0; i < count; i++)
         {
-            if (consistDefinition.cars[i] == null)
+            if (GetCarSpec(i) == null)
             {
                 carTractionStates[i].Reset();
             }
@@ -168,50 +169,17 @@ public class TractionSystemController : MonoBehaviour
 
     private float GetTotalConsistMassKg()
     {
-        if (consistDefinition == null || consistDefinition.cars == null || consistDefinition.cars.Count == 0)
+        float fallbackMassKg = trainSpec != null ? trainSpec.massKg : 1f;
+        if (consistDefinition == null)
         {
-            return Mathf.Max(1f, trainSpec != null ? trainSpec.massKg : 1f);
+            return Mathf.Max(1f, fallbackMassKg);
         }
 
-        float totalMassKg = 0f;
-        for (int i = 0; i < consistDefinition.cars.Count; i++)
-        {
-            CarSpec carSpec = consistDefinition.cars[i];
-            if (carSpec == null)
-            {
-                continue;
-            }
-
-            totalMassKg += Mathf.Max(1f, carSpec.massKg);
-        }
-
-        if (totalMassKg <= 0f)
-        {
-            totalMassKg = Mathf.Max(1f, trainSpec != null ? trainSpec.massKg : 1f);
-        }
-
-        return totalMassKg;
+        return consistDefinition.GetTotalMassKgOrFallback(fallbackMassKg);
     }
 
-    private int GetTotalMotorCount()
+    private CarSpec GetCarSpec(int index)
     {
-        if (consistDefinition == null || consistDefinition.cars == null)
-        {
-            return 0;
-        }
-
-        int totalMotorCount = 0;
-        for (int i = 0; i < consistDefinition.cars.Count; i++)
-        {
-            CarSpec carSpec = consistDefinition.cars[i];
-            if (carSpec == null || carSpec.carType != CarType.Motor)
-            {
-                continue;
-            }
-
-            totalMotorCount += Mathf.Max(0, carSpec.motorCount);
-        }
-
-        return totalMotorCount;
+        return consistDefinition != null ? consistDefinition.GetCar(index) : null;
     }
 }

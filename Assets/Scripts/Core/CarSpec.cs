@@ -1,16 +1,39 @@
 using UnityEngine;
 
+public enum CarRole
+{
+    Intermediate,
+    Cab
+}
+
 public enum CarType
 {
     Motor,
     Trailer
 }
 
+public enum CabEnd
+{
+    None,
+    Front,
+    Rear
+}
+
 [CreateAssetMenu(fileName = "CarSpec", menuName = "Train/Car Spec")]
 public class CarSpec : ScriptableObject
 {
+    [Header("Prefab")]
+    public GameObject carPrefab;
+
+    [Header("Role")]
+    public CarRole carRole = CarRole.Intermediate;
+    public CabEnd cabEnd = CabEnd.None;
+
     [Header("Identity")]
     public CarType carType = CarType.Trailer;
+
+    [Header("Geometry")]
+    [Min(1f)] public float lengthM = 20f;
 
     [Header("Mass")]
     [Min(1f)] public float massKg = 35000f;
@@ -30,6 +53,8 @@ public class CarSpec : ScriptableObject
 
     private void OnValidate()
     {
+
+        lengthM = Mathf.Max(1f, lengthM);
         massKg = Mathf.Max(1f, massKg);
         motorCount = Mathf.Max(0, motorCount);
         maxRegenDecelMS2 = Mathf.Max(0f, maxRegenDecelMS2);
@@ -43,6 +68,14 @@ public class CarSpec : ScriptableObject
         if (carType == CarType.Trailer)
         {
             motorCount = 0;
+        }
+        if (carRole != CarRole.Cab)
+        {
+            cabEnd = CabEnd.None;
+        }
+        else if (cabEnd == CabEnd.None)
+        {
+            cabEnd = CabEnd.Front;
         }
     }
 }

@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class TrackBuilder
 {
-    private TrackGraph targetGraph;
+    private readonly TrackGraph targetGraph;
 
     public Vector3 currentPos { get; private set; }
     public Quaternion currentRot { get; private set; }
 
     private TrackNode lastNode;
-    private List<TrackCurveData> currentCurves = new List<TrackCurveData>();
+    private readonly List<TrackCurveData> currentCurves = new List<TrackCurveData>();
     private float currentEdgeLength = 0f;
 
     public TrackBuilder(TrackGraph graph)
@@ -36,59 +37,26 @@ public class TrackBuilder
 
     public void AddStraight(float lengthM)
     {
-        currentCurves.Add(new TrackCurveData
-        {
-            trackCurveType = TrackCurveType.Straight,
-            lengthM = lengthM,
-            radiusM = 0f
-        });
-        currentEdgeLength += lengthM;
-        currentPos += currentRot * Vector3.forward * lengthM;
+        AppendCurveSegment(TrackCurveType.Straight, lengthM, 0f);
+        AdvanceCurrentPose(TrackCurveType.Straight, lengthM, 0f);
     }
 
     public void AddCurve(float lengthM, float radiusM)
     {
-        currentCurves.Add(new TrackCurveData
-        {
-            trackCurveType = TrackCurveType.Curve,
-            lengthM = lengthM,
-            radiusM = radiusM
-        });
-        currentEdgeLength += lengthM;
-        
-        TrackRuntimeResolver.CalculateCircularCurve(lengthM, radiusM, out float localX, out float localZ, out float angleDegree);
-        currentPos += currentRot * new Vector3(localX, 0f, localZ);
-        currentRot *= Quaternion.Euler(0f, angleDegree, 0f);
+        AppendCurveSegment(TrackCurveType.Curve, lengthM, radiusM);
+        AdvanceCurrentPose(TrackCurveType.Curve, lengthM, radiusM);
     }
 
     public void AddClothoidIn(float lengthM, float radiusM)
     {
-        currentCurves.Add(new TrackCurveData
-        {
-            trackCurveType = TrackCurveType.TransitionIn,
-            lengthM = lengthM,
-            radiusM = radiusM
-        });
-        currentEdgeLength += lengthM;
-        
-        TrackRuntimeResolver.CalculateClothoidIn(lengthM, lengthM, radiusM, out float localX, out float localZ, out float angleDegree);
-        currentPos += currentRot * new Vector3(localX, 0f, localZ);
-        currentRot *= Quaternion.Euler(0f, angleDegree, 0f);
+        AppendCurveSegment(TrackCurveType.TransitionIn, lengthM, radiusM);
+        AdvanceCurrentPose(TrackCurveType.TransitionIn, lengthM, radiusM);
     }
 
     public void AddClothoidOut(float lengthM, float radiusM)
     {
-        currentCurves.Add(new TrackCurveData
-        {
-            trackCurveType = TrackCurveType.TransitionOut,
-            lengthM = lengthM,
-            radiusM = radiusM
-        });
-        currentEdgeLength += lengthM;
-        
-        TrackRuntimeResolver.CalculateClothoidOut(lengthM, lengthM, radiusM, out float localX, out float localZ, out float angleDegree);
-        currentPos += currentRot * new Vector3(localX, 0f, localZ);
-        currentRot *= Quaternion.Euler(0f, angleDegree, 0f);
+        AppendCurveSegment(TrackCurveType.TransitionOut, lengthM, radiusM);
+        AdvanceCurrentPose(TrackCurveType.TransitionOut, lengthM, radiusM);
     }
 
     public void AddClothoidInOut(float lengthM, float radiusM)
@@ -99,10 +67,8 @@ public class TrackBuilder
 
     public TrackNode PutNode(string optionalNodeId = null, float speedLimitKmH = -1f)
     {
-        // 1. 今のペン先に「新しいノード」を置く
         TrackNode newNode = CreateNode(currentPos, currentRot, optionalNodeId);
 
-        // 以下、ConnectToNodeと共通の処理
         ConnectToNode(newNode, speedLimitKmH);
 
         return newNode;
@@ -158,5 +124,42 @@ public class TrackBuilder
         };
         targetGraph.nodes.Add(node);
         return node;
+    }
+
+    private void AppendCurveSegment(TrackCurveType type, float lengthM, float radiusM)
+    {
+        currentCurves.Add(new TrackCurveData
+        {
+            trackCurveType = type,
+            lengthM = lengthM,
+            radiusM = radiusM
+        });
+        currentEdgeLength += lengthM;
+    }
+
+    private void AdvanceCurrentPose(TrackCurveType type, float lengthM, float radiusM)
+    {
+        float localX;
+        float localZ;
+        float angleDegree;
+
+        switch (type)
+        {
+            case TrackCurveType.Curve:
+                TrackRuntimeResolver.CalculateCircularCurve(lengthM, radiusM, out localX, out localZ, out angleDegree);
+                break;
+            case TrackCurveType.TransitionIn:
+                TrackRuntimeResolver.CalculateClothoidIn(lengthM, lengthM, radiusM, out localX, out localZ, out angleDegree);
+                break;
+            case TrackCurveType.TransitionOut:
+                TrackRuntimeResolver.CalculateClothoidOut(lengthM, lengthM, radiusM, out localX, out localZ, out angleDegree);
+                break;
+            default:
+                TrackRuntimeResolver.CalculateStraight(lengthM, out localX, out localZ, out angleDegree);
+                break;
+        }
+
+        currentPos += currentRot * new Vector3(localX, 0f, localZ);
+        currentRot *= Quaternion.Euler(0f, angleDegree, 0f);
     }
 }

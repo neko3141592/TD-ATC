@@ -31,16 +31,7 @@ public class ATCController : MonoBehaviour
 
     void Awake()
     {
-        if (trainSpec == null && train != null)
-        {
-            trainSpec = train.Spec;
-        }
-
-        if (notchManager == null && train != null)
-        {
-            notchManager = train.GetComponent<NotchManager>();
-        }
-
+        ResolveRuntimeReferences();
         if (audioSource == null)
         {
             audioSource = GetComponent<AudioSource>();
@@ -55,22 +46,11 @@ public class ATCController : MonoBehaviour
 
     void Update()
     {
-        if (trainSpec == null && train != null)
-        {
-            trainSpec = train.Spec;
-        }
-
-        if (notchManager == null && train != null)
-        {
-            notchManager = train.GetComponent<NotchManager>();
-        }
+        ResolveRuntimeReferences();
 
         if (train == null || train.Graph == null || string.IsNullOrEmpty(train.CurrentEdgeId))
         {
-            currentLimitSpeedMS = 0f;
-            patternAllowSpeedMS = 0f;
-            patternTargetDistanceM = 0f;
-            patternTargetSpeedMS = 0f;
+            ResetPatternState();
             hasPreviousLimit = false;
             isATCBrakeLatched = false;
             SendATCBrake(0);
@@ -219,12 +199,24 @@ public class ATCController : MonoBehaviour
         return Mathf.Max(0f, fallbackPatternDecelerationMS2);
     }
 
-    private float GetEmergencyPatternDecelerationMS2 () {
-        if (trainSpec != null)
+    private void ResolveRuntimeReferences()
+    {
+        if (trainSpec == null && train != null)
         {
-            return Mathf.Max(0f, trainSpec.GetBrakeDeceleration(8));
+            trainSpec = train.Spec;
         }
 
-        return Mathf.Max(0f, fallbackPatternDecelerationMS2);
+        if (notchManager == null && train != null)
+        {
+            notchManager = train.GetComponent<NotchManager>();
+        }
+    }
+
+    private void ResetPatternState()
+    {
+        currentLimitSpeedMS = 0f;
+        patternAllowSpeedMS = 0f;
+        patternTargetDistanceM = 0f;
+        patternTargetSpeedMS = 0f;
     }
 }

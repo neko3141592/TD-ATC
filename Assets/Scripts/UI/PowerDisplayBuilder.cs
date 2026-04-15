@@ -11,7 +11,6 @@ public class PowerDisplayBuilder : MonoBehaviour
 
     [Header("Runtime")]
     [SerializeField] private TrainController train;
-    [SerializeField] private bool autoFindTrain = true;
     [SerializeField] private bool showOnlyCurrentNotchText = true;
 
     [Header("Read Delay")]
@@ -269,11 +268,6 @@ public class PowerDisplayBuilder : MonoBehaviour
 
     private void UpdateRuntimeDisplay()
     {
-        if (autoFindTrain && train == null)
-        {
-            train = FindFirstObjectByType<TrainController>();
-        }
-
         if (train == null)
         {
             return;

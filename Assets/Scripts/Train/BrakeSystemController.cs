@@ -29,13 +29,13 @@ public class BrakeSystemController : MonoBehaviour
         InitializeCarBrakeStates();
     }
 
-    public float currentBCPressureKPa { get; private set; } = 0f;
-    public float currentRegenForceN { get; private set; } = 0f;
-    public float currentAirForceN { get; private set; } = 0f;
-    public float totalBrakeForceN { get; private set; } = 0f;
-    public float currentRegenDecel { get; private set; } = 0f;
-    public float currentAirDecel { get; private set; } = 0f;
-    public float totalBrakeDecel { get; private set; } = 0f;
+    public float CurrentBCPressureKPa { get; private set; } = 0f;
+    public float CurrentRegenForceN { get; private set; } = 0f;
+    public float CurrentAirForceN { get; private set; } = 0f;
+    public float TotalBrakeForceN { get; private set; } = 0f;
+    public float CurrentRegenDecelMS2 { get; private set; } = 0f;
+    public float CurrentAirDecelMS2 { get; private set; } = 0f;
+    public float TotalBrakeDecelMS2 { get; private set; } = 0f;
     public float CurrentConsistMassKg { get; private set; } = 0f;
 
     public void UpdateBrake(int brakeNotch, float speedMS, float deltaTime, bool isEmergency)
@@ -112,11 +112,8 @@ public class BrakeSystemController : MonoBehaviour
         // 3) さらに残差があればM車空気に配る
         // ------------------------------------------------------------
 
-        // 編成車両数（carBrakeStatesとconsistDefinitionは同じ件数に同期済み）
         int carCount = carBrakeStates.Count;
 
-        // ===== 1) M車回生の上限（cap）を車両ごとに作る =====
-        // capは「その車両がこのフレームで理論上出せる最大回生力[N]」
         float[] regenCapsN = new float[carCount];
         for (int i = 0; i < carCount; i++)
         {
@@ -329,67 +326,39 @@ public class BrakeSystemController : MonoBehaviour
         }
 
         float safeMassKg = Mathf.Max(1f, massKg);
-        currentRegenForceN = totalRegenN;
-        currentAirForceN = totalAirN;
-        totalBrakeForceN = currentRegenForceN + currentAirForceN;
-        currentRegenDecel = currentRegenForceN / safeMassKg;
-        currentAirDecel = currentAirForceN / safeMassKg;
-        totalBrakeDecel = totalBrakeForceN / safeMassKg;
-        currentBCPressureKPa = maxBCKPa;
+        CurrentRegenForceN = totalRegenN;
+        CurrentAirForceN = totalAirN;
+        TotalBrakeForceN = CurrentRegenForceN + CurrentAirForceN;
+        CurrentRegenDecelMS2 = CurrentRegenForceN / safeMassKg;
+        CurrentAirDecelMS2 = CurrentAirForceN / safeMassKg;
+        TotalBrakeDecelMS2 = TotalBrakeForceN / safeMassKg;
+        CurrentBCPressureKPa = maxBCKPa;
     }
 
     private float GetTotalConsistMassKg()
     {
-        // 編成未設定時は既存TrainSpec質量をフォールバックとして使う
-        if (consistDefinition == null || consistDefinition.cars == null || consistDefinition.cars.Count == 0)
+        float fallbackMassKg = trainSpec != null ? trainSpec.massKg : 1f;
+        if (consistDefinition == null)
         {
-            return Mathf.Max(1f, trainSpec.massKg);
+            return Mathf.Max(1f, fallbackMassKg);
         }
 
-        float totalMassKg = 0f;
-        for (int i = 0; i < consistDefinition.cars.Count; i++)
-        {
-            CarSpec carSpec = consistDefinition.cars[i];
-            if (carSpec == null)
-            {
-                continue;
-            }
-
-            totalMassKg += Mathf.Max(1f, carSpec.massKg);
-        }
-
-        if (totalMassKg <= 0f)
-        {
-            totalMassKg = Mathf.Max(1f, trainSpec.massKg);
-        }
-
-        return totalMassKg;
+        return consistDefinition.GetTotalMassKgOrFallback(fallbackMassKg);
     }
 
     private CarSpec GetCarSpec(int index)
     {
-        if (consistDefinition == null || consistDefinition.cars == null)
-        {
-            return null;
-        }
-        if (index < 0 || index >= consistDefinition.cars.Count)
-        {
-            return null;
-        }
-
-        return consistDefinition.cars[index];
+        return consistDefinition != null ? consistDefinition.GetCar(index) : null;
     }
 
     private void InitializeCarBrakeStates()
     {
         // 編成長に合わせて、車両ごとの実行時状態を初期生成
         carBrakeStates.Clear();
-        int target = consistDefinition?.cars?.Count ?? 0;
+        int target = consistDefinition != null ? consistDefinition.CarCount : 0;
         for (int i = 0; i < target; i++)
         {
-            CarBrakeState state = new CarBrakeState();
-            regenBrakeUnit.InitializeCarState(state);
-            carBrakeStates.Add(state);
+            carBrakeStates.Add(CreateBrakeState());
         }
 
         ResetNullCarStates();
@@ -398,13 +367,11 @@ public class BrakeSystemController : MonoBehaviour
     private void EnsureCarBrakeStateCount()
     {
         // 編成変更に追従して、状態リストの不足/過剰を調整
-        int target = consistDefinition?.cars?.Count ?? 0;
+        int target = consistDefinition != null ? consistDefinition.CarCount : 0;
 
         while (carBrakeStates.Count < target)
         {
-            CarBrakeState state = new CarBrakeState();
-            regenBrakeUnit.InitializeCarState(state);
-            carBrakeStates.Add(state);
+            carBrakeStates.Add(CreateBrakeState());
         }
 
         while (carBrakeStates.Count > target)
@@ -418,19 +385,26 @@ public class BrakeSystemController : MonoBehaviour
     private void ResetNullCarStates()
     {
         // 編成内にnull車両があっても落ちないように、そのスロットだけ初期化して無効化
-        if (consistDefinition == null || consistDefinition.cars == null)
+        if (consistDefinition == null || !consistDefinition.HasCars)
         {
             return;
         }
 
-        int count = Mathf.Min(carBrakeStates.Count, consistDefinition.cars.Count);
+        int count = Mathf.Min(carBrakeStates.Count, consistDefinition.CarCount);
         for (int i = 0; i < count; i++)
         {
-            if (consistDefinition.cars[i] == null)
+            if (GetCarSpec(i) == null)
             {
                 carBrakeStates[i].Reset();
             }
         }
+    }
+
+    private CarBrakeState CreateBrakeState()
+    {
+        CarBrakeState state = new CarBrakeState();
+        regenBrakeUnit.InitializeCarState(state);
+        return state;
     }
 
     private void ResetOutputs()
@@ -446,13 +420,13 @@ public class BrakeSystemController : MonoBehaviour
             state.Reset();
         }
 
-        currentBCPressureKPa = 0f;
-        currentRegenForceN = 0f;
-        currentAirForceN = 0f;
-        totalBrakeForceN = 0f;
-        currentRegenDecel = 0f;
-        currentAirDecel = 0f;
-        totalBrakeDecel = 0f;
+        CurrentBCPressureKPa = 0f;
+        CurrentRegenForceN = 0f;
+        CurrentAirForceN = 0f;
+        TotalBrakeForceN = 0f;
+        CurrentRegenDecelMS2 = 0f;
+        CurrentAirDecelMS2 = 0f;
+        TotalBrakeDecelMS2 = 0f;
         CurrentConsistMassKg = 0f;
     }
 }

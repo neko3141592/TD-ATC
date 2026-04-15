@@ -41,14 +41,6 @@ public class SpeedometerUI : MonoBehaviour
     private float nextSampleTime = 0f;
     private bool hasSampledSpeed = false;
 
-    private void Awake()
-    {
-        if (atcController == null)
-        {
-            atcController = FindFirstObjectByType<ATCController>();
-        }
-    }
-
     private void OnEnable()
     {
         displayedSpeedKmH = 0f;

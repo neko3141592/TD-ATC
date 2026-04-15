@@ -12,7 +12,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
 
     [Header("Runtime")]
     [SerializeField] private TrainController train;
-    [SerializeField] private bool autoFindTrain = true;
     [SerializeField, Min(0f)] private float displayUpdateLagSeconds = 0f;
     [SerializeField] private BrakeSystemController brakeSystem;
     [SerializeField] private TractionSystemController tractionSystem;
@@ -64,11 +63,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         formationDisplayRoot = transform as RectTransform;
     }
 
-    private void Awake()
-    {
-        ResolveRuntimeReferences();
-    }
-
     private void Update()
     {
         if (!Application.isPlaying)
@@ -76,14 +70,11 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             return;
         }
 
-        ResolveRuntimeReferences();
         UpdateRuntimeVisuals();
     }
 
     private void OnValidate()
     {
-        ResolveRuntimeReferences();
-
         if (!regenerateOnValidate)
         {
             return;
@@ -116,7 +107,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     [ContextMenu("Generate Train Formation Display")]
     public void Generate()
     {
-        ResolveRuntimeReferences();
         if (formationDisplayRoot == null)
         {
             formationDisplayRoot = transform as RectTransform;
@@ -345,13 +335,11 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
 
     public CarSpec GetCarSpecAt(int carIndex)
     {
-        ResolveRuntimeReferences();
         return consistDefinition != null ? consistDefinition.GetCar(carIndex) : null;
     }
 
     public bool TryGetCarTypeAt(int carIndex, out CarType carType)
     {
-        ResolveRuntimeReferences();
         if (consistDefinition == null)
         {
             carType = CarType.Trailer;
@@ -369,7 +357,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     public bool TryGetCarTractionForceN(int carIndex, out float tractionForceN)
     {
         tractionForceN = 0f;
-        ResolveRuntimeReferences();
 
         if (train == null)
         {
@@ -395,7 +382,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     public bool TryGetCarRegenForceN(int carIndex, out float regenForceN)
     {
         regenForceN = 0f;
-        ResolveRuntimeReferences();
 
         if (train == null)
         {
@@ -416,38 +402,5 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
 
         regenForceN = state.regenForceN;
         return true;
-    }
-
-    private void ResolveRuntimeReferences()
-    {
-        if (autoFindTrain && train == null)
-        {
-            train = FindFirstObjectByType<TrainController>();
-        }
-
-        if (train == null)
-        {
-            brakeSystem = null;
-            tractionSystem = null;
-            consistDefinition = null;
-            return;
-        }
-
-        if (train != null)
-        {
-            BrakeSystemController foundBrakeSystem = train.GetComponent<BrakeSystemController>();
-            brakeSystem = foundBrakeSystem;
-            TractionSystemController foundTractionSystem = train.GetComponent<TractionSystemController>();
-            tractionSystem = foundTractionSystem;
-        }
-
-        if (brakeSystem != null)
-        {
-            consistDefinition = brakeSystem.ConsistDefinition;
-        }
-        else
-        {
-            consistDefinition = null;
-        }
     }
 }
