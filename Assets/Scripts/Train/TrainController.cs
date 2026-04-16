@@ -94,21 +94,18 @@ public class TrainController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Z))
         {
-            if (brakeNotch == 0 && powerNotch < trainSpec.maxPowerNotch) powerNotch++;
+            if (brakeNotch > 0) brakeNotch--;
+            else if (powerNotch < trainSpec.maxPowerNotch) powerNotch++;
         }
-        if (Input.GetKeyDown(KeyCode.X))
+        if (Input.GetKeyDown(KeyCode.A))
         {
-            if (powerNotch > 0) powerNotch--;
+            while (powerNotch > 0) powerNotch--;
         }
 
-        if (Input.GetKeyDown(KeyCode.Comma))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
-            if (powerNotch > 0) powerNotch = 0; 
-            if (brakeNotch < emergencyBrakeNotch) brakeNotch++;
-        }
-        if (Input.GetKeyDown(KeyCode.Period))
-        {
-            if (brakeNotch > 0) brakeNotch--;
+            if (powerNotch > 0) powerNotch--; 
+            else if (brakeNotch < emergencyBrakeNotch) brakeNotch++;
         }
 
         notchManager.SetManualNotches(powerNotch, brakeNotch);
