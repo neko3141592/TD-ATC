@@ -165,10 +165,25 @@ MonoBehaviour:
       radiusM: 0
   turnoutStates: []
   stations:
+  - stationId: ST_Start
+    stationName: "\u59CB\u767A\u99C5"
+    edgeId: E001
+    distanceFromEdgeStart: 50
+    stopMarginM: 6
+  - stationId: ST_Mid
+    stationName: "\u4E2D\u9593\u99C5"
+    edgeId: E002
+    distanceFromEdgeStart: 350
+    stopMarginM: 5
+  - stationId: ST_Pass
+    stationName: "\u901A\u904E\u99C5"
+    edgeId: E004
+    distanceFromEdgeStart: 300
+    stopMarginM: 5
   - stationId: ST_End
     stationName: "\u7D42\u70B9\u99C5"
-    edgeId: E006
-    distanceFromEdgeStart: 50
+    edgeId: E005
+    distanceFromEdgeStart: 700
     stopMarginM: 5
   nodeMergeDistanceM: 0.05
   generateReverseEdge: 0

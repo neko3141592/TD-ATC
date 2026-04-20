@@ -13,10 +13,10 @@ public enum TrackNodeType
 [Serializable]
 public class TrackNode
 {
-    public string nodeId; // ノードのID
-    public TrackNodeType trackNodeType = TrackNodeType.Normal; // ノードの種類
-    public string junctionId; // 分岐器のID
+    public string nodeId; // Unique node identifier.
+    public TrackNodeType trackNodeType = TrackNodeType.Normal; // Node role in the route graph.
+    public string junctionId; // Turnout/junction identifier when this node behaves as a branch.
     public Vector3 worldPosition;
-    public Quaternion worldRotation = Quaternion.identity; // 【追加】ノードの向いている角度
-    public List<string> outgoingEdgeIds = new(); // 進むことが可能な線路
+    public Quaternion worldRotation = Quaternion.identity; // World-facing direction used as the local forward basis.
+    public List<string> outgoingEdgeIds = new(); // Edges that can be taken from this node.
 }

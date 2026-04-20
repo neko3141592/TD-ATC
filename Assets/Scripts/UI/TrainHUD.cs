@@ -6,6 +6,7 @@ public class TrainHUD : MonoBehaviour
 {
     [SerializeField] private TrainController train;
     [SerializeField] private ATCController atc;
+    [SerializeField] private StationStopController stationStop;
     [SerializeField] private TMP_Text hudText;
 
     private string FormatBrakeNotchLabel(int notch)
@@ -35,6 +36,37 @@ public class TrainHUD : MonoBehaviour
         float regenBrakeForceKN = train.CurrentRegenBrakeForceN / 1000f;
         float airBrakeForceKN = train.CurrentAirBrakeForceN / 1000f;
         var carBrakeStates = train.CurrentCarBrakeStates;
+
+        // Keep the station block separate so manual station checks are easy to scan while driving.
+        // This makes it easy to watch target updates, pass-through skips, and overshoot behaviour in one place.
+        StringBuilder stationSection = new StringBuilder();
+        stationSection.Append("[Station]\n");
+        if (stationStop == null)
+        {
+            stationSection.Append("Controller: --\n");
+        }
+        else
+        {
+            stationSection.Append($"Next: {stationStop.CurrentTargetStationName}\n");
+            stationSection.Append(
+                stationStop.HasTargetStation
+                    ? $"Distance: {stationStop.DistanceToStopM:+0.0;-0.0;0.0} m\n"
+                    : "Distance: --\n"
+            );
+            stationSection.Append(
+                stationStop.HasTargetStation
+                    ? $"Error: {stationStop.StopErrorM:+0.0;-0.0;0.0} m\n"
+                    : "Error: --\n"
+            );
+            stationSection.Append($"Judge: {stationStop.JudgeStateLabel}\n");
+            stationSection.Append($"Hold: {stationStop.StopHoldTimer:0.0} / {stationStop.StopHoldSeconds:0.0} s\n");
+            stationSection.Append($"Index: {stationStop.CurrentStopIndex} -> {stationStop.ResolvedStopIndex}\n");
+            stationSection.Append(
+                stationStop.LastCompletedStationName != "--"
+                    ? $"Last: {stationStop.LastCompletedStationName} ({stationStop.LastCompletedStopErrorM:+0.0;-0.0;0.0} m)\n"
+                    : "Last: --\n"
+            );
+        }
 
         StringBuilder carBrakeSection = new StringBuilder();
         carBrakeSection.Append("[Brake Cars]\n");
@@ -75,6 +107,8 @@ public class TrainHUD : MonoBehaviour
             "\n" +
             "[Safety]\n" +
             $"ATC Limit: {atcLimitText}\n" +
+            "\n" +
+            stationSection.ToString() +
             "\n" +
             "[Brake]\n" +
             $"Total: {totalBrakeForceKN:0.0} kN | {train.CurrentBrakeDecelMS2:0.00} m/s^2\n" +

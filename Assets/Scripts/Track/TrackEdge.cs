@@ -6,11 +6,11 @@ using UnityEngine;
 [Serializable]
 public class TrackEdge
 {
-    public string edgeId; // エッジのID
-    public string fromNodeId; // 始点
-    public string toNodeId; // 終点
+    public string edgeId; // Unique edge identifier.
+    public string fromNodeId; // Start node ID.
+    public string toNodeId; // End node ID.
 
-    // エッジ情報
+    // Core movement data for this edge.
     [Min(0f)] public float lengthM;
     [Min(0f)] public float speedLimitMS = 33.33f;
 

@@ -12140,6 +12140,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TrainHUD
   train: {fileID: 1870010703}
   atc: {fileID: 1387673559}
+  stationStop: {fileID: 1870010708}
   hudText: {fileID: 1446815716}
 --- !u!4 &972664077
 Transform:
@@ -24110,6 +24111,8 @@ GameObject:
   - component: {fileID: 1870010704}
   - component: {fileID: 1870010706}
   - component: {fileID: 1870010703}
+  - component: {fileID: 1870010707}
+  - component: {fileID: 1870010708}
   m_Layer: 0
   m_Name: TrainGroup
   m_TagString: Untagged
@@ -24200,6 +24203,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TractionSystemController
   trainSpec: {fileID: 11400000, guid: 3b93c3b4e22154f86b0199cbba216365, type: 2}
   consistDefinition: {fileID: 11400000, guid: c4d49eb9bbc3e4c54acc77ec86289df9, type: 2}
+--- !u!114 &1870010707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1870010700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d654f10839e0e4495b7c56130efae6a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NextStationResolver
+--- !u!114 &1870010708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1870010700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c43522d0ae48e48c6a9a4e407857f1c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StationStopController
+  trackGraph: {fileID: 11400000, guid: 92c8f99f40382414cbc3e9ab9a21a81d, type: 2}
+  service: {fileID: 11400000, guid: 4f4c40ebd570448b1b9d8b938ad3d5c0, type: 2}
+  train: {fileID: 1870010703}
+  nextStationResolver: {fileID: 1870010707}
+  stationLookaheadDistanceM: 3000
+  stopSpeedThresholdMS: 0.2
+  stopHoldSeconds: 1
 --- !u!1 &1880692393
 GameObject:
   m_ObjectHideFlags: 0

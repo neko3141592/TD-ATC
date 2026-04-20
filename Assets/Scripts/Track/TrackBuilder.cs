@@ -101,14 +101,14 @@ public class TrackBuilder
 
     public void AddStation(string stationId, string stationName, float offsetMFromNode = 10f)
     {
-        // 直近のエッジ（現在ペン先が置かれているエッジ）の途中に駅を設置
+        // Place a station on the most recently created edge, measured from that edge's start.
         if (targetGraph.edges.Count == 0) return;
         
         var station = new StationData
         {
             stationId = stationId,
             stationName = stationName,
-            edgeId = $"E{targetGraph.edges.Count:000}", // 最後に作成されたエッジ
+            edgeId = $"E{targetGraph.edges.Count:000}", // This is the last edge created by the builder.
             distanceFromEdgeStart = offsetMFromNode
         };
         targetGraph.stations.Add(station);

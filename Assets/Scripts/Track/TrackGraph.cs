@@ -201,7 +201,7 @@ public class TrackGraph : ScriptableObject
             return null;
         }
 
-        // incomingが不明なら先頭
+        // If the incoming edge is unknown, use the first configured outgoing edge.
         if (string.IsNullOrEmpty(incomingEdgeId))
         {
             return node.outgoingEdgeIds[0];
@@ -215,7 +215,7 @@ public class TrackGraph : ScriptableObject
 
         string previousNodeId = incomingEdge.fromNodeId;
 
-        // 可能なら直前ノードへ折り返すエッジを避ける
+        // Prefer an edge that does not immediately send the train back to the previous node.
         for (int i = 0; i < node.outgoingEdgeIds.Count; i++)
         {
             string candidateId = node.outgoingEdgeIds[i];
@@ -231,7 +231,7 @@ public class TrackGraph : ScriptableObject
             }
         }
 
-        // 全候補が折り返しなら先頭を返す
+        // If every candidate loops back, fall back to the first option.
         return node.outgoingEdgeIds[0];
     }
 
@@ -260,7 +260,7 @@ public class TrackGraph : ScriptableObject
 
     public void SyncTurnoutStates()
     {
-        // 既存stateは一旦マップ化
+        // Snapshot existing turnout state objects so valid selections can be preserved across regeneration.
         var stateByJunction = new Dictionary<string, TurnoutState>();
         for (int i = 0; i < turnoutStates.Count; i++)
         {
@@ -276,7 +276,7 @@ public class TrackGraph : ScriptableObject
             }
         }
 
-        // nodesから再生成
+        // Rebuild the turnout list from the current node set.
         var newStates = new List<TurnoutState>();
         for (int i = 0; i < nodes.Count; i++)
         {
@@ -292,7 +292,7 @@ public class TrackGraph : ScriptableObject
                 state = new TurnoutState { junctionId = node.junctionId };
             }
 
-            // 選択edgeが不正ならデフォルトを入れる
+            // If the stored selection is no longer valid, replace it with the default route.
             if (string.IsNullOrEmpty(state.selectedOutgoingEdgeId) ||
                 node.outgoingEdgeIds == null ||
                 !node.outgoingEdgeIds.Contains(state.selectedOutgoingEdgeId))

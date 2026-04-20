@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class NextStationResolver : MonoBehaviour
 {
+    // Reused buffers avoid per-frame allocations while tracing the route ahead and behind the train.
     private readonly List<TrackTraceSegment> aheadTraceSegments = new();
     private readonly List<TrackTraceSegment> behindTraceSegments = new();
 
@@ -22,6 +23,7 @@ public class NextStationResolver : MonoBehaviour
         station = null;
         distanceToStopM = 0f;
 
+        // Every dependency must be valid because this resolver is used directly from runtime HUD/stop logic.
         if (graph == null ||
             graph.stations == null ||
             service == null ||
@@ -32,6 +34,7 @@ public class NextStationResolver : MonoBehaviour
             return false;
         }
 
+        // Start searching from the current service index so already-completed stops are skipped.
         int startIndex = Mathf.Max(0, currentStopIndex);
         if (startIndex >= service.stops.Count)
         {
@@ -58,6 +61,7 @@ public class NextStationResolver : MonoBehaviour
             return false;
         }
 
+        // Walk the service definition in timetable order and return the first stop that exists on the traced route.
         for (int i = startIndex; i < service.stops.Count; i++)
         {
             ServiceStop serviceStop = service.stops[i];
@@ -89,6 +93,7 @@ public class NextStationResolver : MonoBehaviour
             {
                 resolvedStopIndex = i;
                 station = candidateStation;
+                // A negative distance means the train has already passed the stop point on the traced route.
                 distanceToStopM = -distanceToStopM;
                 return true;
             }
@@ -108,6 +113,7 @@ public class NextStationResolver : MonoBehaviour
         out float distanceToStopM
     )
     {
+        // Find the traced segment that contains the station and convert that local position into distance from the train.
         for (int i = 0; i < traceSegments.Count; i++)
         {
             TrackTraceSegment segment = traceSegments[i];
@@ -137,6 +143,7 @@ public class NextStationResolver : MonoBehaviour
 
     private static StationData FindStation(TrackGraph graph, string stationId)
     {
+        // TrackGraph.stations is small today, so a linear lookup is fine and keeps the data model simple.
         for (int i = 0; i < graph.stations.Count; i++)
         {
             StationData station = graph.stations[i];

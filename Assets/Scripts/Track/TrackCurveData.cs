@@ -5,8 +5,8 @@ public enum TrackCurveType
 {
     Straight,
     Curve,
-    TransitionIn,  // 直線 → 円曲線
-    TransitionOut  // 円曲線 → 直線
+    TransitionIn,  // Straight to circular curve.
+    TransitionOut  // Circular curve back to straight.
 }
 
 [Serializable]
@@ -16,7 +16,7 @@ public class TrackCurveData
     
     [Min(0f)] 
     public float gradientPermille = 0f;
-    public float lengthM = 100f; // カーブ区間の長さ(m)
+    public float lengthM = 100f; // Segment length in meters.
     
-    public float radiusM = 500f; // 半径(m)。右カーブはプラス、左カーブはマイナス
+    public float radiusM = 500f; // Radius in meters. Positive turns right, negative turns left.
 }

@@ -7,8 +7,8 @@ public class StationData
     public string stationId;
     public string stationName;
     public string edgeId;
-    public float distanceFromEdgeStart; // エッジの始点からの位置 (m)
-    public float stopMarginM = 5f;      // 停止位置許容範囲 (m)
+    public float distanceFromEdgeStart; // Distance from the edge start, in meters.
+    public float stopMarginM = 5f;      // Allowed stopping error around the target point, in meters.
     
-    // 3Dモデルなどの参照をここに追加可能
+    // Additional references such as station models or markers can be attached here later.
 }
