@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public static class ATCPatternCalculator
+internal static class ATCPatternCalculator
 {
     // v_allow = sqrt(v_target^2 + 2 * a * d)
     // v_target: 目標速度[m/s], a: 想定減速度[m/s^2], d: 目標地点までの残距離[m]

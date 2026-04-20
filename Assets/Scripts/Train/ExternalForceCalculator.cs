@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public static class ExternalForceCalculator
+internal static class ExternalForceCalculator
 {
-    public static float GetRollingResistanceForceN(TrainSpec spec, float speedMS)
+    private static float GetRollingResistanceForceN(TrainSpec spec, float speedMS)
     {
         if (spec == null)
         {
@@ -13,7 +13,7 @@ public static class ExternalForceCalculator
         return Mathf.Max(0f, spec.resistanceA + (spec.resistanceB * v));
     }
 
-    public static float GetAerodynamicDragForceN(TrainSpec spec, float speedMS)
+    private static float GetAerodynamicDragForceN(TrainSpec spec, float speedMS)
     {
         if (spec == null)
         {

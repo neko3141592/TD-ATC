@@ -79,15 +79,18 @@ public class TrackVisualizer : MonoBehaviour
             GenerateSleepers(edge, resolver);
         }
     }
-    public void GenerateSleepers(TrackEdge edge, TrackRuntimeResolver resolver) {
+    private void GenerateSleepers(TrackEdge edge, TrackRuntimeResolver resolver)
+    {
         GameObject parent = new GameObject("Sleepers_" + edge.edgeId);
         parent.transform.SetParent(this.transform);
-        for(float dist = 0f; dist <= edge.lengthM; dist++) {
+        for (float dist = 0f; dist <= edge.lengthM; dist++)
+        {
             if (resolver.TryResolvePose(graph, edge.edgeId, dist, out Vector3 pos, out Vector3 tangent))
             {
-                Quaternion rotation =  Quaternion.LookRotation(tangent, Vector3.up);
+                Quaternion rotation = Quaternion.LookRotation(tangent, Vector3.up);
                 pos.y -= 0.22f;
-                if (sleeperPrefab != null) {
+                if (sleeperPrefab != null)
+                {
                     Instantiate(sleeperPrefab, pos, rotation, parent.transform);
                 }
             }

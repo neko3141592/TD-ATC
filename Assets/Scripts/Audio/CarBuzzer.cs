@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(AudioSource))]
-public class CabBuzzer : MonoBehaviour
+public class CarBuzzer : MonoBehaviour
 {
     private AudioSource audioSource;
 

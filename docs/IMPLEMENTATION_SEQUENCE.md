@@ -35,7 +35,7 @@
 
 ### 2.4 ATC
 
-- `ATCProfile` + `SpeedBlock` の距離ベース制限を実装済み
+- `TrackGraph` / `TrackEdge.speedLimitMS` によるグラフベース制限へ移行済み
 - `ATCPatternCalculator` は  
   `v_allow = sqrt(v_target^2 + 2*a*d)` を実装済み
 - `ATCController` は現在制限とパターンの低い方を採用

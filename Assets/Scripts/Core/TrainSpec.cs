@@ -73,7 +73,7 @@ public class TrainSpec : ScriptableObject
         new Keyframe(1f, 1f)
     );
 
-    public float GetPowerNotchRatio(int notch)
+    private float GetPowerNotchRatio(int notch)
     {
         if (notch <= 0)
         {
@@ -202,7 +202,7 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, Mathf.Min(shapedForceN, capForceN));
     }
 
-    public float GetMaxTractionPowerByMotorCountW(int totalMotorCount)
+    private float GetMaxTractionPowerByMotorCountW(int totalMotorCount)
     {
         if (totalMotorCount > 0)
         {
@@ -212,7 +212,7 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, maxTractionPowerW);
     }
 
-    public float GetMaxMotorTorqueByMotorCountNm(int totalMotorCount)
+    private float GetMaxMotorTorqueByMotorCountNm(int totalMotorCount)
     {
         if (totalMotorCount > 0)
         {
@@ -267,37 +267,20 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, coastDeceleration);
     }
 
-    public float GetTractionForceCapN(float speedMS)
-    {
-        return GetTractionForceCapN(speedMS, maxTractionPowerW);
-    }
-
-    public float GetTractionForceCapN(float speedMS, float tractionPowerWOverride)
+    private float GetTractionForceCapN(float speedMS, float tractionPowerWOverride)
     {
         float speedForPowerLimit = Mathf.Max(tractionPowerSpeedFloorMS, speedMS);
         float powerLimitedForce = Mathf.Max(0f, tractionPowerWOverride) / speedForPowerLimit;
         return Mathf.Max(0f, Mathf.Min(maxTractionForceN, powerLimitedForce));
     }
 
-    public float GetTorqueBasedForceN()
-    {
-        return GetTorqueBasedForceN(maxMotorTorqueNm);
-    }
-
-    public float GetTorqueBasedForceN(float motorTorqueNmOverride)
+    private float GetTorqueBasedForceN(float motorTorqueNmOverride)
     {
         float safeWheelRadius = Mathf.Max(0.01f, wheelRadiusM);
         float safeGearRatio = Mathf.Max(0.01f, gearRatio);
         float safeEfficiency = Mathf.Clamp01(drivelineEfficiency);
         float safeMotorTorqueNm = Mathf.Max(0f, motorTorqueNmOverride);
         return Mathf.Max(0f, (safeMotorTorqueNm * safeGearRatio * safeEfficiency) / safeWheelRadius);
-    }
-
-    public float GetRegenCapDeceleration(float speedMS)
-    {
-        float capWithoutCutOut = GetRegenCurveCapDeceleration(speedMS);
-        float cutOutFactor = GetRegenCutOutFactor(speedMS);
-        return Mathf.Max(0f, capWithoutCutOut * cutOutFactor);
     }
 
     public float GetRegenCurveCapDeceleration(float speedMS)

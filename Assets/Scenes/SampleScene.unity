@@ -5031,7 +5031,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d7c7f8ed8683148d5a6e563e25b0b576, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CabBuzzer
+  m_EditorClassIdentifier: Assembly-CSharp::CarBuzzer
 --- !u!82 &425876953
 AudioSource:
   m_ObjectHideFlags: 0

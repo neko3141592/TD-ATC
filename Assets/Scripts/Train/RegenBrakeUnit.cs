@@ -4,7 +4,7 @@ using UnityEngine;
 /// 回生ブレーキ計算ユニット:
 /// 1両分の回生の立ち上がり/立ち下がり、失効、揺らぎを担当する。
 /// </summary>
-public class RegenBrakeUnit
+internal class RegenBrakeUnit
 {
     private const float RegenHardCutOutSpeedMS = 0.1f; // 停止域では回生を強制失効させる閾値[m/s]
 

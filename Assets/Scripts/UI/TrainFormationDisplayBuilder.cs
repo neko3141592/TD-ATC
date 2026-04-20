@@ -37,11 +37,7 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     [SerializeField] private Color carNumberColor = Color.white;
     [SerializeField] private TMP_FontAsset carNumberFontAsset;
 
-    public TrainController Train => train;
-    public BrakeSystemController BrakeSystem => brakeSystem;
-    public TractionSystemController TractionSystem => tractionSystem;
-    public ConsistDefinition ConsistDefinition => consistDefinition;
-    public int CarCount => consistDefinition != null ? consistDefinition.CarCount : 0;
+    private int CarCount => consistDefinition != null ? consistDefinition.CarCount : 0;
 
     private readonly List<Image> generatedCarImages = new List<Image>();
     private readonly Queue<VisualSnapshot> pendingVisualSnapshots = new Queue<VisualSnapshot>();
@@ -333,12 +329,7 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         }
     }
 
-    public CarSpec GetCarSpecAt(int carIndex)
-    {
-        return consistDefinition != null ? consistDefinition.GetCar(carIndex) : null;
-    }
-
-    public bool TryGetCarTypeAt(int carIndex, out CarType carType)
+    private bool TryGetCarTypeAt(int carIndex, out CarType carType)
     {
         if (consistDefinition == null)
         {
@@ -349,12 +340,12 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         return consistDefinition.TryGetCarType(carIndex, out carType);
     }
 
-    public CarType GetCarTypeAtOrDefault(int carIndex, CarType fallback = CarType.Trailer)
+    private CarType GetCarTypeAtOrDefault(int carIndex, CarType fallback = CarType.Trailer)
     {
         return TryGetCarTypeAt(carIndex, out CarType carType) ? carType : fallback;
     }
 
-    public bool TryGetCarTractionForceN(int carIndex, out float tractionForceN)
+    private bool TryGetCarTractionForceN(int carIndex, out float tractionForceN)
     {
         tractionForceN = 0f;
 
@@ -379,7 +370,7 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         return true;
     }
 
-    public bool TryGetCarRegenForceN(int carIndex, out float regenForceN)
+    private bool TryGetCarRegenForceN(int carIndex, out float regenForceN)
     {
         regenForceN = 0f;
 

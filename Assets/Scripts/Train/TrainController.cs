@@ -52,7 +52,6 @@ public class TrainController : MonoBehaviour
     public float CurrentAccelerationMS2 => currentAccelerationMS2;
     public IReadOnlyList<CarBrakeState> CurrentCarBrakeStates => brakeSystem != null ? brakeSystem.CarBrakeStates : null;
     public IReadOnlyList<CarTractionState> CurrentCarTractionStates => tractionSystem != null ? tractionSystem.CarTractionStates : null;
-    public IReadOnlyList<TrackEdge> ActiveEdges => activeEdges;
     public IReadOnlyList<CarTrackState> CarTrackStates => carTrackStates;
     public ConsistDefinition ConsistDefinition => ResolveConsistDefinition();
 
@@ -148,7 +147,9 @@ public class TrainController : MonoBehaviour
 
         ApplyHeadPose(pos, tan);
 
-        EnsureActiveEdgeHistory(GetRequiredHistoryLengthM());
+        float requiredHistoryLengthM = GetRequiredHistoryLengthM();
+        EnsureActiveEdgeHistory(requiredHistoryLengthM);
+        TrimActiveEdgeHistory(requiredHistoryLengthM);
         UpdateCarTrackStates();
     }
 
@@ -186,17 +187,27 @@ public class TrainController : MonoBehaviour
             {
                 // 先が無ければ端で止める
                 distanceOnEdgeM = edgeLengthM;
+                speedMS = 0f;
+                currentAccelerationMS2 = 0f;
                 break;
             }
-            
-            currentEdgeId = nextEdgeId;
-            distanceOnEdgeM = remainDistanceM;
 
             TrackEdge newEdge = trackGraph.FindEdge(nextEdgeId);
-            if (newEdge != null)
+            if (newEdge == null)
             {
-                activeEdges.Insert(0, newEdge);
+                distanceOnEdgeM = edgeLengthM;
+                speedMS = 0f;
+                currentAccelerationMS2 = 0f;
+                Debug.LogWarning(
+                    $"{nameof(TrainController)} on {name}: resolved next edge '{nextEdgeId}' was not found. Stopping at end of edge '{currentEdgeId}'.",
+                    this
+                );
+                break;
             }
+
+            currentEdgeId = nextEdgeId;
+            distanceOnEdgeM = remainDistanceM;
+            SetCurrentActiveEdge(newEdge);
         }
 
         if (guard >= maxTransitionsPerFrame)
@@ -367,7 +378,9 @@ public class TrainController : MonoBehaviour
             distanceOnEdgeM = 0f;
         }
 
-        if (trackGraph == null || string.IsNullOrEmpty(currentEdgeId) || activeEdges.Count > 0)
+        activeEdges.Clear();
+
+        if (trackGraph == null || string.IsNullOrEmpty(currentEdgeId))
         {
             return;
         }
@@ -581,18 +594,66 @@ public class TrainController : MonoBehaviour
             }
 
             TrackEdge previousEdge = trackGraph.FindEdge(previousEdgeId);
-            if (previousEdge == null || ContainsTrackedEdge(previousEdge.edgeId))
+            if (previousEdge == null)
+            {
+                break;
+            }
+
+            float previousEdgeLengthM = Mathf.Max(0f, previousEdge.lengthM);
+            if (previousEdgeLengthM <= Mathf.Epsilon)
             {
                 break;
             }
 
             activeEdges.Add(previousEdge);
-            coveredDistanceM += Mathf.Max(0f, previousEdge.lengthM);
+            coveredDistanceM += previousEdgeLengthM;
         }
 
         if (guard >= maxBackfillEdges)
         {
             Debug.LogWarning($"{nameof(TrainController)} on {name}: active edge history backfill reached guard limit.", this);
+        }
+    }
+
+    private void SetCurrentActiveEdge(TrackEdge currentEdge)
+    {
+        if (currentEdge == null)
+        {
+            return;
+        }
+
+        if (activeEdges.Count > 0 && activeEdges[0] != null && activeEdges[0].edgeId == currentEdge.edgeId)
+        {
+            activeEdges[0] = currentEdge;
+            return;
+        }
+
+        activeEdges.Insert(0, currentEdge);
+    }
+
+    private void TrimActiveEdgeHistory(float requiredOffsetM)
+    {
+        if (activeEdges.Count <= 1)
+        {
+            return;
+        }
+
+        float coveredDistanceM = Mathf.Max(0f, distanceOnEdgeM);
+        int keepCount = 1;
+        while (keepCount < activeEdges.Count && coveredDistanceM < requiredOffsetM)
+        {
+            TrackEdge trackedEdge = activeEdges[keepCount];
+            if (trackedEdge != null)
+            {
+                coveredDistanceM += Mathf.Max(0f, trackedEdge.lengthM);
+            }
+
+            keepCount++;
+        }
+
+        if (keepCount < activeEdges.Count)
+        {
+            activeEdges.RemoveRange(keepCount, activeEdges.Count - keepCount);
         }
     }
 
@@ -609,24 +670,5 @@ public class TrainController : MonoBehaviour
         }
 
         return coveredDistanceM;
-    }
-
-    private bool ContainsTrackedEdge(string edgeId)
-    {
-        if (string.IsNullOrEmpty(edgeId))
-        {
-            return false;
-        }
-
-        for (int i = 0; i < activeEdges.Count; i++)
-        {
-            TrackEdge trackedEdge = activeEdges[i];
-            if (trackedEdge != null && trackedEdge.edgeId == edgeId)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

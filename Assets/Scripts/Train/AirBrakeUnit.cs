@@ -4,7 +4,7 @@ using UnityEngine;
 /// 空気ブレーキ計算ユニット:
 /// 1両分のBC圧遅れと、BC圧から空気ブレーキ力(N)への変換を担当する。
 /// </summary>
-public class AirBrakeUnit
+internal class AirBrakeUnit
 {
     public float GetAirBrakeCapForceN(TrainSpec trainSpec, CarSpec carSpec, float speedMS)
     {

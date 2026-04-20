@@ -9,8 +9,6 @@ public class ConsistDefinition : ScriptableObject
 
     public bool HasCars => cars != null && cars.Count > 0;
     public int CarCount => cars != null ? cars.Count : 0;
-    public IReadOnlyList<CarSpec> Cars => cars;
-
     public bool TryGetCar(int index, out CarSpec car)
     {
         if (!HasCars || index < 0 || index >= cars.Count)
@@ -29,12 +27,6 @@ public class ConsistDefinition : ScriptableObject
         return car;
     }
 
-    public CarType GetCarType(int index)
-    {
-        CarSpec car = GetCar(index);
-        return car != null ? car.carType : CarType.Trailer;
-    }
-
     public bool TryGetCarType(int index, out CarType carType)
     {
         if (!TryGetCar(index, out CarSpec car))
@@ -47,7 +39,7 @@ public class ConsistDefinition : ScriptableObject
         return true;
     }
 
-    public float GetTotalMassKg()
+    private float GetTotalMassKg()
     {
         if (!HasCars)
         {

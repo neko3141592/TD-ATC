@@ -5,7 +5,7 @@ using UnityEngine;
 /// ブレーキ制御装置:
 /// ノッチ指令から目標ブレーキ力(N)と目標BC圧(kPa)を決める。
 /// </summary>
-public class BrakeControlUnit
+internal class BrakeControlUnit
 {
     public float GetTargetTotalBrakeForceN(TrainSpec trainSpec, int brakeNotch, float massKg)
     {

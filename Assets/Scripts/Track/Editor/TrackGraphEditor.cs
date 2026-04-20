@@ -11,6 +11,22 @@ public class TrackGraphEditor : Editor
 
         GUILayout.Space(8);
 
+        if (GUILayout.Button("Validate Graph"))
+        {
+            var graph = (TrackGraph)target;
+            var errors = new List<string>();
+            if (graph.ValidateGraph(errors))
+            {
+                Debug.Log($"TrackGraph validation passed. nodes={graph.nodes.Count}, edges={graph.edges.Count}", graph);
+            }
+            else
+            {
+                Debug.LogError("TrackGraph validation failed:\n- " + string.Join("\n- ", errors), graph);
+            }
+        }
+
+        GUILayout.Space(8);
+
         if (GUILayout.Button("Create Simple Test Track"))
         {
             var graph = (TrackGraph)target;
@@ -301,4 +317,3 @@ public class TrackGraphEditor : Editor
         }
     }
 }
-
