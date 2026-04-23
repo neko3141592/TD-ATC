@@ -2,8 +2,15 @@ using UnityEngine;
 
 internal static class ATCPatternCalculator
 {
-    // v_allow = sqrt(v_target^2 + 2 * a * d)
-    // v_target: 目標速度[m/s], a: 想定減速度[m/s^2], d: 目標地点までの残距離[m]
+    // 許容速度の式: v_allow = sqrt(v_target^2 + 2 * a * d)
+    // 各変数の意味: v_target は目標速度[m/s]、a は想定減速度[m/s^2]、d は目標地点までの残距離[m]
+    /// <summary>
+    /// 役割: CalculateAllowSpeedMS の処理を行います。
+    /// </summary>
+    /// <param name="targetSpeedMS">targetSpeedMS を指定します。</param>
+    /// <param name="decelerationMS2">decelerationMS2 を指定します。</param>
+    /// <param name="remainDistanceM">remainDistanceM を指定します。</param>
+    /// <returns>計算または参照した値を返します。</returns>
     public static float CalculateAllowSpeedMS(float targetSpeedMS, float decelerationMS2, float remainDistanceM)
     {
         float clampedTarget = Mathf.Max(0f, targetSpeedMS);

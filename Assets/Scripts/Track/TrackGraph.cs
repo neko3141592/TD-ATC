@@ -12,12 +12,27 @@ public class TrackGraph : ScriptableObject
     public List<TurnoutState> turnoutStates = new();
     public List<StationData> stations = new();
 
+    /// <summary>
+    /// 役割: FindNode の処理を検索します。
+    /// </summary>
+    /// <param name="id">id を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public TrackNode FindNode(string id) =>
         string.IsNullOrEmpty(id) || nodes == null ? null : nodes.Find(n => n != null && n.nodeId == id);
 
+    /// <summary>
+    /// 役割: FindEdge の処理を検索します。
+    /// </summary>
+    /// <param name="id">id を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public TrackEdge FindEdge(string id) =>
         string.IsNullOrEmpty(id) || edges == null ? null : edges.Find(e => e != null && e.edgeId == id);
 
+    /// <summary>
+    /// 役割: FindTurnoutState の処理を検索します。
+    /// </summary>
+    /// <param name="junctionId">junctionId を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public TurnoutState FindTurnoutState(string junctionId) =>
         string.IsNullOrEmpty(junctionId) || turnoutStates == null
             ? null
@@ -33,6 +48,11 @@ public class TrackGraph : ScriptableObject
     public float NodeMergeDistanceM => nodeMergeDistanceM;
     public bool GenerateReverseEdge => generateReverseEdge;
 
+    /// <summary>
+    /// 役割: ValidateGraph の処理を検証します。
+    /// </summary>
+    /// <param name="errors">errors を指定します。</param>
+    /// <returns>処理が成功した場合は true、それ以外は false を返します。</returns>
     public bool ValidateGraph(List<string> errors)
     {
         if (errors == null)
@@ -115,6 +135,12 @@ public class TrackGraph : ScriptableObject
         return errors.Count == 0;
     }
 
+    /// <summary>
+    /// 役割: ResolveNextEdgeId の処理を解決します。
+    /// </summary>
+    /// <param name="nodeId">nodeId を指定します。</param>
+    /// <param name="incomingEdgeId">incomingEdgeId を指定します。</param>
+    /// <returns>文字列結果を返します。</returns>
     public string ResolveNextEdgeId(string nodeId, string incomingEdgeId = null)
     {
         TrackNode node = FindNode(nodeId);
@@ -134,9 +160,16 @@ public class TrackGraph : ScriptableObject
             }
         }
 
+
         return GetDefaultOutgoingEdgeId(node, incomingEdgeId);
     }
 
+    /// <summary>
+    /// 役割: ResolvePreviousEdgeId の処理を解決します。
+    /// </summary>
+    /// <param name="nodeId">nodeId を指定します。</param>
+    /// <param name="outgoingEdgeId">outgoingEdgeId を指定します。</param>
+    /// <returns>文字列結果を返します。</returns>
     public string ResolvePreviousEdgeId(string nodeId, string outgoingEdgeId = null)
     {
         if (string.IsNullOrEmpty(nodeId) || edges == null || edges.Count == 0)
@@ -177,6 +210,12 @@ public class TrackGraph : ScriptableObject
         return fallbackEdgeId;
     }
 
+    /// <summary>
+    /// 役割: SetTurnoutSelectedEdge の処理を設定します。
+    /// </summary>
+    /// <param name="junctionId">junctionId を指定します。</param>
+    /// <param name="edgeId">edgeId を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public void SetTurnoutSelectedEdge(string junctionId, string edgeId)
     {
         if (string.IsNullOrEmpty(junctionId))
@@ -194,6 +233,12 @@ public class TrackGraph : ScriptableObject
         state.selectedOutgoingEdgeId = edgeId;
     }
 
+    /// <summary>
+    /// 役割: GetDefaultOutgoingEdgeId の処理を取得します。
+    /// </summary>
+    /// <param name="node">node を指定します。</param>
+    /// <param name="incomingEdgeId">incomingEdgeId を指定します。</param>
+    /// <returns>文字列結果を返します。</returns>
     private string GetDefaultOutgoingEdgeId(TrackNode node, string incomingEdgeId)
     {
         if (node == null || node.outgoingEdgeIds == null || node.outgoingEdgeIds.Count == 0)
@@ -201,7 +246,7 @@ public class TrackGraph : ScriptableObject
             return null;
         }
 
-        // If the incoming edge is unknown, use the first configured outgoing edge.
+        // 進入エッジが不明な場合は、設定順で先頭の出線を使います。
         if (string.IsNullOrEmpty(incomingEdgeId))
         {
             return node.outgoingEdgeIds[0];
@@ -215,7 +260,7 @@ public class TrackGraph : ScriptableObject
 
         string previousNodeId = incomingEdge.fromNodeId;
 
-        // Prefer an edge that does not immediately send the train back to the previous node.
+        // 直前のノードへすぐ戻さない出線を優先して選びます。
         for (int i = 0; i < node.outgoingEdgeIds.Count; i++)
         {
             string candidateId = node.outgoingEdgeIds[i];
@@ -231,10 +276,14 @@ public class TrackGraph : ScriptableObject
             }
         }
 
-        // If every candidate loops back, fall back to the first option.
+        // すべての候補が折り返しになる場合は、先頭の候補に戻します。
         return node.outgoingEdgeIds[0];
     }
 
+    /// <summary>
+    /// 役割: UpdateNodeTypesAndJunctionIds の処理を更新します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void UpdateNodeTypesAndJunctionIds()
     {
         for (int i = 0; i < nodes.Count; i++)
@@ -258,9 +307,13 @@ public class TrackGraph : ScriptableObject
         }
     }
 
+    /// <summary>
+    /// 役割: SyncTurnoutStates の処理を同期します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void SyncTurnoutStates()
     {
-        // Snapshot existing turnout state objects so valid selections can be preserved across regeneration.
+        // 再生成後も有効な分岐選択を引き継げるよう、既存の分岐状態を一度退避します。
         var stateByJunction = new Dictionary<string, TurnoutState>();
         for (int i = 0; i < turnoutStates.Count; i++)
         {
@@ -276,7 +329,7 @@ public class TrackGraph : ScriptableObject
             }
         }
 
-        // Rebuild the turnout list from the current node set.
+        // 現在のノード構成から分岐状態リストを組み直します。
         var newStates = new List<TurnoutState>();
         for (int i = 0; i < nodes.Count; i++)
         {
@@ -292,7 +345,7 @@ public class TrackGraph : ScriptableObject
                 state = new TurnoutState { junctionId = node.junctionId };
             }
 
-            // If the stored selection is no longer valid, replace it with the default route.
+            // 保存済みの選択が無効になっていたら、既定の進路に差し替えます。
             if (string.IsNullOrEmpty(state.selectedOutgoingEdgeId) ||
                 node.outgoingEdgeIds == null ||
                 !node.outgoingEdgeIds.Contains(state.selectedOutgoingEdgeId))
@@ -305,6 +358,13 @@ public class TrackGraph : ScriptableObject
 
         turnoutStates = newStates;
     }
+
+    /// <summary>
+    /// 役割: ValidateEdges の処理を検証します。
+    /// </summary>
+    /// <param name="errors">errors を指定します。</param>
+    /// <param name="nodeById">nodeById を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
 
     private void ValidateEdges(
         List<string> errors,
@@ -359,6 +419,12 @@ public class TrackGraph : ScriptableObject
         }
     }
 
+    /// <summary>
+    /// 役割: ValidateEdgeCurveLengths の処理を検証します。
+    /// </summary>
+    /// <param name="errors">errors を指定します。</param>
+    /// <param name="edge">edge を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ValidateEdgeCurveLengths(List<string> errors, TrackEdge edge)
     {
         if (edge.mathCurves == null)
@@ -403,6 +469,12 @@ public class TrackGraph : ScriptableObject
         }
     }
 
+    /// <summary>
+    /// 役割: ValidateNodeOutgoingEdges の処理を検証します。
+    /// </summary>
+    /// <param name="errors">errors を指定します。</param>
+    /// <param name="edgeById">edgeById を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ValidateNodeOutgoingEdges(List<string> errors, Dictionary<string, TrackEdge> edgeById)
     {
         if (nodes == null)
@@ -460,6 +532,12 @@ public class TrackGraph : ScriptableObject
         }
     }
 
+    /// <summary>
+    /// 役割: ValidateTurnouts の処理を検証します。
+    /// </summary>
+    /// <param name="errors">errors を指定します。</param>
+    /// <param name="edgeById">edgeById を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ValidateTurnouts(List<string> errors, Dictionary<string, TrackEdge> edgeById)
     {
         var stateByJunction = new Dictionary<string, TurnoutState>();

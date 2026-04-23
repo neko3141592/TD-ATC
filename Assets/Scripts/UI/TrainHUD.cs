@@ -9,6 +9,11 @@ public class TrainHUD : MonoBehaviour
     [SerializeField] private StationStopController stationStop;
     [SerializeField] private TMP_Text hudText;
 
+    /// <summary>
+    /// 役割: FormatBrakeNotchLabel の処理を表示用に整形します。
+    /// </summary>
+    /// <param name="notch">notch を指定します。</param>
+    /// <returns>文字列結果を返します。</returns>
     private string FormatBrakeNotchLabel(int notch)
     {
         if (train != null && notch >= train.EmergencyBrakeNotch)
@@ -19,6 +24,10 @@ public class TrainHUD : MonoBehaviour
         return $"B{notch}";
     }
 
+    /// <summary>
+    /// 役割: 毎フレームの更新処理を行います。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void Update()
     {
         if (train == null || hudText == null)
@@ -37,8 +46,8 @@ public class TrainHUD : MonoBehaviour
         float airBrakeForceKN = train.CurrentAirBrakeForceN / 1000f;
         var carBrakeStates = train.CurrentCarBrakeStates;
 
-        // Keep the station block separate so manual station checks are easy to scan while driving.
-        // This makes it easy to watch target updates, pass-through skips, and overshoot behaviour in one place.
+        // 駅関連の表示は独立したブロックにまとめ、運転中でも手動確認しやすくしています。
+        // これにより、対象駅の更新、通過駅のスキップ、過走挙動を一か所で追えます。
         StringBuilder stationSection = new StringBuilder();
         stationSection.Append("[Station]\n");
         if (stationStop == null)

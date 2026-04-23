@@ -3,9 +3,23 @@ using UnityEngine;
 
 public class NextStationResolver : MonoBehaviour
 {
-    // Reused buffers avoid per-frame allocations while tracing the route ahead and behind the train.
+    // 毎フレームの経路探索で余計な GC を出さないよう、前方・後方のトレース結果バッファを使い回します。
     private readonly List<TrackTraceSegment> aheadTraceSegments = new();
     private readonly List<TrackTraceSegment> behindTraceSegments = new();
+
+    /// <summary>
+    /// 役割: TryGetNextStopStation の処理を取得を試みます。
+    /// </summary>
+    /// <param name="graph">graph を指定します。</param>
+    /// <param name="service">service を指定します。</param>
+    /// <param name="currentStopIndex">currentStopIndex を指定します。</param>
+    /// <param name="currentEdgeId">currentEdgeId を指定します。</param>
+    /// <param name="distanceOnEdgeM">distanceOnEdgeM を指定します。</param>
+    /// <param name="lookaheadDistanceM">lookaheadDistanceM を指定します。</param>
+    /// <param name="resolvedStopIndex">出力結果を受け取る resolvedStopIndex です。</param>
+    /// <param name="station">出力結果を受け取る station です。</param>
+    /// <param name="distanceToStopM">出力結果を受け取る distanceToStopM です。</param>
+    /// <returns>処理が成功した場合は true、それ以外は false を返します。</returns>
 
     public bool TryGetNextStopStation(
         TrackGraph graph,
@@ -23,7 +37,7 @@ public class NextStationResolver : MonoBehaviour
         station = null;
         distanceToStopM = 0f;
 
-        // Every dependency must be valid because this resolver is used directly from runtime HUD/stop logic.
+        // この resolver は運転中の HUD や停車判定から直接呼ばれるため、依存参照はすべて有効である必要があります。
         if (graph == null ||
             graph.stations == null ||
             service == null ||
@@ -34,7 +48,7 @@ public class NextStationResolver : MonoBehaviour
             return false;
         }
 
-        // Start searching from the current service index so already-completed stops are skipped.
+        // すでに完了した停車を飛ばすため、現在のサービス停車インデックスから探索を始めます。
         int startIndex = Mathf.Max(0, currentStopIndex);
         if (startIndex >= service.stops.Count)
         {
@@ -61,7 +75,7 @@ public class NextStationResolver : MonoBehaviour
             return false;
         }
 
-        // Walk the service definition in timetable order and return the first stop that exists on the traced route.
+        // ダイヤ順に停車定義をたどり、現在トレースした経路上に存在する最初の停車駅を返します。
         for (int i = startIndex; i < service.stops.Count; i++)
         {
             ServiceStop serviceStop = service.stops[i];
@@ -93,7 +107,7 @@ public class NextStationResolver : MonoBehaviour
             {
                 resolvedStopIndex = i;
                 station = candidateStation;
-                // A negative distance means the train has already passed the stop point on the traced route.
+                // 負の距離は、トレースした経路上で列車がすでに停止位置を通り過ぎていることを表します。
                 distanceToStopM = -distanceToStopM;
                 return true;
             }
@@ -106,6 +120,15 @@ public class NextStationResolver : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// 役割: TryGetDistanceInTrace の処理を取得を試みます。
+    /// </summary>
+    /// <param name="traceSegments">traceSegments を指定します。</param>
+    /// <param name="station">station を指定します。</param>
+    /// <param name="isBehindTrace">isBehindTrace を指定します。</param>
+    /// <param name="distanceToStopM">出力結果を受け取る distanceToStopM です。</param>
+    /// <returns>処理が成功した場合は true、それ以外は false を返します。</returns>
+
     private static bool TryGetDistanceInTrace(
         List<TrackTraceSegment> traceSegments,
         StationData station,
@@ -113,7 +136,7 @@ public class NextStationResolver : MonoBehaviour
         out float distanceToStopM
     )
     {
-        // Find the traced segment that contains the station and convert that local position into distance from the train.
+        // 駅を含むトレース区間を見つけ、その区間内の位置を列車からの距離に変換します。
         for (int i = 0; i < traceSegments.Count; i++)
         {
             TrackTraceSegment segment = traceSegments[i];
@@ -141,9 +164,15 @@ public class NextStationResolver : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// 役割: FindStation の処理を検索します。
+    /// </summary>
+    /// <param name="graph">graph を指定します。</param>
+    /// <param name="stationId">stationId を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private static StationData FindStation(TrackGraph graph, string stationId)
     {
-        // TrackGraph.stations is small today, so a linear lookup is fine and keeps the data model simple.
+        // 現状の TrackGraph.stations は件数が少ないため、線形探索で十分でありデータ構造も単純に保てます。
         for (int i = 0; i < graph.stations.Count; i++)
         {
             StationData station = graph.stations[i];

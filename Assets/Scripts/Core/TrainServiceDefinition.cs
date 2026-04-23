@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 
-// ServiceType identifies the operating pattern of a train service.
+// ServiceType は列車サービスの運転種別を表します。
 public enum ServiceType
 {
     Local,
@@ -16,20 +16,20 @@ public enum ServiceType
 [Serializable]
 public class ServiceStop
 {
-    // stationId must match StationData.stationId in the active TrackGraph.
+    // stationId は使用中の TrackGraph にある StationData.stationId と一致している必要があります。
     public string stationId;
-    // stopHere lets one service pass a station while another service stops there.
+    // stopHere により、ある列車は通過し、別の列車は同じ駅に停車する設定を作れます。
     public bool stopHere = true;
-    // dwellSeconds is reserved for future door/dwell gameplay and does not drive runtime logic yet.
+    // dwellSeconds は将来のドア扱いや停車時分用の予約値で、現時点では実行時ロジックには使っていません。
     public float dwellSeconds = 30f;
 }
 
 [CreateAssetMenu(fileName = "TrainServiceDefinition", menuName = "Train/Service Definition")]
 public class TrainServiceDefinition : ScriptableObject
 {
-    // serviceName is a human-readable label for editor setup and future HUD/session screens.
+    // serviceName はエディタ設定や将来の HUD / セッション画面で使う人間向けの表示名です。
     public string serviceName;
     public ServiceType serviceType;
-    // stops is ordered in running direction and acts as the canonical stop/pass sequence.
+    // stops は進行方向順に並び、この列車の停車・通過順序の正本として扱います。
     public List<ServiceStop> stops = new List<ServiceStop>();
 }

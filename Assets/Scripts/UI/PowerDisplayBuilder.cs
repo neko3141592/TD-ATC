@@ -22,7 +22,7 @@ public class PowerDisplayBuilder : MonoBehaviour
 
     [Header("Layout")]
     [SerializeField, Min(0f)] private float spacing = 8f;
-    [SerializeField] private Vector4 padding = new Vector4(8f, 8f, 8f, 8f); // left, top, right, bottom
+    [SerializeField] private Vector4 padding = new Vector4(8f, 8f, 8f, 8f); // 左、上、右、下の余白です。
     [SerializeField, Min(8f)] private float notchItemHeight = 28f;
 
     [Header("Colors")]

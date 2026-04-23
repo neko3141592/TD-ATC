@@ -8,10 +8,11 @@ public class TrainController : MonoBehaviour
     [SerializeField] private BrakeSystemController brakeSystem;
     [SerializeField] private TractionSystemController tractionSystem;
     [SerializeField] private TrackGraph trackGraph;
+    [SerializeField] private string trainId = "PlayerTrain";
     [SerializeField] private string currentEdgeId;
-    [SerializeField] private float speedMS = 0f; // 現在速度 (m/s)
+    [SerializeField] private float speedMS = 0f; 
     [SerializeField, Min(0f)] private float distanceOnEdgeM = 0f;
-    private float distance = 0f;   // スタートからの累計走行距離 (m)
+    private float distance = 0f;
 
     private float currentAccelerationMS2 = 0f;
 
@@ -30,6 +31,7 @@ public class TrainController : MonoBehaviour
     public float SpeedKmH => speedMS * 3.6f;
     public float SpeedMS => speedMS;
     public float DistanceM => distance;
+    public string TrainId => string.IsNullOrWhiteSpace(trainId) ? name : trainId;
     public TrackGraph Graph => trackGraph;
     public string CurrentEdgeId => currentEdgeId;
     public float DistanceOnEdgeM => distanceOnEdgeM;
@@ -55,6 +57,11 @@ public class TrainController : MonoBehaviour
     public IReadOnlyList<CarTrackState> CarTrackStates => carTrackStates;
     public ConsistDefinition ConsistDefinition => ResolveConsistDefinition();
 
+
+    /// <summary>
+    /// 役割: コンポーネント初期化時の準備を行います。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void Awake()
     {
         if (trainSpec == null)
@@ -72,14 +79,22 @@ public class TrainController : MonoBehaviour
         notchManager.ConfigureLimits(trainSpec.maxPowerNotch, EmergencyBrakeNotch);
     }
 
+    /// <summary>
+    /// 役割: 毎フレームの更新処理を行います。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void Update()
     {
-        HandleInput();    // 1. 入力を処理
-        ApplyPhysics();   // 2. 物理計算（速度と距離）
+        HandleInput();    
+        ApplyPhysics();  
         MoveTrain(); 
     }
 
 
+    /// <summary>
+    /// 役割: HandleInput の処理を入力や状態を処理します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void HandleInput()
     {
         if (notchManager == null)
@@ -110,12 +125,16 @@ public class TrainController : MonoBehaviour
         notchManager.SetManualNotches(powerNotch, brakeNotch);
     }
 
+    /// <summary>
+    /// 役割: ApplyPhysics の処理を適用します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void ApplyPhysics()
     {
         notchManager.ConfigureLimits(trainSpec.maxPowerNotch, EmergencyBrakeNotch);
 
-        int powerNotch = PowerNotch; // 高位優先解決後の力行ノッチ
-        int brakeNotch = BrakeNotch; // 高位優先解決後の制動ノッチ
+        int powerNotch = PowerNotch; 
+        int brakeNotch = BrakeNotch; 
         bool isEmergencyBrake = brakeNotch >= EmergencyBrakeNotch;
 
         if (brakeSystem != null)
@@ -128,13 +147,17 @@ public class TrainController : MonoBehaviour
 
         float externalForceN = GetExternalResistanceForceN(powerNotch, brakeDeceleration);
         float tractionForceN = GetTractionForceN(powerNotch, massKg, externalForceN);
-        float vehicleForceN = tractionForceN - brakeForceN; // 車両側で作る合成力[N]
+        float vehicleForceN = tractionForceN - brakeForceN;
 
-        float netForceN = vehicleForceN - externalForceN; // 外力込みの正味合力[N]
-        float acceleration = netForceN / massKg; // 正味加速度[m/s^2]
+        float netForceN = vehicleForceN - externalForceN; 
+        float acceleration = netForceN / massKg; 
 
         IntegrateMotion(acceleration);
     }
+    /// <summary>
+    /// 役割: MoveTrain の処理を移動処理を行います。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void MoveTrain()
     {
         SyncCarTrackStatesWithConsist();
@@ -153,6 +176,10 @@ public class TrainController : MonoBehaviour
         UpdateCarTrackStates();
     }
 
+    /// <summary>
+    /// 役割: AdvanceEdgeTransitionIfNeeded の処理を進めます。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void AdvanceEdgeTransitionIfNeeded()
     {
         if (trackGraph == null || string.IsNullOrEmpty(currentEdgeId))
@@ -179,13 +206,12 @@ public class TrainController : MonoBehaviour
                 break;
             }
 
-            // 端を超えた分を次エッジへ繰り越す
             float remainDistanceM = distanceOnEdgeM - edgeLengthM;
             string nextEdgeId = trackGraph.ResolveNextEdgeId(currentEdge.toNodeId, currentEdgeId);
 
             if (string.IsNullOrEmpty(nextEdgeId))
             {
-                // 先が無ければ端で止める
+                
                 distanceOnEdgeM = edgeLengthM;
                 speedMS = 0f;
                 currentAccelerationMS2 = 0f;
@@ -216,6 +242,13 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: TryGetPositionBehind の処理を取得を試みます。
+    /// </summary>
+    /// <param name="offsetM">offsetM を指定します。</param>
+    /// <param name="edgeId">出力結果を受け取る edgeId です。</param>
+    /// <param name="distOnEdge">出力結果を受け取る distOnEdge です。</param>
+    /// <returns>処理が成功した場合は true、それ以外は false を返します。</returns>
     public bool TryGetPositionBehind(float offsetM, out string edgeId, out float distOnEdge)
     {
         edgeId = currentEdgeId;
@@ -255,6 +288,54 @@ public class TrainController : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// 先頭基準点より前に実際の車体がどれだけ張り出しているかを返します。
+    /// TrainController の位置は先頭車の中心として扱っているため、
+    /// 先頭車長の半分が前方張り出し量になります。
+    /// </summary>
+    public float GetHeadForwardExtentM()
+    {
+        ConsistDefinition consist = ResolveConsistDefinition();
+        return 0.5f * GetCarLengthM(consist, 0);
+    }
+
+    /// <summary>
+    /// 先頭基準点から実際の最後尾端までの距離を返します。
+    /// carTrackStates には最後尾車の中心位置までのオフセットが入っているため、
+    /// そこに最後尾車長の半分を足すと編成の実際の後端位置になります。
+    /// </summary>
+    public float GetTailEndOffsetFromHeadM()
+    {
+        SyncCarTrackStatesWithConsist();
+
+        if (carTrackStates == null || carTrackStates.Count == 0)
+        {
+            return 0f;
+        }
+
+        ConsistDefinition consist = ResolveConsistDefinition();
+        int tailIndex = carTrackStates.Count - 1;
+        CarTrackState tailState = carTrackStates[tailIndex];
+        float tailCarLengthM = GetCarLengthM(consist, tailIndex);
+
+        return tailState.offsetFromHeadM + 0.5f * tailCarLengthM;
+    }
+
+    /// <summary>
+    /// 編成の実際の最後尾端が線路上のどこにあるかを解決します。
+    /// これは、最後尾が完全に抜けるまで前の閉塞を保持したい
+    /// 閉塞在線管理のような仕組みで使う想定です。
+    /// </summary>
+    public bool TryGetTailEndTrackPosition(out string edgeId, out float distanceOnEdgeM)
+    {
+        float tailOffsetM = GetTailEndOffsetFromHeadM();
+        return TryGetPositionBehind(tailOffsetM, out edgeId, out distanceOnEdgeM);
+    }
+
+    /// <summary>
+    /// 役割: GetCurrentConsistMassKg の処理を取得します。
+    /// </summary>
+    /// <returns>計算または参照した値を返します。</returns>
     private float GetCurrentConsistMassKg()
     {
         if (brakeSystem != null && brakeSystem.CurrentConsistMassKg > 0f)
@@ -270,6 +351,14 @@ public class TrainController : MonoBehaviour
         return Mathf.Max(1f, trainSpec.massKg);
     }
 
+    /// <summary>
+    /// 役割: GetBrakeOutputs の処理を取得します。
+    /// </summary>
+    /// <param name="brakeNotch">brakeNotch を指定します。</param>
+    /// <param name="massKg">massKg を指定します。</param>
+    /// <param name="brakeDecelerationMS2">出力結果を受け取る brakeDecelerationMS2 です。</param>
+    /// <param name="brakeForceN">出力結果を受け取る brakeForceN です。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void GetBrakeOutputs(int brakeNotch, float massKg, out float brakeDecelerationMS2, out float brakeForceN)
     {
         brakeDecelerationMS2 = 0f;
@@ -291,6 +380,12 @@ public class TrainController : MonoBehaviour
         brakeForceN = Mathf.Max(0f, brakeDecelerationMS2) * massKg;
     }
 
+    /// <summary>
+    /// 役割: GetExternalResistanceForceN の処理を取得します。
+    /// </summary>
+    /// <param name="powerNotch">powerNotch を指定します。</param>
+    /// <param name="brakeDecelerationMS2">brakeDecelerationMS2 を指定します。</param>
+    /// <returns>計算または参照した値を返します。</returns>
     private float GetExternalResistanceForceN(int powerNotch, float brakeDecelerationMS2)
     {
         float runningResistanceForceN = ExternalForceCalculator.GetRunningResistanceForceN(trainSpec, speedMS);
@@ -304,6 +399,13 @@ public class TrainController : MonoBehaviour
         return runningResistanceForceN + coastResistanceForceN;
     }
 
+    /// <summary>
+    /// 役割: GetTractionForceN の処理を取得します。
+    /// </summary>
+    /// <param name="powerNotch">powerNotch を指定します。</param>
+    /// <param name="massKg">massKg を指定します。</param>
+    /// <param name="externalForceN">externalForceN を指定します。</param>
+    /// <returns>計算または参照した値を返します。</returns>
     private float GetTractionForceN(int powerNotch, float massKg, float externalForceN)
     {
         if (tractionSystem != null)
@@ -320,6 +422,11 @@ public class TrainController : MonoBehaviour
         );
     }
 
+    /// <summary>
+    /// 役割: IntegrateMotion の処理を積分して状態を更新します。
+    /// </summary>
+    /// <param name="acceleration">acceleration を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void IntegrateMotion(float acceleration)
     {
         currentAccelerationMS2 = acceleration;
@@ -332,6 +439,10 @@ public class TrainController : MonoBehaviour
         AdvanceEdgeTransitionIfNeeded();
     }
 
+    /// <summary>
+    /// 役割: SyncCarTrackStatesWithConsist の処理を同期します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void SyncCarTrackStatesWithConsist()
     {
         ConsistDefinition resolvedConsistDefinition = ResolveConsistDefinition();
@@ -339,6 +450,10 @@ public class TrainController : MonoBehaviour
         RefreshCarOffsets(resolvedConsistDefinition);
     }
 
+    /// <summary>
+    /// 役割: ResolveControllerReferences の処理を解決します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ResolveControllerReferences()
     {
         if (notchManager == null)
@@ -362,6 +477,10 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: EnsureRuntimeResolver の処理を必要な状態を保証します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void EnsureRuntimeResolver()
     {
         if (resolver == null)
@@ -370,6 +489,10 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: InitializeTrackState の処理を初期化します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void InitializeTrackState()
     {
         if (trackGraph != null && string.IsNullOrEmpty(currentEdgeId) && trackGraph.edges != null && trackGraph.edges.Count > 0)
@@ -392,6 +515,12 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: TryResolveHeadPose の処理を行います。
+    /// </summary>
+    /// <param name="pos">出力結果を受け取る pos です。</param>
+    /// <param name="tan">出力結果を受け取る tan です。</param>
+    /// <returns>処理が成功した場合は true、それ以外は false を返します。</returns>
     private bool TryResolveHeadPose(out Vector3 pos, out Vector3 tan)
     {
         pos = default;
@@ -421,6 +550,12 @@ public class TrainController : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// 役割: ApplyHeadPose の処理を適用します。
+    /// </summary>
+    /// <param name="pos">pos を指定します。</param>
+    /// <param name="tan">tan を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ApplyHeadPose(Vector3 pos, Vector3 tan)
     {
         transform.position = pos;
@@ -430,6 +565,10 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: UpdateCarTrackStates の処理を更新します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void UpdateCarTrackStates()
     {
         for (int i = 0; i < carTrackStates.Count; i++)
@@ -438,6 +577,11 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: UpdateCarTrackState の処理を更新します。
+    /// </summary>
+    /// <param name="index">index を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void UpdateCarTrackState(int index)
     {
         CarTrackState state = carTrackStates[index];
@@ -461,6 +605,11 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: EnsureCarTrackStateCount の処理を必要な状態を保証します。
+    /// </summary>
+    /// <param name="targetCarCount">targetCarCount を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void EnsureCarTrackStateCount(int targetCarCount)
     {
         while (carTrackStates.Count < targetCarCount)
@@ -474,6 +623,11 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: RefreshCarOffsets の処理を再計算します。
+    /// </summary>
+    /// <param name="resolvedConsistDefinition">resolvedConsistDefinition を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void RefreshCarOffsets(ConsistDefinition resolvedConsistDefinition)
     {
         float accumulatedOffsetM = 0f;
@@ -497,6 +651,11 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: GetOrCreateCarTrackState の処理を取得します。
+    /// </summary>
+    /// <param name="index">index を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private CarTrackState GetOrCreateCarTrackState(int index)
     {
         CarTrackState state = carTrackStates[index];
@@ -509,6 +668,10 @@ public class TrainController : MonoBehaviour
         return state;
     }
 
+    /// <summary>
+    /// 役割: ResolveConsistDefinition の処理を解決します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private ConsistDefinition ResolveConsistDefinition()
     {
         if (consistDefinition != null && consistDefinition.HasCars)
@@ -529,6 +692,11 @@ public class TrainController : MonoBehaviour
         return consistDefinition;
     }
 
+    /// <summary>
+    /// 役割: GetTargetCarCount の処理を取得します。
+    /// </summary>
+    /// <param name="resolvedConsistDefinition">resolvedConsistDefinition を指定します。</param>
+    /// <returns>計算または参照した値を返します。</returns>
     private int GetTargetCarCount(ConsistDefinition resolvedConsistDefinition)
     {
         if (resolvedConsistDefinition != null && resolvedConsistDefinition.HasCars)
@@ -539,6 +707,12 @@ public class TrainController : MonoBehaviour
         return Mathf.Max(1, carTrackStates.Count);
     }
 
+    /// <summary>
+    /// 役割: GetCarLengthM の処理を取得します。
+    /// </summary>
+    /// <param name="resolvedConsistDefinition">resolvedConsistDefinition を指定します。</param>
+    /// <param name="index">index を指定します。</param>
+    /// <returns>計算または参照した値を返します。</returns>
     private float GetCarLengthM(ConsistDefinition resolvedConsistDefinition, int index)
     {
         if (resolvedConsistDefinition != null &&
@@ -551,6 +725,10 @@ public class TrainController : MonoBehaviour
         return Mathf.Max(1f, defaultCarLengthM);
     }
 
+    /// <summary>
+    /// 役割: GetRequiredHistoryLengthM の処理を取得します。
+    /// </summary>
+    /// <returns>計算または参照した値を返します。</returns>
     private float GetRequiredHistoryLengthM()
     {
         if (carTrackStates == null || carTrackStates.Count == 0)
@@ -567,6 +745,11 @@ public class TrainController : MonoBehaviour
         return Mathf.Max(0f, tailState.offsetFromHeadM);
     }
 
+    /// <summary>
+    /// 役割: EnsureActiveEdgeHistory の処理を必要な状態を保証します。
+    /// </summary>
+    /// <param name="requiredOffsetM">requiredOffsetM を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void EnsureActiveEdgeHistory(float requiredOffsetM)
     {
         if (trackGraph == null || activeEdges.Count == 0 || requiredOffsetM <= 0f)
@@ -615,6 +798,11 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: SetCurrentActiveEdge の処理を設定します。
+    /// </summary>
+    /// <param name="currentEdge">currentEdge を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void SetCurrentActiveEdge(TrackEdge currentEdge)
     {
         if (currentEdge == null)
@@ -631,6 +819,11 @@ public class TrainController : MonoBehaviour
         activeEdges.Insert(0, currentEdge);
     }
 
+    /// <summary>
+    /// 役割: TrimActiveEdgeHistory の処理を不要分を削減します。
+    /// </summary>
+    /// <param name="requiredOffsetM">requiredOffsetM を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void TrimActiveEdgeHistory(float requiredOffsetM)
     {
         if (activeEdges.Count <= 1)
@@ -657,6 +850,10 @@ public class TrainController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: GetTrackedHistoryLengthM の処理を取得します。
+    /// </summary>
+    /// <returns>計算または参照した値を返します。</returns>
     private float GetTrackedHistoryLengthM()
     {
         float coveredDistanceM = Mathf.Max(0f, distanceOnEdgeM);

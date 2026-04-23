@@ -64,7 +64,7 @@ public class SpeedometerScaleGenerator : MonoBehaviour
         }
 
 #if UNITY_EDITOR
-        // Avoid generating before Unity finishes object setup.
+        // Unity のオブジェクト初期化が終わる前に生成してしまうのを防ぎます。
         UnityEditor.EditorApplication.delayCall -= DelayedGenerateInEditor;
         UnityEditor.EditorApplication.delayCall += DelayedGenerateInEditor;
 #endif

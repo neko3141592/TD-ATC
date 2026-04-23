@@ -11,7 +11,7 @@ public enum StationStopJudgeState
 
 public class StationStopController : MonoBehaviour
 {
-    // trackGraph is optional. Leaving it empty lets the controller follow the graph already assigned to the train.
+    // trackGraph は任意です。未設定なら train に割り当てられた TrackGraph をそのまま使います。
     [SerializeField] private TrackGraph trackGraph;
     [SerializeField] private TrainServiceDefinition service;
     [SerializeField] private TrainController train;
@@ -55,9 +55,13 @@ public class StationStopController : MonoBehaviour
     public string LastCompletedStationName => string.IsNullOrEmpty(lastCompletedStationName) ? "--" : lastCompletedStationName;
     public float LastCompletedStopErrorM => lastCompletedStopErrorM;
 
+    /// <summary>
+    /// 役割: 毎フレームの更新処理を行います。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void Update()
     {
-        // If the driving stack is not ready, keep the public state in a clean "no target" state for HUD/debug views.
+        // 運転系の参照が揃っていない間は、HUD やデバッグ表示に出す状態を「対象なし」で初期化しておきます。
         if (train == null || nextStationResolver == null || service == null)
         {
             ClearTarget();
@@ -75,7 +79,7 @@ public class StationStopController : MonoBehaviour
         var distanceOnEdgeM = train.DistanceOnEdgeM;
         var speedMS = train.SpeedMS;
 
-        // Resolve the next stop every frame from the train's current route position so turnout changes are reflected immediately.
+        // 分岐切替の影響をすぐ反映できるよう、現在位置から毎フレーム次の停車駅を引き直します。
         if (nextStationResolver.TryGetNextStopStation(
             activeTrackGraph,
             service,
@@ -100,9 +104,14 @@ public class StationStopController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: UpdateStopCompletion の処理を更新します。
+    /// </summary>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void UpdateStopCompletion(float speedMS)
     {
-        // Ignore stale resolver results after the service index has already advanced.
+        // サービスの停車インデックスが先に進んだ後の古い解決結果は無視します。
         if (currentTargetStation == null || resolvedStopIndex < currentStopIndex)
         {
             stopHoldTimer = 0f;
@@ -113,7 +122,7 @@ public class StationStopController : MonoBehaviour
         bool isWithinStopRange = Mathf.Abs(distanceToStopM) <= stopMarginM;
         bool isStopped = Mathf.Abs(speedMS) <= stopSpeedThresholdMS;
 
-        // The train must both stop accurately and stay settled for a short time before the stop counts as completed.
+        // 停車完了とみなすには、停止位置に収まり、かつ短時間しっかり停止し続ける必要があります。
         if (!isWithinStopRange || !isStopped)
         {
             stopHoldTimer = 0f;
@@ -126,13 +135,18 @@ public class StationStopController : MonoBehaviour
             return;
         }
 
-        // Cache the result before advancing so HUD/debug views can show the last successful stop.
+        // インデックスを進める前に結果を保持し、HUD やデバッグ表示で直前の成功停車を見られるようにします。
         lastCompletedStationName = CurrentTargetStationName;
         lastCompletedStopErrorM = distanceToStopM;
         currentStopIndex = resolvedStopIndex + 1;
         ClearTarget();
     }
 
+    /// <summary>
+    /// 役割: UpdateJudgeState の処理を更新します。
+    /// </summary>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void UpdateJudgeState(float speedMS)
     {
         if (!HasTargetStation)
@@ -153,12 +167,16 @@ public class StationStopController : MonoBehaviour
             return;
         }
 
-        // Once the train is inside the stop window, distinguish "still rolling" from "holding the stop".
+        // 停止許容範囲に入った後は、まだ転動中なのか、停止保持に入ったのかを分けて扱います。
         judgeState = Mathf.Abs(speedMS) <= stopSpeedThresholdMS
             ? StationStopJudgeState.Holding
             : StationStopJudgeState.InRange;
     }
 
+    /// <summary>
+    /// 役割: ClearTarget の処理をクリアします。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ClearTarget()
     {
         resolvedStopIndex = -1;
@@ -168,6 +186,10 @@ public class StationStopController : MonoBehaviour
         judgeState = StationStopJudgeState.NoTarget;
     }
 
+    /// <summary>
+    /// 役割: インスペクター変更時の値補正を行います。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
         stationLookaheadDistanceM = Mathf.Max(0f, stationLookaheadDistanceM);
@@ -175,6 +197,11 @@ public class StationStopController : MonoBehaviour
         stopHoldSeconds = Mathf.Max(0f, stopHoldSeconds);
     }
 
+    /// <summary>
+    /// 役割: GetJudgeStateLabel の処理を取得します。
+    /// </summary>
+    /// <param name="state">state を指定します。</param>
+    /// <returns>文字列結果を返します。</returns>
     private static string GetJudgeStateLabel(StationStopJudgeState state)
     {
         switch (state)
