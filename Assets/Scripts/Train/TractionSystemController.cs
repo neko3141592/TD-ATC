@@ -13,6 +13,10 @@ public class TractionSystemController : MonoBehaviour
     public float CurrentTotalTractionForceN { get; private set; } = 0f;
     public float CurrentConsistMassKg { get; private set; } = 0f;
 
+    /// <summary>
+    /// 役割: Awake の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Awake()
     {
         if (trainSpec == null)
@@ -24,12 +28,23 @@ public class TractionSystemController : MonoBehaviour
         CurrentConsistMassKg = GetTotalConsistMassKg();
     }
 
+    /// <summary>
+    /// 役割: OnValidate の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
         InitializeCarTractionStates();
         CurrentConsistMassKg = GetTotalConsistMassKg();
     }
 
+    /// <summary>
+    /// 役割: UpdateTraction の処理を実行します。
+    /// </summary>
+    /// <param name="powerNotch">powerNotch を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <param name="externalForceN">externalForceN を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public void UpdateTraction(int powerNotch, float speedMS, float externalForceN)
     {
         EnsureCarTractionStateCount();
@@ -106,6 +121,10 @@ public class TractionSystemController : MonoBehaviour
         CurrentTotalTractionForceN = distributedTractionForceN;
     }
 
+    /// <summary>
+    /// 役割: InitializeCarTractionStates の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void InitializeCarTractionStates()
     {
         carTractionStates.Clear();
@@ -118,6 +137,10 @@ public class TractionSystemController : MonoBehaviour
         ResetNullCarStates();
     }
 
+    /// <summary>
+    /// 役割: EnsureCarTractionStateCount の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void EnsureCarTractionStateCount()
     {
         int target = consistDefinition != null ? consistDefinition.CarCount : 0;
@@ -136,6 +159,10 @@ public class TractionSystemController : MonoBehaviour
         CurrentConsistMassKg = GetTotalConsistMassKg();
     }
 
+    /// <summary>
+    /// 役割: ResetNullCarStates の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ResetNullCarStates()
     {
         if (consistDefinition == null || !consistDefinition.HasCars)
@@ -153,6 +180,10 @@ public class TractionSystemController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: ResetCurrentTractionForces の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ResetCurrentTractionForces()
     {
         for (int i = 0; i < carTractionStates.Count; i++)
@@ -167,6 +198,10 @@ public class TractionSystemController : MonoBehaviour
         CurrentTotalTractionForceN = 0f;
     }
 
+    /// <summary>
+    /// 役割: GetTotalConsistMassKg の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private float GetTotalConsistMassKg()
     {
         float fallbackMassKg = trainSpec != null ? trainSpec.massKg : 1f;
@@ -178,6 +213,11 @@ public class TractionSystemController : MonoBehaviour
         return consistDefinition.GetTotalMassKgOrFallback(fallbackMassKg);
     }
 
+    /// <summary>
+    /// 役割: GetCarSpec の処理を実行します。
+    /// </summary>
+    /// <param name="index">index を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private CarSpec GetCarSpec(int index)
     {
         return consistDefinition != null ? consistDefinition.GetCar(index) : null;

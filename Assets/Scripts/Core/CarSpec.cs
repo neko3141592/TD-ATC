@@ -51,6 +51,10 @@ public class CarSpec : ScriptableObject
     [Range(0f, 1f)] public float brakeMechanicalEfficiency = 0.9f;
     [Min(0f)] public float bcMaxPressureKPa = 380f;
 
+    /// <summary>
+    /// 役割: OnValidate の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
 

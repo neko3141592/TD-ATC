@@ -23,6 +23,12 @@ public class NeutralDisplay : MonoBehaviour
         public float timestamp;
         public bool value;
 
+        /// <summary>
+        /// 役割: NeutralStateSample の処理を実行します。
+        /// </summary>
+        /// <param name="timestamp">timestamp を指定します。</param>
+        /// <param name="value">value を指定します。</param>
+        /// <returns>処理結果を返します。</returns>
         public NeutralStateSample(float timestamp, bool value)
         {
             this.timestamp = timestamp;
@@ -30,11 +36,19 @@ public class NeutralDisplay : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: Reset の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Reset()
     {
         targetImage = GetComponent<Image>();
     }
 
+    /// <summary>
+    /// 役割: Awake の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Awake()
     {
         if (targetImage == null)
@@ -45,6 +59,10 @@ public class NeutralDisplay : MonoBehaviour
         ResetDelayState(GetRawNeutralState());
     }
 
+    /// <summary>
+    /// 役割: Update の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Update()
     {
         if (targetImage == null)
@@ -62,6 +80,10 @@ public class NeutralDisplay : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: GetRawNeutralState の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private bool GetRawNeutralState()
     {
         if (train == null)
@@ -72,6 +94,11 @@ public class NeutralDisplay : MonoBehaviour
         return train.PowerNotch <= 0 && train.BrakeNotch <= 0;
     }
 
+    /// <summary>
+    /// 役割: ResolveDelayedNeutralState の処理を実行します。
+    /// </summary>
+    /// <param name="rawState">rawState を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private bool ResolveDelayedNeutralState(bool rawState)
     {
         if (!Application.isPlaying || !enableReadDelay || readDelaySeconds <= 0f)
@@ -97,6 +124,11 @@ public class NeutralDisplay : MonoBehaviour
         return displayedNeutralState;
     }
 
+    /// <summary>
+    /// 役割: ResetDelayState の処理を実行します。
+    /// </summary>
+    /// <param name="rawState">rawState を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ResetDelayState(bool rawState)
     {
         displayedNeutralState = rawState;

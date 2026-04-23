@@ -8,6 +8,11 @@ internal class RegenBrakeUnit
 {
     private const float RegenHardCutOutSpeedMS = 0.1f; // 停止域では回生を強制失効させる閾値[m/s]
 
+    /// <summary>
+    /// 役割: InitializeCarState の処理を実行します。
+    /// </summary>
+    /// <param name="state">state を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public void InitializeCarState(CarBrakeState state)
     {
         // 車両ごとの回生ノイズ初期化（未設定時のみ）
@@ -22,6 +27,11 @@ internal class RegenBrakeUnit
         }
     }
 
+    /// <summary>
+    /// 役割: ResetCarState の処理を実行します。
+    /// </summary>
+    /// <param name="state">state を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public void ResetCarState(CarBrakeState state)
     {
         // その車両の回生状態だけをリセット
@@ -36,6 +46,16 @@ internal class RegenBrakeUnit
         state.regenNoiseTime = 0f;
     }
 
+    /// <summary>
+    /// 役割: UpdateBrakeApplicationState の処理を実行します。
+    /// </summary>
+    /// <param name="trainSpec">trainSpec を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <param name="state">state を指定します。</param>
+    /// <param name="hasBrakeCommand">hasBrakeCommand を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <param name="forceDisableRegen">forceDisableRegen を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public void UpdateBrakeApplicationState(TrainSpec trainSpec, CarSpec carSpec, CarBrakeState state, bool hasBrakeCommand, float speedMS, bool forceDisableRegen)
     {
         // ブレーキ開始時の速度で回生可否をラッチする（ブレーキ中は保持）
@@ -68,6 +88,14 @@ internal class RegenBrakeUnit
         }
     }
 
+    /// <summary>
+    /// 役割: GetRegenCapForceN の処理を実行します。
+    /// </summary>
+    /// <param name="trainSpec">trainSpec を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <param name="state">state を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetRegenCapForceN(TrainSpec trainSpec, CarSpec carSpec, CarBrakeState state, float speedMS)
     {
         // その車両の回生上限力[N]（速度カーブcapと車両capの小さい方）
@@ -89,6 +117,17 @@ internal class RegenBrakeUnit
         return Mathf.Max(0f, regenCapDecel * carMassKg);
     }
 
+    /// <summary>
+    /// 役割: UpdateRegenForceN の処理を実行します。
+    /// </summary>
+    /// <param name="trainSpec">trainSpec を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <param name="state">state を指定します。</param>
+    /// <param name="targetRegenForceN">targetRegenForceN を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <param name="deltaTime">deltaTime を指定します。</param>
+    /// <param name="forceDisableRegen">forceDisableRegen を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float UpdateRegenForceN(TrainSpec trainSpec, CarSpec carSpec, CarBrakeState state, float targetRegenForceN, float speedMS, float deltaTime, bool forceDisableRegen)
     {
         // 回生目標力に対して、立上/立下遅れ・揺らぎ・停止域失効を適用した実回生力[N]を返す

@@ -13,6 +13,10 @@ public class Compressor : MonoBehaviour
 
     public bool IsRunning => isRunning;
 
+    /// <summary>
+    /// 役割: Awake の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Awake()
     {
         if (oneShotSource == null)
@@ -32,6 +36,10 @@ public class Compressor : MonoBehaviour
         loopSource.clip = loopClip;
     }
 
+    /// <summary>
+    /// 役割: StartCompressor の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void StartCompressor()
     {
         if (isRunning)
@@ -52,6 +60,10 @@ public class Compressor : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: StopCompressor の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void StopCompressor()
     {
         if (!isRunning)
@@ -74,6 +86,10 @@ public class Compressor : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: ToggleCompressor の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void ToggleCompressor()
     {
         if (isRunning)
@@ -86,6 +102,10 @@ public class Compressor : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: StartLoop の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void StartLoop()
     {
         if (!isRunning || loopClip == null)

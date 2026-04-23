@@ -45,6 +45,12 @@ public class PressureGaugeUI : MonoBehaviour
         public float time;
         public float pressureKPa;
 
+        /// <summary>
+        /// 役割: TimedPressureSample の処理を実行します。
+        /// </summary>
+        /// <param name="time">time を指定します。</param>
+        /// <param name="pressureKPa">pressureKPa を指定します。</param>
+        /// <returns>処理結果を返します。</returns>
         public TimedPressureSample(float time, float pressureKPa)
         {
             this.time = time;
@@ -52,6 +58,10 @@ public class PressureGaugeUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: OnEnable の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void OnEnable()
     {
         displayedPressureKPa = 0f;
@@ -63,6 +73,10 @@ public class PressureGaugeUI : MonoBehaviour
         pressureSamples.Clear();
     }
 
+    /// <summary>
+    /// 役割: Update の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Update()
     {
         if (train == null)
@@ -102,6 +116,10 @@ public class PressureGaugeUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: SamplePressureIfNeeded の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void SamplePressureIfNeeded()
     {
         if (!hasSampledPressure || !enableRandomLag || Time.time >= nextSampleTime)
@@ -112,6 +130,11 @@ public class PressureGaugeUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: UpdateDisplayLag の処理を実行します。
+    /// </summary>
+    /// <param name="currentPressureKPa">currentPressureKPa を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void UpdateDisplayLag(float currentPressureKPa)
     {
         if (!hasLaggedPressure)
@@ -142,6 +165,10 @@ public class PressureGaugeUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: ScheduleNextSampleTime の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ScheduleNextSampleTime()
     {
         if (!enableRandomLag)

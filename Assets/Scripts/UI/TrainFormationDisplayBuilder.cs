@@ -47,6 +47,12 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         public readonly float sampledTime;
         public readonly Sprite[] sprites;
 
+        /// <summary>
+        /// 役割: VisualSnapshot の処理を実行します。
+        /// </summary>
+        /// <param name="sampledTime">sampledTime を指定します。</param>
+        /// <param name="sprites">sprites を指定します。</param>
+        /// <returns>処理結果を返します。</returns>
         public VisualSnapshot(float sampledTime, Sprite[] sprites)
         {
             this.sampledTime = sampledTime;
@@ -54,11 +60,19 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: Reset の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Reset()
     {
         formationDisplayRoot = transform as RectTransform;
     }
 
+    /// <summary>
+    /// 役割: Update の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Update()
     {
         if (!Application.isPlaying)
@@ -69,6 +83,10 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         UpdateRuntimeVisuals();
     }
 
+    /// <summary>
+    /// 役割: OnValidate の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
         if (!regenerateOnValidate)
@@ -89,6 +107,10 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    /// <summary>
+    /// 役割: DelayedGenerateInEditor の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void DelayedGenerateInEditor()
     {
         if (this == null || Application.isPlaying)
@@ -101,6 +123,10 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
 #endif
 
     [ContextMenu("Generate Train Formation Display")]
+    /// <summary>
+    /// 役割: Generate の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void Generate()
     {
         if (formationDisplayRoot == null)
@@ -132,6 +158,15 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: CreateSpriteCar の処理を実行します。
+    /// </summary>
+    /// <param name="sprite">sprite を指定します。</param>
+    /// <param name="objectName">objectName を指定します。</param>
+    /// <param name="carNumber">carNumber を指定します。</param>
+    /// <param name="anchoredPosition">anchoredPosition を指定します。</param>
+    /// <param name="mirrorX">mirrorX を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private Image CreateSpriteCar(Sprite sprite, string objectName, int carNumber, Vector2 anchoredPosition, bool mirrorX)
     {
         GameObject go = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
@@ -159,6 +194,13 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         return image;
     }
 
+    /// <summary>
+    /// 役割: CreateCarNumberLabel の処理を実行します。
+    /// </summary>
+    /// <param name="parent">parent を指定します。</param>
+    /// <param name="carNumber">carNumber を指定します。</param>
+    /// <param name="parentMirroredX">parentMirroredX を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void CreateCarNumberLabel(RectTransform parent, int carNumber, bool parentMirroredX)
     {
         if (!showCarNumbers || parent == null)
@@ -192,6 +234,11 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: GetDisplaySpriteForCar の処理を実行します。
+    /// </summary>
+    /// <param name="carIndex">carIndex を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private Sprite GetDisplaySpriteForCar(int carIndex)
     {
         bool isHeadOrTail = carIndex == 0 || carIndex == CarCount - 1;
@@ -222,6 +269,10 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         return normalMotor;
     }
 
+    /// <summary>
+    /// 役割: UpdateRuntimeVisuals の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void UpdateRuntimeVisuals()
     {
         if (formationDisplayRoot == null || CarCount <= 0)
@@ -250,6 +301,10 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: CaptureCurrentSnapshot の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private VisualSnapshot CaptureCurrentSnapshot()
     {
         int count = CarCount;
@@ -262,6 +317,11 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         return new VisualSnapshot(Time.time, sprites);
     }
 
+    /// <summary>
+    /// 役割: ApplySnapshot の処理を実行します。
+    /// </summary>
+    /// <param name="snapshot">snapshot を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ApplySnapshot(VisualSnapshot snapshot)
     {
         if (snapshot.sprites == null)
@@ -286,6 +346,10 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: RebuildGeneratedImageCache の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void RebuildGeneratedImageCache()
     {
         generatedCarImages.Clear();
@@ -306,6 +370,10 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     }
 
     [ContextMenu("Clear Generated Train Formation Display")]
+    /// <summary>
+    /// 役割: ClearGenerated の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void ClearGenerated()
     {
         generatedCarImages.Clear();
@@ -329,6 +397,12 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: TryGetCarTypeAt の処理を実行します。
+    /// </summary>
+    /// <param name="carIndex">carIndex を指定します。</param>
+    /// <param name="carType">carType を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private bool TryGetCarTypeAt(int carIndex, out CarType carType)
     {
         if (consistDefinition == null)
@@ -340,11 +414,23 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         return consistDefinition.TryGetCarType(carIndex, out carType);
     }
 
+    /// <summary>
+    /// 役割: GetCarTypeAtOrDefault の処理を実行します。
+    /// </summary>
+    /// <param name="carIndex">carIndex を指定します。</param>
+    /// <param name="fallback">fallback を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private CarType GetCarTypeAtOrDefault(int carIndex, CarType fallback = CarType.Trailer)
     {
         return TryGetCarTypeAt(carIndex, out CarType carType) ? carType : fallback;
     }
 
+    /// <summary>
+    /// 役割: TryGetCarTractionForceN の処理を実行します。
+    /// </summary>
+    /// <param name="carIndex">carIndex を指定します。</param>
+    /// <param name="tractionForceN">tractionForceN を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private bool TryGetCarTractionForceN(int carIndex, out float tractionForceN)
     {
         tractionForceN = 0f;
@@ -370,6 +456,12 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// 役割: TryGetCarRegenForceN の処理を実行します。
+    /// </summary>
+    /// <param name="carIndex">carIndex を指定します。</param>
+    /// <param name="regenForceN">regenForceN を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private bool TryGetCarRegenForceN(int carIndex, out float regenForceN)
     {
         regenForceN = 0f;

@@ -73,6 +73,11 @@ public class TrainSpec : ScriptableObject
         new Keyframe(1f, 1f)
     );
 
+    /// <summary>
+    /// 役割: GetPowerNotchRatio の処理を実行します。
+    /// </summary>
+    /// <param name="notch">notch を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private float GetPowerNotchRatio(int notch)
     {
         if (notch <= 0)
@@ -95,6 +100,12 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, powerNotchRatios[index]);
     }
 
+    /// <summary>
+    /// 役割: GetPowerNotchSpeedGain の処理を実行します。
+    /// </summary>
+    /// <param name="notch">notch を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetPowerNotchSpeedGain(int notch, float speedMS)
     {
         if (notch <= 0)
@@ -118,6 +129,14 @@ public class TrainSpec : ScriptableObject
         return GetPowerNotchRatio(notch);
     }
 
+    /// <summary>
+    /// 役割: GetTractionDemandForceN の処理を実行します。
+    /// </summary>
+    /// <param name="notch">notch を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <param name="massKg">massKg を指定します。</param>
+    /// <param name="externalForceN">externalForceN を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetTractionDemandForceN(int notch, float speedMS, float massKg, float externalForceN)
     {
         // 既存互換: motorCount未指定時は従来の編成固定上限を使う
@@ -131,6 +150,15 @@ public class TrainSpec : ScriptableObject
         );
     }
 
+    /// <summary>
+    /// 役割: GetTractionDemandForceN の処理を実行します。
+    /// </summary>
+    /// <param name="notch">notch を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <param name="massKg">massKg を指定します。</param>
+    /// <param name="externalForceN">externalForceN を指定します。</param>
+    /// <param name="totalMotorCount">totalMotorCount を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetTractionDemandForceN(int notch, float speedMS, float massKg, float externalForceN, int totalMotorCount)
     {
         // 新仕様: 1基あたり値 * 総モータ基数で、出力/トルク上限を作る
@@ -202,6 +230,11 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, Mathf.Min(shapedForceN, capForceN));
     }
 
+    /// <summary>
+    /// 役割: GetMaxTractionPowerByMotorCountW の処理を実行します。
+    /// </summary>
+    /// <param name="totalMotorCount">totalMotorCount を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private float GetMaxTractionPowerByMotorCountW(int totalMotorCount)
     {
         if (totalMotorCount > 0)
@@ -212,6 +245,11 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, maxTractionPowerW);
     }
 
+    /// <summary>
+    /// 役割: GetMaxMotorTorqueByMotorCountNm の処理を実行します。
+    /// </summary>
+    /// <param name="totalMotorCount">totalMotorCount を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private float GetMaxMotorTorqueByMotorCountNm(int totalMotorCount)
     {
         if (totalMotorCount > 0)
@@ -222,6 +260,11 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, maxMotorTorqueNm);
     }
 
+    /// <summary>
+    /// 役割: GetBrakeDeceleration の処理を実行します。
+    /// </summary>
+    /// <param name="notch">notch を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetBrakeDeceleration(int notch)
     {
         if (notch <= 0)
@@ -240,12 +283,21 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, brakeNotchDecelerations[index]);
     }
 
+    /// <summary>
+    /// 役割: GetEmergencyBrakeNotch の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     public int GetEmergencyBrakeNotch()
     {
         // 常用最大ノッチ(B8想定)の1段上を非常段(B9)とする
         return Mathf.Max(2, maxBrakeNotch + 1);
     }
 
+    /// <summary>
+    /// 役割: GetBrakeFrictionCoefficientMu の処理を実行します。
+    /// </summary>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetBrakeFrictionCoefficientMu(float speedMS)
     {
         // 指定式: μ = 0.35 * ((v + 100) / (3v + 100))
@@ -262,11 +314,22 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, mu);
     }
 
+    /// <summary>
+    /// 役割: GetCoastDeceleration の処理を実行します。
+    /// </summary>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetCoastDeceleration(float speedMS)
     {
         return Mathf.Max(0f, coastDeceleration);
     }
 
+    /// <summary>
+    /// 役割: GetTractionForceCapN の処理を実行します。
+    /// </summary>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <param name="tractionPowerWOverride">tractionPowerWOverride を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private float GetTractionForceCapN(float speedMS, float tractionPowerWOverride)
     {
         float speedForPowerLimit = Mathf.Max(tractionPowerSpeedFloorMS, speedMS);
@@ -274,6 +337,11 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, Mathf.Min(maxTractionForceN, powerLimitedForce));
     }
 
+    /// <summary>
+    /// 役割: GetTorqueBasedForceN の処理を実行します。
+    /// </summary>
+    /// <param name="motorTorqueNmOverride">motorTorqueNmOverride を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private float GetTorqueBasedForceN(float motorTorqueNmOverride)
     {
         float safeWheelRadius = Mathf.Max(0.01f, wheelRadiusM);
@@ -283,6 +351,11 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, (safeMotorTorqueNm * safeGearRatio * safeEfficiency) / safeWheelRadius);
     }
 
+    /// <summary>
+    /// 役割: GetRegenCurveCapDeceleration の処理を実行します。
+    /// </summary>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetRegenCurveCapDeceleration(float speedMS)
     {
         float speed01 = maxSpeedMS > 0f ? Mathf.Clamp01(speedMS / maxSpeedMS) : 0f;
@@ -290,6 +363,11 @@ public class TrainSpec : ScriptableObject
         return Mathf.Max(0f, maxRegenDecelerationMS2 * curveMultiplier);
     }
 
+    /// <summary>
+    /// 役割: GetRegenCutOutFactor の処理を実行します。
+    /// </summary>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetRegenCutOutFactor(float speedMS)
     {
         if (regenCutOutStartSpeedMS <= regenCutOutEndSpeedMS)
@@ -309,6 +387,10 @@ public class TrainSpec : ScriptableObject
         return Mathf.InverseLerp(regenCutOutEndSpeedMS, regenCutOutStartSpeedMS, speedMS);
     }
 
+    /// <summary>
+    /// 役割: OnValidate の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
         massKg = Mathf.Max(1f, massKg);
@@ -378,6 +460,13 @@ public class TrainSpec : ScriptableObject
         }
     }
 
+    /// <summary>
+    /// 役割: ResizeArray の処理を実行します。
+    /// </summary>
+    /// <param name="source">source を指定します。</param>
+    /// <param name="size">size を指定します。</param>
+    /// <param name="useRatioDefault">useRatioDefault を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private float[] ResizeArray(float[] source, int size, bool useRatioDefault)
     {
         float[] result = new float[size];
@@ -406,6 +495,13 @@ public class TrainSpec : ScriptableObject
         return result;
     }
 
+    /// <summary>
+    /// 役割: ResizeCurveArray の処理を実行します。
+    /// </summary>
+    /// <param name="source">source を指定します。</param>
+    /// <param name="size">size を指定します。</param>
+    /// <param name="fallbackRatios">fallbackRatios を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private AnimationCurve[] ResizeCurveArray(AnimationCurve[] source, int size, float[] fallbackRatios)
     {
         AnimationCurve[] result = new AnimationCurve[size];
@@ -432,6 +528,11 @@ public class TrainSpec : ScriptableObject
         return result;
     }
 
+    /// <summary>
+    /// 役割: CreateConstantCurve の処理を実行します。
+    /// </summary>
+    /// <param name="value">value を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private AnimationCurve CreateConstantCurve(float value)
     {
         float v = Mathf.Max(0f, value);

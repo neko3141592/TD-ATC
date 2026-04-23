@@ -24,6 +24,10 @@ public class CarBrakeState
     [Tooltip("回生揺らぎノイズの経過時間")]
     public float regenNoiseTime = 0f;
 
+    /// <summary>
+    /// 役割: Reset の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void Reset()
     {
         regenForceN = 0f;

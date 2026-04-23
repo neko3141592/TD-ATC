@@ -21,12 +21,20 @@ public class TrackVisualizer : MonoBehaviour
 
     
 
+    /// <summary>
+    /// 役割: Start の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void Start()
     {
         GenerateAllTrackMeshes();
     }
 
     [ContextMenu("Generate All Meshes")]
+    /// <summary>
+    /// 役割: GenerateAllTrackMeshes の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void GenerateAllTrackMeshes()
     {
         if (graph == null || generatorTemplate == null) return;
@@ -79,6 +87,12 @@ public class TrackVisualizer : MonoBehaviour
             GenerateSleepers(edge, resolver);
         }
     }
+    /// <summary>
+    /// 役割: GenerateSleepers の処理を実行します。
+    /// </summary>
+    /// <param name="edge">edge を指定します。</param>
+    /// <param name="resolver">resolver を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void GenerateSleepers(TrackEdge edge, TrackRuntimeResolver resolver)
     {
         GameObject parent = new GameObject("Sleepers_" + edge.edgeId);

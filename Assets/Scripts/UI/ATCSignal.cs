@@ -8,11 +8,19 @@ public class ATCSignal : MonoBehaviour
     [SerializeField] private Sprite greenSprite;
     [SerializeField] private ATCController atc;
 
+    /// <summary>
+    /// 役割: Reset の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Reset()
     {
         targetImage = GetComponent<Image>();
     }
 
+    /// <summary>
+    /// 役割: Update の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Update()
     {
         if (targetImage == null || atc == null) return;

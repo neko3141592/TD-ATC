@@ -23,6 +23,12 @@ public class EBDisplay : MonoBehaviour
         public float timestamp;
         public bool value;
 
+        /// <summary>
+        /// 役割: EBStateSample の処理を実行します。
+        /// </summary>
+        /// <param name="timestamp">timestamp を指定します。</param>
+        /// <param name="value">value を指定します。</param>
+        /// <returns>処理結果を返します。</returns>
         public EBStateSample(float timestamp, bool value)
         {
             this.timestamp = timestamp;
@@ -30,11 +36,19 @@ public class EBDisplay : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: Reset の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Reset()
     {
         targetImage = GetComponent<Image>();
     }
 
+    /// <summary>
+    /// 役割: Awake の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Awake()
     {
         if (targetImage == null)
@@ -45,6 +59,10 @@ public class EBDisplay : MonoBehaviour
         ResetDelayState(GetRawEmergencyState());
     }
 
+    /// <summary>
+    /// 役割: Update の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Update()
     {
         if (targetImage == null)
@@ -62,11 +80,20 @@ public class EBDisplay : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: GetRawEmergencyState の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private bool GetRawEmergencyState()
     {
         return train != null && train.IsEmergencyBrakeActive;
     }
 
+    /// <summary>
+    /// 役割: ResolveDelayedEmergencyState の処理を実行します。
+    /// </summary>
+    /// <param name="rawState">rawState を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private bool ResolveDelayedEmergencyState(bool rawState)
     {
         if (!Application.isPlaying || !enableReadDelay || readDelaySeconds <= 0f)
@@ -92,6 +119,11 @@ public class EBDisplay : MonoBehaviour
         return displayedEmergencyState;
     }
 
+    /// <summary>
+    /// 役割: ResetDelayState の処理を実行します。
+    /// </summary>
+    /// <param name="rawState">rawState を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ResetDelayState(bool rawState)
     {
         displayedEmergencyState = rawState;

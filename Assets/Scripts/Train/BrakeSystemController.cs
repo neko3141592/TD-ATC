@@ -14,6 +14,10 @@ public class BrakeSystemController : MonoBehaviour
     public IReadOnlyList<CarBrakeState> CarBrakeStates => carBrakeStates;
     public ConsistDefinition ConsistDefinition => consistDefinition;
 
+    /// <summary>
+    /// 役割: Awake の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Awake()
     {
         if (trainSpec == null)
@@ -24,6 +28,10 @@ public class BrakeSystemController : MonoBehaviour
         InitializeCarBrakeStates();
     }
 
+    /// <summary>
+    /// 役割: OnValidate の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
         InitializeCarBrakeStates();
@@ -38,6 +46,14 @@ public class BrakeSystemController : MonoBehaviour
     public float TotalBrakeDecelMS2 { get; private set; } = 0f;
     public float CurrentConsistMassKg { get; private set; } = 0f;
 
+    /// <summary>
+    /// 役割: UpdateBrake の処理を実行します。
+    /// </summary>
+    /// <param name="brakeNotch">brakeNotch を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <param name="deltaTime">deltaTime を指定します。</param>
+    /// <param name="isEmergency">isEmergency を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public void UpdateBrake(int brakeNotch, float speedMS, float deltaTime, bool isEmergency)
     {
         // エディタ上の編成変更や初期化漏れに備え、件数を毎フレーム同期する
@@ -76,6 +92,12 @@ public class BrakeSystemController : MonoBehaviour
         RefreshOutputsFromStates(CurrentConsistMassKg);
     }
 
+    /// <summary>
+    /// 役割: ApplyEmergencyBrake の処理を実行します。
+    /// </summary>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <param name="deltaTime">deltaTime を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ApplyEmergencyBrake(float speedMS, float deltaTime)
     {
         // 非常時は全車とも回生を使わず、BCを最大へ向けて込める
@@ -103,6 +125,14 @@ public class BrakeSystemController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: ApplyNormalBrake の処理を実行します。
+    /// </summary>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <param name="deltaTime">deltaTime を指定します。</param>
+    /// <param name="hasBrakeCommand">hasBrakeCommand を指定します。</param>
+    /// <param name="targetTotalBrakeForceN">targetTotalBrakeForceN を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ApplyNormalBrake(float speedMS, float deltaTime, bool hasBrakeCommand, float targetTotalBrakeForceN)
     {
         // ------------------------------------------------------------
@@ -301,6 +331,11 @@ public class BrakeSystemController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: RefreshOutputsFromStates の処理を実行します。
+    /// </summary>
+    /// <param name="massKg">massKg を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void RefreshOutputsFromStates(float massKg)
     {
         // 各車の実状態を集約して、外部公開用の値へ反映する
@@ -335,6 +370,10 @@ public class BrakeSystemController : MonoBehaviour
         CurrentBCPressureKPa = maxBCKPa;
     }
 
+    /// <summary>
+    /// 役割: GetTotalConsistMassKg の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private float GetTotalConsistMassKg()
     {
         float fallbackMassKg = trainSpec != null ? trainSpec.massKg : 1f;
@@ -346,11 +385,20 @@ public class BrakeSystemController : MonoBehaviour
         return consistDefinition.GetTotalMassKgOrFallback(fallbackMassKg);
     }
 
+    /// <summary>
+    /// 役割: GetCarSpec の処理を実行します。
+    /// </summary>
+    /// <param name="index">index を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private CarSpec GetCarSpec(int index)
     {
         return consistDefinition != null ? consistDefinition.GetCar(index) : null;
     }
 
+    /// <summary>
+    /// 役割: InitializeCarBrakeStates の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void InitializeCarBrakeStates()
     {
         // 編成長に合わせて、車両ごとの実行時状態を初期生成
@@ -364,6 +412,10 @@ public class BrakeSystemController : MonoBehaviour
         ResetNullCarStates();
     }
 
+    /// <summary>
+    /// 役割: EnsureCarBrakeStateCount の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void EnsureCarBrakeStateCount()
     {
         // 編成変更に追従して、状態リストの不足/過剰を調整
@@ -382,6 +434,10 @@ public class BrakeSystemController : MonoBehaviour
         ResetNullCarStates();
     }
 
+    /// <summary>
+    /// 役割: ResetNullCarStates の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ResetNullCarStates()
     {
         // 編成内にnull車両があっても落ちないように、そのスロットだけ初期化して無効化
@@ -400,6 +456,10 @@ public class BrakeSystemController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: CreateBrakeState の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private CarBrakeState CreateBrakeState()
     {
         CarBrakeState state = new CarBrakeState();
@@ -407,6 +467,10 @@ public class BrakeSystemController : MonoBehaviour
         return state;
     }
 
+    /// <summary>
+    /// 役割: ResetOutputs の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ResetOutputs()
     {
         // 外部公開値と内部状態を全クリア

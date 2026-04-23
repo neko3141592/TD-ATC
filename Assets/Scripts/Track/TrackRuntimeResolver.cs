@@ -3,11 +3,28 @@ public class TrackRuntimeResolver
 {
     // ====== 【新しい数学エンジン部分】 ======
 
+    /// <summary>
+    /// 役割: CalculateStraight の処理を実行します。
+    /// </summary>
+    /// <param name="L">L を指定します。</param>
+    /// <param name="x">x を指定します。</param>
+    /// <param name="z">z を指定します。</param>
+    /// <param name="angleDegree">angleDegree を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public static void CalculateStraight(float L, out float x, out float z, out float angleDegree) {
         x = 0f;
         z = L;
         angleDegree = 0f;
     }
+    /// <summary>
+    /// 役割: CalculateCircularCurve の処理を実行します。
+    /// </summary>
+    /// <param name="L">L を指定します。</param>
+    /// <param name="R">R を指定します。</param>
+    /// <param name="x">x を指定します。</param>
+    /// <param name="z">z を指定します。</param>
+    /// <param name="angleDegree">angleDegree を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public static void CalculateCircularCurve(float L, float R, out float x, out float z, out float angleDegree)
     {
         if (Mathf.Abs(R) < 0.001f)
@@ -23,6 +40,16 @@ public class TrackRuntimeResolver
     }
 
     // クロソイド曲線の近似計算（マクローリン展開：直線→カーブ）
+    /// <summary>
+    /// 役割: CalculateClothoidIn の処理を実行します。
+    /// </summary>
+    /// <param name="l">l を指定します。</param>
+    /// <param name="totalL">totalL を指定します。</param>
+    /// <param name="R">R を指定します。</param>
+    /// <param name="x">x を指定します。</param>
+    /// <param name="z">z を指定します。</param>
+    /// <param name="angleDegree">angleDegree を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public static void CalculateClothoidIn(float l, float totalL, float R, out float x, out float z, out float angleDegree)
     {
         if (Mathf.Abs(R) < 0.001f || totalL < 0.001f)
@@ -44,6 +71,16 @@ public class TrackRuntimeResolver
     }
 
     // クロソイド曲線の近似計算（カーブ→直線）
+    /// <summary>
+    /// 役割: CalculateClothoidOut の処理を実行します。
+    /// </summary>
+    /// <param name="l">l を指定します。</param>
+    /// <param name="totalL">totalL を指定します。</param>
+    /// <param name="R">R を指定します。</param>
+    /// <param name="x">x を指定します。</param>
+    /// <param name="z">z を指定します。</param>
+    /// <param name="angleDegree">angleDegree を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public static void CalculateClothoidOut(float l, float totalL, float R, out float x, out float z, out float angleDegree)
     {
         if (Mathf.Abs(R) < 0.001f || totalL < 0.001f)
@@ -144,6 +181,17 @@ public class TrackRuntimeResolver
     }
 
     // --- 計算を合体させる魔法の補助関数 ---
+    /// <summary>
+    /// 役割: CalculateHorizontalAndAltitude の処理を実行します。
+    /// </summary>
+    /// <param name="l">l を指定します。</param>
+    /// <param name="totalL">totalL を指定します。</param>
+    /// <param name="type">type を指定します。</param>
+    /// <param name="R">R を指定します。</param>
+    /// <param name="permille">permille を指定します。</param>
+    /// <param name="currentPos">currentPos を指定します。</param>
+    /// <param name="currentRot">currentRot を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void CalculateHorizontalAndAltitude(float l, float totalL, TrackCurveType type, float R, float permille, ref Vector3 currentPos, ref Quaternion currentRot)
     {
         float pitchRad = Mathf.Atan(permille / 1000f);

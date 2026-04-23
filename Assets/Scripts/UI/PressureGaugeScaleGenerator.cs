@@ -42,11 +42,19 @@ public class PressureGaugeScaleGenerator : MonoBehaviour
     private const string TickPrefix = "PressureTick_";
     private const string LabelPrefix = "PressureLabel_";
 
+    /// <summary>
+    /// 役割: Reset の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Reset()
     {
         scaleRoot = transform as RectTransform;
     }
 
+    /// <summary>
+    /// 役割: OnValidate の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
         if (!regenerateOnValidate)
@@ -68,6 +76,10 @@ public class PressureGaugeScaleGenerator : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    /// <summary>
+    /// 役割: DelayedGenerateInEditor の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void DelayedGenerateInEditor()
     {
         if (this == null || Application.isPlaying)
@@ -80,6 +92,10 @@ public class PressureGaugeScaleGenerator : MonoBehaviour
 #endif
 
     [ContextMenu("Generate Scale")]
+    /// <summary>
+    /// 役割: GenerateScale の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void GenerateScale()
     {
         if (scaleRoot == null)
@@ -125,6 +141,10 @@ public class PressureGaugeScaleGenerator : MonoBehaviour
     }
 
     [ContextMenu("Clear Generated")]
+    /// <summary>
+    /// 役割: ClearGeneratedObjects の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void ClearGeneratedObjects()
     {
         if (scaleRoot == null)
@@ -151,6 +171,14 @@ public class PressureGaugeScaleGenerator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: CreateTick の処理を実行します。
+    /// </summary>
+    /// <param name="pressureKPa">pressureKPa を指定します。</param>
+    /// <param name="angle">angle を指定します。</param>
+    /// <param name="length">length を指定します。</param>
+    /// <param name="width">width を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void CreateTick(float pressureKPa, float angle, float length, float width)
     {
         GameObject tick = new GameObject($"{TickPrefix}{Mathf.RoundToInt(pressureKPa)}", typeof(RectTransform));
@@ -178,6 +206,12 @@ public class PressureGaugeScaleGenerator : MonoBehaviour
         image.raycastTarget = false;
     }
 
+    /// <summary>
+    /// 役割: CreateLabel の処理を実行します。
+    /// </summary>
+    /// <param name="pressureKPa">pressureKPa を指定します。</param>
+    /// <param name="angle">angle を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void CreateLabel(float pressureKPa, float angle)
     {
         GameObject label = new GameObject($"{LabelPrefix}{Mathf.RoundToInt(pressureKPa)}", typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -205,6 +239,12 @@ public class PressureGaugeScaleGenerator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: IsMultipleOfStep の処理を実行します。
+    /// </summary>
+    /// <param name="value">value を指定します。</param>
+    /// <param name="step">step を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private static bool IsMultipleOfStep(float value, float step)
     {
         if (step <= 0f)

@@ -7,6 +7,13 @@ using UnityEngine;
 /// </summary>
 internal class BrakeControlUnit
 {
+    /// <summary>
+    /// 役割: GetTargetTotalBrakeForceN の処理を実行します。
+    /// </summary>
+    /// <param name="trainSpec">trainSpec を指定します。</param>
+    /// <param name="brakeNotch">brakeNotch を指定します。</param>
+    /// <param name="massKg">massKg を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetTargetTotalBrakeForceN(TrainSpec trainSpec, int brakeNotch, float massKg)
     {
         // ノッチ -> 目標減速度を使って、編成全体の必要制動力[N]を作る
@@ -20,6 +27,12 @@ internal class BrakeControlUnit
         return targetDecelMS2 * safeMassKg;
     }
 
+    /// <summary>
+    /// 役割: AllocateWithSaturation の処理を実行します。
+    /// </summary>
+    /// <param name="caps">caps を指定します。</param>
+    /// <param name="target">target を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float[] AllocateWithSaturation(IReadOnlyList<float> caps, float target)
     {
         // caps[i] の範囲で target を配る（上限の大きい順に貪欲配分）
@@ -59,6 +72,12 @@ internal class BrakeControlUnit
         return allocated;
     }
 
+    /// <summary>
+    /// 役割: AllocateEvenlyWithSaturation の処理を実行します。
+    /// </summary>
+    /// <param name="caps">caps を指定します。</param>
+    /// <param name="target">target を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float[] AllocateEvenlyWithSaturation(IReadOnlyList<float> caps, float target)
     {
         // caps[i] の範囲で target をなるべく均等に配る（水位均し）

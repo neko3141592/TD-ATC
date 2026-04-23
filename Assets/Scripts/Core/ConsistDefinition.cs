@@ -9,6 +9,12 @@ public class ConsistDefinition : ScriptableObject
 
     public bool HasCars => cars != null && cars.Count > 0;
     public int CarCount => cars != null ? cars.Count : 0;
+    /// <summary>
+    /// 役割: TryGetCar の処理を実行します。
+    /// </summary>
+    /// <param name="index">index を指定します。</param>
+    /// <param name="car">car を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public bool TryGetCar(int index, out CarSpec car)
     {
         if (!HasCars || index < 0 || index >= cars.Count)
@@ -21,12 +27,23 @@ public class ConsistDefinition : ScriptableObject
         return car != null;
     }
 
+    /// <summary>
+    /// 役割: GetCar の処理を実行します。
+    /// </summary>
+    /// <param name="index">index を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public CarSpec GetCar(int index)
     {
         TryGetCar(index, out CarSpec car);
         return car;
     }
 
+    /// <summary>
+    /// 役割: TryGetCarType の処理を実行します。
+    /// </summary>
+    /// <param name="index">index を指定します。</param>
+    /// <param name="carType">carType を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public bool TryGetCarType(int index, out CarType carType)
     {
         if (!TryGetCar(index, out CarSpec car))
@@ -39,6 +56,10 @@ public class ConsistDefinition : ScriptableObject
         return true;
     }
 
+    /// <summary>
+    /// 役割: GetTotalMassKg の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private float GetTotalMassKg()
     {
         if (!HasCars)
@@ -58,6 +79,11 @@ public class ConsistDefinition : ScriptableObject
         return totalMass;
     }
 
+    /// <summary>
+    /// 役割: GetTotalMassKgOrFallback の処理を実行します。
+    /// </summary>
+    /// <param name="fallbackMassKg">fallbackMassKg を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetTotalMassKgOrFallback(float fallbackMassKg)
     {
         float totalMassKg = GetTotalMassKg();
@@ -69,6 +95,10 @@ public class ConsistDefinition : ScriptableObject
         return Mathf.Max(1f, fallbackMassKg);
     }
 
+    /// <summary>
+    /// 役割: GetTotalMotorCount の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     public int GetTotalMotorCount()
     {
         if (!HasCars)

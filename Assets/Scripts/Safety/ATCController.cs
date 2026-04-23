@@ -29,6 +29,10 @@ public class ATCController : MonoBehaviour
     public float CurrentPatternTargetSpeedKmH => patternTargetSpeedMS * 3.6f;
     public bool IsPatternApproaching => train != null && patternAllowSpeedMS < currentLimitSpeedMS && patternTargetSpeedMS < train.SpeedMS;
 
+    /// <summary>
+    /// 役割: Awake の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void Awake()
     {
         ResolveRuntimeReferences();
@@ -44,6 +48,10 @@ public class ATCController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: Update の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void Update()
     {
         ResolveRuntimeReferences();
@@ -74,6 +82,10 @@ public class ATCController : MonoBehaviour
         SendATCBrake(isATCBrakeLatched ? atcBrakeNotch : 0);
     }
 
+    /// <summary>
+    /// 役割: PlayDing の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void PlayDing()
     {
         if (audioSource == null || dingClip == null)
@@ -84,6 +96,11 @@ public class ATCController : MonoBehaviour
         audioSource.PlayOneShot(dingClip);
     }
 
+    /// <summary>
+    /// 役割: SendATCBrake の処理を実行します。
+    /// </summary>
+    /// <param name="brakeNotch">brakeNotch を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void SendATCBrake(int brakeNotch)
     {
         if (notchManager == null)
@@ -94,6 +111,10 @@ public class ATCController : MonoBehaviour
         notchManager.SetATCBrakeNotch(Mathf.Max(0, brakeNotch));
     }
 
+    /// <summary>
+    /// 役割: UpdateATCBrakeLatch の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void UpdateATCBrakeLatch()
     {
         float applyThresholdMS = patternAllowSpeedMS + Mathf.Max(0f, overspeedToleranceMS);
@@ -116,6 +137,11 @@ public class ATCController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: UpdatePatternAllowSpeed の処理を実行します。
+    /// </summary>
+    /// <param name="currentEdge">currentEdge を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void UpdatePatternAllowSpeed(TrackEdge currentEdge)
     {
         patternAllowSpeedMS = currentLimitSpeedMS;
@@ -189,6 +215,10 @@ public class ATCController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: GetPatternDecelerationMS2 の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private float GetPatternDecelerationMS2()
     {
         if (trainSpec != null)
@@ -199,6 +229,10 @@ public class ATCController : MonoBehaviour
         return Mathf.Max(0f, fallbackPatternDecelerationMS2);
     }
 
+    /// <summary>
+    /// 役割: ResolveRuntimeReferences の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ResolveRuntimeReferences()
     {
         if (trainSpec == null && train != null)
@@ -212,6 +246,10 @@ public class ATCController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: ResetPatternState の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ResetPatternState()
     {
         currentLimitSpeedMS = 0f;

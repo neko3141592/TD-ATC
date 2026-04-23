@@ -6,6 +6,13 @@ using UnityEngine;
 /// </summary>
 internal class AirBrakeUnit
 {
+    /// <summary>
+    /// 役割: GetAirBrakeCapForceN の処理を実行します。
+    /// </summary>
+    /// <param name="trainSpec">trainSpec を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetAirBrakeCapForceN(TrainSpec trainSpec, CarSpec carSpec, float speedMS)
     {
         // 現在速度における「その車両が出せる空気ブレーキ上限力[N]」
@@ -19,6 +26,15 @@ internal class AirBrakeUnit
         return Mathf.Max(0f, maxBCPressureKPa * forcePerKPa);
     }
 
+    /// <summary>
+    /// 役割: GetTargetBCPressureKPa の処理を実行します。
+    /// </summary>
+    /// <param name="trainSpec">trainSpec を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <param name="targetAirForceN">targetAirForceN を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <param name="hasBrakeCommand">hasBrakeCommand を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetTargetBCPressureKPa(TrainSpec trainSpec, CarSpec carSpec, float targetAirForceN, float speedMS, bool hasBrakeCommand)
     {
         // 目標空気力[N]を実現するための目標BC圧[kPa]を逆算する
@@ -42,6 +58,15 @@ internal class AirBrakeUnit
         return targetBCPressureKPa;
     }
 
+    /// <summary>
+    /// 役割: UpdateBCPressureKPa の処理を実行します。
+    /// </summary>
+    /// <param name="trainSpec">trainSpec を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <param name="currentBCPressureKPa">currentBCPressureKPa を指定します。</param>
+    /// <param name="targetBCPressureKPa">targetBCPressureKPa を指定します。</param>
+    /// <param name="deltaTime">deltaTime を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float UpdateBCPressureKPa(TrainSpec trainSpec, CarSpec carSpec, float currentBCPressureKPa, float targetBCPressureKPa, float deltaTime)
     {
         // BC圧の応答遅れ（込め/抜き速度）を通して次フレーム値を計算
@@ -78,6 +103,14 @@ internal class AirBrakeUnit
         return Mathf.Clamp(nextBCPressureKPa, 0f, maxBCPressureKPa);
     }
 
+    /// <summary>
+    /// 役割: GetAirBrakeForceN の処理を実行します。
+    /// </summary>
+    /// <param name="trainSpec">trainSpec を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <param name="bcPressureKPa">bcPressureKPa を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     public float GetAirBrakeForceN(TrainSpec trainSpec, CarSpec carSpec, float bcPressureKPa, float speedMS)
     {
         // 実BC圧[kPa] -> 実空気ブレーキ力[N] 変換
@@ -92,6 +125,13 @@ internal class AirBrakeUnit
         return Mathf.Max(0f, safeBCPressureKPa * forcePerKPa);
     }
 
+    /// <summary>
+    /// 役割: GetForcePerKPa の処理を実行します。
+    /// </summary>
+    /// <param name="trainSpec">trainSpec を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <param name="speedMS">speedMS を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private float GetForcePerKPa(TrainSpec trainSpec, CarSpec carSpec, float speedMS)
     {
         // 1kPaあたり何N出るかを車両パラメータと速度依存μから算出
@@ -117,6 +157,12 @@ internal class AirBrakeUnit
         return Mathf.Max(0f, 1000f * areaM2 * cylinderCount * leverage * efficiency * mu);
     }
 
+    /// <summary>
+    /// 役割: GetMaxBCPressureKPa の処理を実行します。
+    /// </summary>
+    /// <param name="trainSpec">trainSpec を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private float GetMaxBCPressureKPa(TrainSpec trainSpec, CarSpec carSpec)
     {
         if (carSpec == null)

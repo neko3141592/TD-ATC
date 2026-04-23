@@ -41,6 +41,10 @@ public class SpeedometerUI : MonoBehaviour
     private float nextSampleTime = 0f;
     private bool hasSampledSpeed = false;
 
+    /// <summary>
+    /// 役割: OnEnable の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void OnEnable()
     {
         displayedSpeedKmH = 0f;
@@ -49,6 +53,10 @@ public class SpeedometerUI : MonoBehaviour
         nextSampleTime = 0f;
     }
 
+    /// <summary>
+    /// 役割: Update の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void Update()
     {
         if (train != null)
@@ -83,6 +91,10 @@ public class SpeedometerUI : MonoBehaviour
         UpdateAtcTriangle();
     }
 
+    /// <summary>
+    /// 役割: SampleSpeedIfNeeded の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void SampleSpeedIfNeeded()
     {
         if (!hasSampledSpeed || !enableRandomLag || Time.time >= nextSampleTime)
@@ -93,6 +105,10 @@ public class SpeedometerUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: ScheduleNextSampleTime の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ScheduleNextSampleTime()
     {
         if (!enableRandomLag)
@@ -106,6 +122,10 @@ public class SpeedometerUI : MonoBehaviour
         nextSampleTime = Time.time + Random.Range(minLag, maxLag);
     }
 
+    /// <summary>
+    /// 役割: UpdateAtcTriangle の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void UpdateAtcTriangle()
     {
         if (atcTriangle == null)

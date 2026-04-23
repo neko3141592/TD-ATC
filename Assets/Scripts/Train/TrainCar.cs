@@ -25,6 +25,14 @@ public class TrainCar : MonoBehaviour
     public bool HasCab => carSpec != null && carSpec.carRole == CarRole.Cab;
     public CabEnd CabEnd => carSpec != null ? carSpec.cabEnd : CabEnd.None;
 
+    /// <summary>
+    /// 役割: Configure の処理を実行します。
+    /// </summary>
+    /// <param name="controller">controller を指定します。</param>
+    /// <param name="carIndex">carIndex を指定します。</param>
+    /// <param name="spec">spec を指定します。</param>
+    /// <param name="yawOffsetDegrees">yawOffsetDegrees を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     public void Configure(TrainController controller, int carIndex, CarSpec spec, float yawOffsetDegrees)
     {
         mainController = controller;
@@ -33,6 +41,10 @@ public class TrainCar : MonoBehaviour
         generatedYawOffsetDegrees = yawOffsetDegrees;
     }
 
+    /// <summary>
+    /// 役割: Update の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     void Update()
     {
         if (mainController == null || mainController.CarTrackStates == null) return;

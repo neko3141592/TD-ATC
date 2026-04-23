@@ -23,6 +23,10 @@ public class TrainFormationBuilder : MonoBehaviour
 
     private const string CarsRootName = "Cars";
 
+    /// <summary>
+    /// 役割: Reset の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Reset()
     {
         trainController = GetComponent<TrainController>();
@@ -30,6 +34,10 @@ public class TrainFormationBuilder : MonoBehaviour
     }
 
     [ContextMenu("Rebuild Train Cars")]
+    /// <summary>
+    /// 役割: Rebuild の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void Rebuild()
     {
         ConsistDefinition resolvedConsist = ResolveConsistDefinition();
@@ -63,6 +71,10 @@ public class TrainFormationBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: ResolveConsistDefinition の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private ConsistDefinition ResolveConsistDefinition()
     {
         if (consistDefinition != null && consistDefinition.HasCars)
@@ -73,6 +85,10 @@ public class TrainFormationBuilder : MonoBehaviour
         return trainController != null ? trainController.ConsistDefinition : consistDefinition;
     }
 
+    /// <summary>
+    /// 役割: EnsureCarsRoot の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void EnsureCarsRoot()
     {
         if (carsRoot != null)
@@ -92,6 +108,10 @@ public class TrainFormationBuilder : MonoBehaviour
         carsRoot = root.transform;
     }
 
+    /// <summary>
+    /// 役割: ClearCarsRoot の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void ClearCarsRoot()
     {
         for (int i = carsRoot.childCount - 1; i >= 0; i--)
@@ -108,6 +128,12 @@ public class TrainFormationBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: BuildCar の処理を実行します。
+    /// </summary>
+    /// <param name="resolvedConsist">resolvedConsist を指定します。</param>
+    /// <param name="carIndex">carIndex を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void BuildCar(ConsistDefinition resolvedConsist, int carIndex)
     {
         if (!resolvedConsist.TryGetCar(carIndex, out CarSpec carSpec) || carSpec == null)
@@ -135,6 +161,11 @@ public class TrainFormationBuilder : MonoBehaviour
         AddCabModuleIfNeeded(instance.transform, carSpec);
     }
 
+    /// <summary>
+    /// 役割: InstantiateCarPrefab の処理を実行します。
+    /// </summary>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private GameObject InstantiateCarPrefab(CarSpec carSpec)
     {
 #if UNITY_EDITOR
@@ -147,12 +178,23 @@ public class TrainFormationBuilder : MonoBehaviour
         return Instantiate(carSpec.carPrefab, carsRoot);
     }
 
+    /// <summary>
+    /// 役割: CreateCarObjectName の処理を実行します。
+    /// </summary>
+    /// <param name="carIndex">carIndex を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private string CreateCarObjectName(int carIndex, CarSpec carSpec)
     {
         string role = carSpec.carRole == CarRole.Cab ? carSpec.cabEnd.ToString() : carSpec.carRole.ToString();
         return $"Car_{carIndex + 1:00}_{carSpec.carType}_{role}";
     }
 
+    /// <summary>
+    /// 役割: ResetGeneratedTransform の処理を実行します。
+    /// </summary>
+    /// <param name="carTransform">carTransform を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ResetGeneratedTransform(Transform carTransform)
     {
         carTransform.SetParent(carsRoot, false);
@@ -161,6 +203,13 @@ public class TrainFormationBuilder : MonoBehaviour
         carTransform.localScale = Vector3.one;
     }
 
+    /// <summary>
+    /// 役割: ConfigureTrainCar の処理を実行します。
+    /// </summary>
+    /// <param name="instance">instance を指定します。</param>
+    /// <param name="carIndex">carIndex を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ConfigureTrainCar(GameObject instance, int carIndex, CarSpec carSpec)
     {
         TrainCar trainCar = instance.GetComponent<TrainCar>();
@@ -172,6 +221,11 @@ public class TrainFormationBuilder : MonoBehaviour
         trainCar.Configure(trainController, carIndex, carSpec, GetCarYawOffsetDegrees(carSpec));
     }
 
+    /// <summary>
+    /// 役割: GetCarYawOffsetDegrees の処理を実行します。
+    /// </summary>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private float GetCarYawOffsetDegrees(CarSpec carSpec)
     {
         if (carSpec != null && carSpec.carRole == CarRole.Cab && carSpec.cabEnd == CabEnd.Rear)
@@ -182,6 +236,12 @@ public class TrainFormationBuilder : MonoBehaviour
         return 0f;
     }
 
+    /// <summary>
+    /// 役割: AddCabModuleIfNeeded の処理を実行します。
+    /// </summary>
+    /// <param name="carRoot">carRoot を指定します。</param>
+    /// <param name="carSpec">carSpec を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void AddCabModuleIfNeeded(Transform carRoot, CarSpec carSpec)
     {
         if (carSpec == null || carSpec.carRole != CarRole.Cab || cabModulePrefab == null)
@@ -197,6 +257,11 @@ public class TrainFormationBuilder : MonoBehaviour
         cabModule.transform.localScale = Vector3.one;
     }
 
+    /// <summary>
+    /// 役割: FindCabModuleMount の処理を実行します。
+    /// </summary>
+    /// <param name="carRoot">carRoot を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private Transform FindCabModuleMount(Transform carRoot)
     {
         if (!string.IsNullOrEmpty(cabModuleMountName))
@@ -211,6 +276,11 @@ public class TrainFormationBuilder : MonoBehaviour
         return carRoot;
     }
 
+    /// <summary>
+    /// 役割: GetCabModuleEuler の処理を実行します。
+    /// </summary>
+    /// <param name="cabEnd">cabEnd を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private Vector3 GetCabModuleEuler(CabEnd cabEnd)
     {
         return cabEnd == CabEnd.Rear ? rearCabModuleLocalEuler : frontCabModuleLocalEuler;

@@ -61,6 +61,12 @@ public class BrakeDisplayBuilder : MonoBehaviour
         public float timestamp;
         public int value;
 
+        /// <summary>
+        /// 役割: NotchSample の処理を実行します。
+        /// </summary>
+        /// <param name="timestamp">timestamp を指定します。</param>
+        /// <param name="value">value を指定します。</param>
+        /// <returns>処理結果を返します。</returns>
         public NotchSample(float timestamp, int value)
         {
             this.timestamp = timestamp;
@@ -68,17 +74,29 @@ public class BrakeDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: Reset の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Reset()
     {
         brakeDisplayRoot = transform as RectTransform;
     }
 
+    /// <summary>
+    /// 役割: Awake の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Awake()
     {
         runtimeRefDirty = true;
         ResetBrakeDelayState(0);
     }
 
+    /// <summary>
+    /// 役割: Update の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void Update()
     {
         if (!Application.isPlaying)
@@ -89,6 +107,10 @@ public class BrakeDisplayBuilder : MonoBehaviour
         UpdateRuntimeDisplay();
     }
 
+    /// <summary>
+    /// 役割: OnValidate の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
         runtimeRefDirty = true;
@@ -111,6 +133,10 @@ public class BrakeDisplayBuilder : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    /// <summary>
+    /// 役割: DelayedGenerateInEditor の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void DelayedGenerateInEditor()
     {
         if (this == null || Application.isPlaying)
@@ -123,6 +149,10 @@ public class BrakeDisplayBuilder : MonoBehaviour
 #endif
 
     [ContextMenu("Generate Brake Display")]
+    /// <summary>
+    /// 役割: Generate の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void Generate()
     {
         RectTransform root = ResolveRoot();
@@ -149,6 +179,10 @@ public class BrakeDisplayBuilder : MonoBehaviour
     }
 
     [ContextMenu("Clear Generated Brake Display")]
+    /// <summary>
+    /// 役割: ClearGenerated の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     public void ClearGenerated()
     {
         RectTransform root = ResolveRoot();
@@ -161,6 +195,10 @@ public class BrakeDisplayBuilder : MonoBehaviour
         runtimeRefDirty = true;
     }
 
+    /// <summary>
+    /// 役割: ResolveRoot の処理を実行します。
+    /// </summary>
+    /// <returns>処理結果を返します。</returns>
     private RectTransform ResolveRoot()
     {
         if (brakeDisplayRoot != null)
@@ -172,6 +210,11 @@ public class BrakeDisplayBuilder : MonoBehaviour
         return brakeDisplayRoot;
     }
 
+    /// <summary>
+    /// 役割: EnsureVerticalLayout の処理を実行します。
+    /// </summary>
+    /// <param name="root">root を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void EnsureVerticalLayout(RectTransform root)
     {
         VerticalLayoutGroup layout = root.GetComponent<VerticalLayoutGroup>();
@@ -196,6 +239,11 @@ public class BrakeDisplayBuilder : MonoBehaviour
         layout.childForceExpandHeight = false;
     }
 
+    /// <summary>
+    /// 役割: ClearGeneratedChildren の処理を実行します。
+    /// </summary>
+    /// <param name="root">root を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ClearGeneratedChildren(RectTransform root)
     {
         for (int i = root.childCount - 1; i >= 0; i--)
@@ -217,11 +265,21 @@ public class BrakeDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: ShouldDeleteChild の処理を実行します。
+    /// </summary>
+    /// <param name="childName">childName を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private bool ShouldDeleteChild(string childName)
     {
         return childName == EmergencyLabelName || childName.StartsWith(NotchPrefix);
     }
 
+    /// <summary>
+    /// 役割: CreateEmergencyLabel の処理を実行します。
+    /// </summary>
+    /// <param name="parent">parent を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void CreateEmergencyLabel(RectTransform parent)
     {
         GameObject root = new GameObject(EmergencyLabelName, typeof(RectTransform), typeof(Image), typeof(LayoutElement));
@@ -272,6 +330,12 @@ public class BrakeDisplayBuilder : MonoBehaviour
         root.SetActive(false);
     }
 
+    /// <summary>
+    /// 役割: CreateNotchItem の処理を実行します。
+    /// </summary>
+    /// <param name="parent">parent を指定します。</param>
+    /// <param name="notch">notch を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void CreateNotchItem(RectTransform parent, int notch)
     {
         GameObject root = new GameObject($"{NotchPrefix}{notch}", typeof(RectTransform), typeof(LayoutElement));
@@ -326,6 +390,10 @@ public class BrakeDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: UpdateRuntimeDisplay の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void UpdateRuntimeDisplay()
     {
         if (train == null)
@@ -384,6 +452,11 @@ public class BrakeDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: ResolveDelayedBrakeNotch の処理を実行します。
+    /// </summary>
+    /// <param name="rawNotch">rawNotch を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private int ResolveDelayedBrakeNotch(int rawNotch)
     {
         rawNotch = Mathf.Max(0, rawNotch);
@@ -410,6 +483,11 @@ public class BrakeDisplayBuilder : MonoBehaviour
         return displayedBrakeNotch;
     }
 
+    /// <summary>
+    /// 役割: ResetBrakeDelayState の処理を実行します。
+    /// </summary>
+    /// <param name="rawNotch">rawNotch を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void ResetBrakeDelayState(int rawNotch)
     {
         displayedBrakeNotch = Mathf.Max(0, rawNotch);
@@ -417,6 +495,10 @@ public class BrakeDisplayBuilder : MonoBehaviour
         lastBufferedBrakeNotch = displayedBrakeNotch;
     }
 
+    /// <summary>
+    /// 役割: CacheRuntimeReferences の処理を実行します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
     private void CacheRuntimeReferences()
     {
         runtimeRefDirty = false;
@@ -466,6 +548,11 @@ public class BrakeDisplayBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 役割: StretchToParent の処理を実行します。
+    /// </summary>
+    /// <param name="rt">rt を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
     private void StretchToParent(RectTransform rt)
     {
         if (rt == null)
@@ -480,6 +567,11 @@ public class BrakeDisplayBuilder : MonoBehaviour
         rt.pivot = new Vector2(0.5f, 0.5f);
     }
 
+    /// <summary>
+    /// 役割: FormatNotchLabel の処理を実行します。
+    /// </summary>
+    /// <param name="notch">notch を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
     private string FormatNotchLabel(int notch)
     {
         return $"B{Mathf.Max(0, notch)}";
