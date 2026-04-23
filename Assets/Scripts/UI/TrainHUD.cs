@@ -7,6 +7,7 @@ public class TrainHUD : MonoBehaviour
     [SerializeField] private TrainController train;
     [SerializeField] private ATCController atc;
     [SerializeField] private StationStopController stationStop;
+    [SerializeField] private BlockOccupancyManager blockOccupancyManager;
     [SerializeField] private TMP_Text hudText;
 
     /// <summary>
@@ -77,6 +78,34 @@ public class TrainHUD : MonoBehaviour
             );
         }
 
+        StringBuilder blockSection = new StringBuilder();
+        blockSection.Append("[Block]\n");
+        if (blockOccupancyManager == null)
+        {
+            blockSection.Append("Occupied: --\n");
+            blockSection.Append("Ahead: --\n");
+            blockSection.Append("Ahead Distance: --\n");
+        }
+        else
+        {
+            blockSection.Append($"Occupied: {blockOccupancyManager.GetOccupiedBlocksLabel(train)}\n");
+
+            if (blockOccupancyManager.TryFindFirstOccupiedBlockAhead(
+                train,
+                out string occupiedBlockId,
+                out float distanceToBlockM
+            ))
+            {
+                blockSection.Append($"Ahead: {occupiedBlockId}\n");
+                blockSection.Append($"Ahead Distance: {distanceToBlockM:0.0} m\n");
+            }
+            else
+            {
+                blockSection.Append("Ahead: --\n");
+                blockSection.Append("Ahead Distance: --\n");
+            }
+        }
+
         StringBuilder carBrakeSection = new StringBuilder();
         carBrakeSection.Append("[Brake Cars]\n");
         if (carBrakeStates == null || carBrakeStates.Count == 0)
@@ -118,6 +147,8 @@ public class TrainHUD : MonoBehaviour
             $"ATC Limit: {atcLimitText}\n" +
             "\n" +
             stationSection.ToString() +
+            "\n" +
+            blockSection.ToString() +
             "\n" +
             "[Brake]\n" +
             $"Total: {totalBrakeForceKN:0.0} kN | {train.CurrentBrakeDecelMS2:0.00} m/s^2\n" +

@@ -6,6 +6,7 @@ public class BlockOccupancyManager : MonoBehaviour
     [SerializeField] private TrackGraph trackGraph;
     [SerializeField] private TrainController train;
     [SerializeField] private List<TrainController> additionalTrains = new();
+    [SerializeField, Min(0f)] private float lookaheadDistanceM = 3000f;
 
     // blockId -> Set<trainId>
     private Dictionary<string, HashSet<string>> occupiedTrainsByBlock = new();
@@ -15,6 +16,7 @@ public class BlockOccupancyManager : MonoBehaviour
     // トレース結果を使い回して、毎フレームの不要な確保を避けます。
     private readonly List<TrackTraceSegment> behindSegments = new();
     private readonly List<TrackTraceSegment> aheadSegments = new();
+    private readonly List<string> sortedBlockBuffer = new();
 
     public IReadOnlyDictionary<string, HashSet<string>> OccupiedTrainsByBlock => occupiedTrainsByBlock;
     public IReadOnlyDictionary<string, HashSet<string>> OccupiedBlocksByTrain => occupiedBlocksByTrain;
@@ -191,5 +193,125 @@ public class BlockOccupancyManager : MonoBehaviour
         }
 
         results.Add(edge.blockId);
+    }
+
+    /// <summary>
+    /// 役割: 指定列車が現在占有している blockId 一覧を文字列として返します。
+    /// </summary>
+    /// <param name="targetTrain">占有 block を確認したい列車を指定します。</param>
+    /// <returns>表示用に整形した blockId 一覧を返します。列車が未登録なら "--" を返します。</returns>
+    public string GetOccupiedBlocksLabel(TrainController targetTrain)
+    {
+        if (targetTrain == null || string.IsNullOrEmpty(targetTrain.TrainId))
+        {
+            return "--";
+        }
+
+        if (!occupiedBlocksByTrain.TryGetValue(targetTrain.TrainId, out HashSet<string> occupiedBlocks) ||
+            occupiedBlocks == null ||
+            occupiedBlocks.Count == 0)
+        {
+            return "--";
+        }
+
+        sortedBlockBuffer.Clear();
+        foreach (string blockId in occupiedBlocks)
+        {
+            sortedBlockBuffer.Add(blockId);
+        }
+
+        sortedBlockBuffer.Sort(System.StringComparer.Ordinal);
+        return string.Join(", ", sortedBlockBuffer);
+    }
+
+    /// <summary>
+    /// 役割: 指定列車の前方で最初に在線している block を検索します。
+    /// </summary>
+    /// <param name="targetTrain">前方在線を調べる自列車を指定します。</param>
+    /// <param name="occupiedBlockId">最初に見つかった在線 blockId を受け取ります。</param>
+    /// <param name="distanceToBlockM">自列車先頭基準点からその block までの距離[m]を受け取ります。</param>
+    /// <returns>自列車以外が在線している前方 block を見つけた場合は true、それ以外は false を返します。</returns>
+    public bool TryFindFirstOccupiedBlockAhead(
+        TrainController targetTrain,
+        out string occupiedBlockId,
+        out float distanceToBlockM
+    )
+    {
+        occupiedBlockId = null;
+        distanceToBlockM = 0f;
+
+        if (targetTrain == null)
+        {
+            return false;
+        }
+
+        TrackGraph activeTrackGraph = trackGraph != null ? trackGraph : targetTrain.Graph;
+        if (activeTrackGraph == null || string.IsNullOrEmpty(targetTrain.CurrentEdgeId))
+        {
+            return false;
+        }
+
+        if (!TrackRouteTracer.TryTraceAhead(
+                activeTrackGraph,
+                targetTrain.CurrentEdgeId,
+                targetTrain.DistanceOnEdgeM,
+                lookaheadDistanceM,
+                aheadSegments
+            ))
+        {
+            return false;
+        }
+
+        HashSet<string> visitedBlocks = new();
+        for (int i = 0; i < aheadSegments.Count; i++)
+        {
+            TrackTraceSegment segment = aheadSegments[i];
+            TrackEdge edge = activeTrackGraph.FindEdge(segment.edgeId);
+            if (edge == null || string.IsNullOrEmpty(edge.blockId))
+            {
+                continue;
+            }
+
+            if (!visitedBlocks.Add(edge.blockId))
+            {
+                continue;
+            }
+
+            if (!IsBlockOccupiedByOtherTrain(edge.blockId, targetTrain.TrainId))
+            {
+                continue;
+            }
+
+            occupiedBlockId = edge.blockId;
+            distanceToBlockM = segment.startDistanceFromOriginM;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 役割: 指定 block に自列車以外の列車が在線しているか判定します。
+    /// </summary>
+    /// <param name="blockId">在線有無を確認する blockId を指定します。</param>
+    /// <param name="selfTrainId">除外したい自列車の trainId を指定します。</param>
+    /// <returns>自列車以外が在線していれば true、それ以外は false を返します。</returns>
+    private bool IsBlockOccupiedByOtherTrain(string blockId, string selfTrainId)
+    {
+        if (!occupiedTrainsByBlock.TryGetValue(blockId, out HashSet<string> trainsInBlock) ||
+            trainsInBlock == null)
+        {
+            return false;
+        }
+
+        foreach (string trainId in trainsInBlock)
+        {
+            if (trainId != selfTrainId)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
