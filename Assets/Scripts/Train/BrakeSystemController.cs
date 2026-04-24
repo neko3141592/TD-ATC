@@ -3,8 +3,11 @@ using UnityEngine;
 
 public class BrakeSystemController : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private TrainSpec trainSpec;
     [SerializeField] private ConsistDefinition consistDefinition;
+
+    [Header("Brake Distribution")]
     [SerializeField, Min(0f)] private float mtAirDistributionThresholdKmH = 120f; // この速度以下で「M回生 -> MT空気」に切替
     private readonly BrakeControlUnit brakeControlUnit = new BrakeControlUnit();
     private readonly RegenBrakeUnit regenBrakeUnit = new RegenBrakeUnit();

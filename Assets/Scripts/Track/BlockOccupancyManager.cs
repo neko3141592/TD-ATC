@@ -3,9 +3,12 @@ using UnityEngine;
 
 public class BlockOccupancyManager : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private TrackGraph trackGraph;
     [SerializeField] private TrainController train;
     [SerializeField] private List<TrainController> additionalTrains = new();
+
+    [Header("Trace Settings")]
     [SerializeField, Min(0f)] private float lookaheadDistanceM = 3000f;
 
     // blockId -> Set<trainId>

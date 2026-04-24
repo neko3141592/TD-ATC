@@ -45,6 +45,7 @@ public class TrainSpec : ScriptableObject
 
     [Header("Brake Notch Decelerations (m/s^2)")]
     public float[] brakeNotchDecelerations = { 0.35f, 0.55f, 0.75f, 0.95f, 1.1f, 1.2f, 1.3f, 1.4f };
+    public float estimatedEmergencyBrakeDeceleration = 1.25f;
 
     [Header("Brake Blend (Regen + Air)")]
     [Min(0f)] public float maxRegenDecelerationMS2 = 1.1f;
@@ -284,6 +285,15 @@ public class TrainSpec : ScriptableObject
     }
 
     /// <summary>
+    /// 役割: GetEmergencyBrakeDeceleration の処理を実行します。
+    /// </summary>
+
+    public float GetEstimatedEmergencyBrakeDeceleration()
+    {
+        return estimatedEmergencyBrakeDeceleration;
+    }
+
+    /// <summary>
     /// 役割: GetEmergencyBrakeNotch の処理を実行します。
     /// </summary>
     /// <returns>処理結果を返します。</returns>
@@ -292,6 +302,7 @@ public class TrainSpec : ScriptableObject
         // 常用最大ノッチ(B8想定)の1段上を非常段(B9)とする
         return Mathf.Max(2, maxBrakeNotch + 1);
     }
+
 
     /// <summary>
     /// 役割: GetBrakeFrictionCoefficientMu の処理を実行します。

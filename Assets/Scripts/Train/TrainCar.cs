@@ -12,6 +12,7 @@ public class TrainCar : MonoBehaviour
     [Tooltip("自分が編成の中で何両目か (0が先頭)")]
     public int myCarIndex = 0;
 
+    [Header("Car Setup")]
     [SerializeField] private CarSpec carSpec;
     [SerializeField] private float generatedYawOffsetDegrees = 0f;
 

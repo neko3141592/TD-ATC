@@ -3,9 +3,14 @@ using UnityEngine.UI;
 
 public class ATCSignal : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private Image targetImage;
+
+    [Header("Signal Sprites")]
     [SerializeField] private Sprite redSprite;
     [SerializeField] private Sprite greenSprite;
+
+    [Header("ATC")]
     [SerializeField] private ATCController atc;
 
     /// <summary>

@@ -2,9 +2,11 @@ using UnityEngine;
 
 public class Compressor : MonoBehaviour
 {
+    [Header("Audio Sources")]
     [SerializeField] private AudioSource oneShotSource;
     [SerializeField] private AudioSource loopSource;
 
+    [Header("Audio Clips")]
     [SerializeField] private AudioClip startClip;
     [SerializeField] private AudioClip loopClip;
     [SerializeField] private AudioClip stopClip;

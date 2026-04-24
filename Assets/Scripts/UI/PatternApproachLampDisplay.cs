@@ -3,9 +3,14 @@ using UnityEngine.UI;
 
 public class PatternApproachLampDisplay : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private Image targetImage;
+
+    [Header("Sprites")]
     [SerializeField] private Sprite lampOnSprite;
     [SerializeField] private Sprite lampOffSprite;
+
+    [Header("ATC")]
     [SerializeField] private ATCController atcController;
 
     /// <summary>

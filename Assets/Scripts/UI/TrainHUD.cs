@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class TrainHUD : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private TrainController train;
     [SerializeField] private ATCController atc;
     [SerializeField] private StationStopController stationStop;
@@ -37,9 +38,15 @@ public class TrainHUD : MonoBehaviour
         }
 
         string atcLimitText = "--";
+        string atcStateText = "--";
+        string atcPatternText = "--";
+        string atcEmergencyPatternText = "--";
         if (atc != null)
         {
             atcLimitText = $"{atc.CurrentLimitSpeedKmH:0.0} km/h";
+            atcStateText = atc.CurrentAtcStateLabel;
+            atcPatternText = $"{atc.CurrentPatternAllowSpeedKmH:0.0} km/h";
+            atcEmergencyPatternText = $"{atc.CurrentPatternEmergencyAllowSpeedKmH:0.0} km/h";
         }
 
         float totalBrakeForceKN = train.CurrentBrakeForceN / 1000f;
@@ -144,7 +151,10 @@ public class TrainHUD : MonoBehaviour
             $"ATC Cmd: {FormatBrakeNotchLabel(train.ATCBrakeNotch)}\n" +
             "\n" +
             "[Safety]\n" +
+            $"ATC State: {atcStateText}\n" +
             $"ATC Limit: {atcLimitText}\n" +
+            $"ATC Pattern: {atcPatternText}\n" +
+            $"ATC Emergency Pattern: {atcEmergencyPatternText}\n" +
             "\n" +
             stationSection.ToString() +
             "\n" +

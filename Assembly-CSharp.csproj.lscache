@@ -90,7 +90,10 @@ Assets/Scripts/
   RegenBrakeUnit.cs
   TractionSystemController.cs
   TrainCar.cs
+  TrainController.Consist.cs
   TrainController.cs
+  TrainController.Physics.cs
+  TrainController.Track.cs
   TrainFormationBuilder.cs
  UI/
   ATCSignal.cs
@@ -481,7 +484,7 @@ Library/ScriptAssemblies/
  Unity.Properties.SourceGenerator.dll
  Unity.SourceGenerators.dll
  Unity.UIToolkit.SourceGenerator.dll
-../.vscode/extensions/visualstudiotoolsforunity.vstuc-1.2.1/Analyzers/Microsoft.Unity.Analyzers.dll
+../.vscode/extensions/visualstudiotoolsforunity.vstuc-1.2.2/Analyzers/Microsoft.Unity.Analyzers.dll
 
 [analyzerConfigFiles]
 Temp/obj/Assembly-CSharp/Assembly-CSharp.GeneratedMSBuildEditorConfig.editorconfig

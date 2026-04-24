@@ -12,11 +12,13 @@ public enum StationStopJudgeState
 public class StationStopController : MonoBehaviour
 {
     // trackGraph は任意です。未設定なら train に割り当てられた TrackGraph をそのまま使います。
+    [Header("References")]
     [SerializeField] private TrackGraph trackGraph;
     [SerializeField] private TrainServiceDefinition service;
     [SerializeField] private TrainController train;
     [SerializeField] private NextStationResolver nextStationResolver;
 
+    [Header("Stop Judge Tuning")]
     [SerializeField, Min(0f)] private float stationLookaheadDistanceM = 3000f;
     [SerializeField, Min(0f)] private float stopSpeedThresholdMS = 0.2f;
     [SerializeField, Min(0f)] private float stopHoldSeconds = 1.0f;

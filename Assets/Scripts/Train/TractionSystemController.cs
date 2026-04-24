@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class TractionSystemController : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private TrainSpec trainSpec;
     [SerializeField] private ConsistDefinition consistDefinition;
 
