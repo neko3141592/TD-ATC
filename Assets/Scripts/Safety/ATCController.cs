@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 public class ATCController : MonoBehaviour
@@ -94,6 +95,8 @@ public class ATCController : MonoBehaviour
         AtcTargetCandidate speedLimitCandidate = BuildSpeedLimitCandidate(currentEdge);
         ApplyPatternCandidate(speedLimitCandidate);
         UpdateATCBrakeLatch();
+
+        // ATCブレーキ司令を送信
         SendATCBrake(isATCBrakeLatched ? atcBrakeNotch : 0);
     }
 
@@ -218,6 +221,23 @@ public class ATCController : MonoBehaviour
         }
 
         return candidate;
+    }
+
+    private void BuildOccupiedBlockCandidate(AtcTargetCandidate candidate)
+    {
+        if(!candidate.isValid)
+        {
+            ResetPatternState();
+            return;
+        }
+        if (blockOccupancyManager.TryFindFirstOccupiedBlockAhead(train, out string occupiedBlockId, out float distanceToBlockM))
+        {
+            
+        } else
+        {
+            return;
+        }
+        
     }
 
     /// <summary>
