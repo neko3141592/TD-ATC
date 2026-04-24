@@ -5,6 +5,7 @@ public class ATCController : MonoBehaviour
     [SerializeField] private TrainController train;
     [SerializeField] private TrainSpec trainSpec;
     [SerializeField] private NotchManager notchManager;
+    [SerializeField] private BlockOccupancyManager blockOccupancyManager;
 
     [SerializeField] private float currentLimitSpeedMS = 0f;
     [SerializeField] private float patternAllowSpeedMS = 0f;
@@ -17,6 +18,7 @@ public class ATCController : MonoBehaviour
     [SerializeField] private float atcReleaseMarginKmH = 3f;
     [SerializeField] private float overspeedToleranceMS = 0.1f;
     [SerializeField] private float safetyDistance = 50f;
+    [SerializeField] private float occupiedBlockSafetyMarginM = 50f;
     [SerializeField] private int atcBrakeNotch = 7;
 
     private bool hasPreviousLimit = false;
@@ -28,6 +30,18 @@ public class ATCController : MonoBehaviour
     public float CurrentPatternTargetDistanceM => patternTargetDistanceM;
     public float CurrentPatternTargetSpeedKmH => patternTargetSpeedMS * 3.6f;
     public bool IsPatternApproaching => train != null && patternAllowSpeedMS < currentLimitSpeedMS && patternTargetSpeedMS < train.SpeedMS;
+
+    /// <summary>
+    /// 役割: ATC 制限候補の情報をひとまとめに保持します。
+    /// </summary>
+    private struct AtcTargetCandidate
+    {
+        public bool isValid;
+        public string sourceLabel;
+        public float distanceM;
+        public float targetSpeedMS;
+        public float allowedSpeedMS;
+    }
 
     /// <summary>
     /// 役割: Awake の処理を実行します。
@@ -77,7 +91,8 @@ public class ATCController : MonoBehaviour
         previousLimitSpeedMS = nextLimitSpeedMS;
         hasPreviousLimit = true;
 
-        UpdatePatternAllowSpeed(currentEdge);
+        AtcTargetCandidate speedLimitCandidate = BuildSpeedLimitCandidate(currentEdge);
+        ApplyPatternCandidate(speedLimitCandidate);
         UpdateATCBrakeLatch();
         SendATCBrake(isATCBrakeLatched ? atcBrakeNotch : 0);
     }
@@ -138,39 +153,37 @@ public class ATCController : MonoBehaviour
     }
 
     /// <summary>
-    /// 役割: UpdatePatternAllowSpeed の処理を実行します。
+    /// 役割: 現在位置から見た速度制限候補を組み立てます。
     /// </summary>
-    /// <param name="currentEdge">currentEdge を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void UpdatePatternAllowSpeed(TrackEdge currentEdge)
+    /// <param name="currentEdge">現在走行中のエッジを指定します。</param>
+    /// <returns>速度制限由来の ATC 制限候補を返します。</returns>
+    private AtcTargetCandidate BuildSpeedLimitCandidate(TrackEdge currentEdge)
     {
-        patternAllowSpeedMS = currentLimitSpeedMS;
-        patternTargetDistanceM = train.DistanceM;
-        patternTargetSpeedMS = currentLimitSpeedMS;
+        AtcTargetCandidate candidate = new AtcTargetCandidate
+        {
+            isValid = true,
+            sourceLabel = "Speed Limit",
+            distanceM = 0f,
+            targetSpeedMS = currentLimitSpeedMS,
+            allowedSpeedMS = currentLimitSpeedMS,
+        };
 
         if (train == null || train.Graph == null || currentEdge == null)
         {
-            return;
+            return candidate;
         }
 
         float patternDecelerationMS2 = GetPatternDecelerationMS2();
-        
         float accumulatedDistM = currentEdge.lengthM - train.DistanceOnEdgeM;
         string edgeId = currentEdge.edgeId;
         string nextEdgeId = train.Graph.ResolveNextEdgeId(currentEdge.toNodeId, edgeId);
-        
-        float minCalculatedAllowSpeedMS = currentLimitSpeedMS;
-        float finalTargetDistM = train.DistanceM;
-        float finalTargetSpeedMS = currentLimitSpeedMS;
-        bool foundLower = false;
 
-        float lookaheadLimitM = 1000f; 
-        
+        float lookaheadLimitM = 1000f;
+
         while (accumulatedDistM < lookaheadLimitM)
         {
             if (string.IsNullOrEmpty(nextEdgeId))
             {
-                // 終端は0km/hパターンを生成しない（1閉塞=1Edge運用では終端減速を強制しない）
                 break;
             }
 
@@ -190,14 +203,12 @@ public class ATCController : MonoBehaviour
                     patternDecelerationMS2,
                     accumulatedDistM - safetyDistance
                 );
-                
-                if (allowSpeedMS < minCalculatedAllowSpeedMS)
+
+                if (allowSpeedMS < candidate.allowedSpeedMS)
                 {
-                    minCalculatedAllowSpeedMS = allowSpeedMS;
-                    // 目標地点絶対距離
-                    finalTargetDistM = train.DistanceM + accumulatedDistM;
-                    finalTargetSpeedMS = nextLimitSpeedMS;
-                    foundLower = true;
+                    candidate.distanceM = accumulatedDistM;
+                    candidate.targetSpeedMS = nextLimitSpeedMS;
+                    candidate.allowedSpeedMS = allowSpeedMS;
                 }
             }
 
@@ -206,13 +217,25 @@ public class ATCController : MonoBehaviour
             nextEdgeId = train.Graph.ResolveNextEdgeId(nextEdge.toNodeId, edgeId);
         }
 
-        // 最も低いパターンを使用
-        patternAllowSpeedMS = Mathf.Min(currentLimitSpeedMS, minCalculatedAllowSpeedMS);
-        
-        if (foundLower) {
-            patternTargetDistanceM = finalTargetDistM;
-            patternTargetSpeedMS = finalTargetSpeedMS;
+        return candidate;
+    }
+
+    /// <summary>
+    /// 役割: 組み立てた ATC 制限候補を現在の表示用状態へ反映します。
+    /// </summary>
+    /// <param name="candidate">反映する ATC 制限候補を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
+    private void ApplyPatternCandidate(AtcTargetCandidate candidate)
+    {
+        if (!candidate.isValid)
+        {
+            ResetPatternState();
+            return;
         }
+
+        patternAllowSpeedMS = candidate.allowedSpeedMS;
+        patternTargetDistanceM = train != null ? train.DistanceM + candidate.distanceM : candidate.distanceM;
+        patternTargetSpeedMS = candidate.targetSpeedMS;
     }
 
     /// <summary>
