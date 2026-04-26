@@ -103,6 +103,11 @@ public class TrackGraphEditor : Editor
             AssetDatabase.SaveAssets();
         }
 
+        if (GUILayout.Button("Create TASC 1km Test Track"))
+        {
+            CreateTascTestTrack();
+        }
+
         if (GUILayout.Button("Create Endless Circle Track"))
         {
             var graph = (TrackGraph)target;
@@ -318,5 +323,55 @@ public class TrackGraphEditor : Editor
             EditorUtility.SetDirty(graph);
             AssetDatabase.SaveAssets();
         }
+    }
+
+    /// <summary>
+    /// 役割: TASC の停止パターン確認だけに使う約1kmの単純な直線線路を生成します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
+    private void CreateTascTestTrack()
+    {
+        var graph = (TrackGraph)target;
+        graph.nodes.Clear();
+        graph.edges.Clear();
+        graph.turnoutStates.Clear();
+        graph.stations.Clear();
+
+        TrackBuilder builder = new TrackBuilder(graph);
+
+        // TASC の挙動を見やすくするため、分岐や曲線を入れない 1km 直線にします。
+        builder.Start(Vector3.zero, Quaternion.identity);
+        builder.AddStraight(1000f);
+        builder.PutNode("TASC_Test_End");
+
+        // 停止目標を終端の少し手前に置き、過走しても線路上に余裕が残るようにします。
+        // 既存の LocalTestService.asset に合わせます。
+        // ST_Start は通過扱いなので、最初の停車対象になる ST_Mid をTASC確認用の停止駅にします。
+        builder.AddStation("ST_Start", "TASC Test Start", offsetMFromNode: 50f);
+        builder.AddStation("ST_Mid", "TASC Test Stop", offsetMFromNode: 950f);
+        builder.AddStation("ST_End", "TASC Test End", offsetMFromNode: 990f);
+
+        if (graph.edges.Count > 0)
+        {
+            TrackEdge edge = graph.edges[0];
+            edge.blockId = "B_TASC_TEST";
+            edge.speedLimitMS = 100f / 3.6f;
+            edge.fromNodeId = graph.nodes[0].nodeId;
+            edge.toNodeId = "TASC_Test_End";
+
+            graph.nodes[0].outgoingEdgeIds.Clear();
+            graph.nodes[0].outgoingEdgeIds.Add(edge.edgeId);
+            for (int i = 0; i < graph.stations.Count; i++)
+            {
+                graph.stations[i].edgeId = edge.edgeId;
+            }
+        }
+
+        graph.UpdateNodeTypesAndJunctionIds();
+        graph.SyncTurnoutStates();
+
+        EditorUtility.SetDirty(graph);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"Created TASC 1km test track. ST_Mid stop station is at 950m on {graph.edges[0].edgeId}.", graph);
     }
 }

@@ -32,6 +32,7 @@ MonoBehaviour:
   resistanceC: 3
   maxPowerNotch: 5
   maxBrakeNotch: 8
+  tascBrakeSubstepsPerNotch: 4
   powerNotchRatios:
   - 0.2
   - 0.4
@@ -193,12 +194,13 @@ MonoBehaviour:
   brakeNotchDecelerations:
   - 0.15
   - 0.3
-  - 0.45
-  - 0.6
-  - 0.75
-  - 0.85
+  - 0.5
+  - 0.65
+  - 0.77
+  - 0.87
   - 0.97
-  - 1.1
+  - 1.15
+  estimatedEmergencyBrakeDeceleration: 1.25
   maxRegenDecelerationMS2: 1.2
   regenRiseRateMS3: 0.17
   regenFallRateMS3: 2

@@ -13,6 +13,12 @@ public partial class TrainController
             return;
         }
 
+        if (!acceptPlayerInput)
+        {
+            notchManager.SetManualNotches(0, 0);
+            return;
+        }
+
         int powerNotch = notchManager.ManualPowerNotch;
         int brakeNotch = notchManager.ManualBrakeNotch;
         int emergencyBrakeNotch = EmergencyBrakeNotch;
@@ -43,19 +49,21 @@ public partial class TrainController
     /// <remarks>返り値はありません。</remarks>
     void ApplyPhysics()
     {
-        notchManager.ConfigureLimits(trainSpec.maxPowerNotch, EmergencyBrakeNotch);
+        notchManager.ConfigureLimits(trainSpec.maxPowerNotch, EmergencyBrakeNotch, trainSpec.GetTascBrakeSubstepsPerNotch());
 
         int powerNotch = PowerNotch;
         int brakeNotch = BrakeNotch;
         bool isEmergencyBrake = brakeNotch >= EmergencyBrakeNotch;
+        bool useTascBrakeStep = notchManager.IsTASCBrakeSelected;
+        int tascBrakeStep = notchManager.TASCBrakeStep;
 
         if (brakeSystem != null)
         {
-            brakeSystem.UpdateBrake(brakeNotch, speedMS, Time.deltaTime, isEmergencyBrake);
+            brakeSystem.UpdateBrake(brakeNotch, speedMS, Time.deltaTime, isEmergencyBrake, useTascBrakeStep, tascBrakeStep);
         }
 
         float massKg = GetCurrentConsistMassKg();
-        GetBrakeOutputs(brakeNotch, massKg, out float brakeDeceleration, out float brakeForceN);
+        GetBrakeOutputs(brakeNotch, useTascBrakeStep, tascBrakeStep, massKg, out float brakeDeceleration, out float brakeForceN);
 
         float externalForceN = GetExternalResistanceForceN(powerNotch, brakeDeceleration);
         float tractionForceN = GetTractionForceN(powerNotch, massKg, externalForceN);
@@ -91,11 +99,13 @@ public partial class TrainController
     /// 役割: GetBrakeOutputs の処理を取得します。
     /// </summary>
     /// <param name="brakeNotch">brakeNotch を指定します。</param>
+    /// <param name="useTascBrakeStep">TASC の連続ブレーキ段を使う場合は true を指定します。</param>
+    /// <param name="tascBrakeStep">TASC の連続ブレーキ段を指定します。</param>
     /// <param name="massKg">massKg を指定します。</param>
     /// <param name="brakeDecelerationMS2">出力結果を受け取る brakeDecelerationMS2 です。</param>
     /// <param name="brakeForceN">出力結果を受け取る brakeForceN です。</param>
     /// <remarks>返り値はありません。</remarks>
-    private void GetBrakeOutputs(int brakeNotch, float massKg, out float brakeDecelerationMS2, out float brakeForceN)
+    private void GetBrakeOutputs(int brakeNotch, bool useTascBrakeStep, int tascBrakeStep, float massKg, out float brakeDecelerationMS2, out float brakeForceN)
     {
         brakeDecelerationMS2 = 0f;
         brakeForceN = 0f;
@@ -107,12 +117,14 @@ public partial class TrainController
             return;
         }
 
-        if (brakeNotch <= 0)
+        if (brakeNotch <= 0 && (!useTascBrakeStep || tascBrakeStep <= 0))
         {
             return;
         }
 
-        brakeDecelerationMS2 = trainSpec.GetBrakeDeceleration(brakeNotch);
+        brakeDecelerationMS2 = useTascBrakeStep
+            ? trainSpec.GetTascBrakeStepDeceleration(tascBrakeStep)
+            : trainSpec.GetBrakeDeceleration(brakeNotch);
         brakeForceN = Mathf.Max(0f, brakeDecelerationMS2) * massKg;
     }
 

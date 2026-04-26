@@ -8,6 +8,7 @@ public partial class TrainController : MonoBehaviour
     [SerializeField] private BrakeSystemController brakeSystem;
     [SerializeField] private TractionSystemController tractionSystem;
     [SerializeField] private TrackGraph trackGraph;
+    [SerializeField] private bool acceptPlayerInput = true;
     [SerializeField] private string trainId = "PlayerTrain";
     [SerializeField] private string currentEdgeId;
     [SerializeField] private float speedMS = 0f;
@@ -35,11 +36,13 @@ public partial class TrainController : MonoBehaviour
     public string CurrentEdgeId => currentEdgeId;
     public float DistanceOnEdgeM => distanceOnEdgeM;
     public TrainSpec Spec => trainSpec;
+    public bool AcceptPlayerInput => acceptPlayerInput;
     public int PowerNotch => notchManager != null ? notchManager.ResolvedPowerNotch : 0;
     public int BrakeNotch => notchManager != null ? notchManager.ResolvedBrakeNotch : 0;
     public int ManualPowerNotch => notchManager != null ? notchManager.ManualPowerNotch : 0;
     public int ManualBrakeNotch => notchManager != null ? notchManager.ManualBrakeNotch : 0;
     public int ATCBrakeNotch => notchManager != null ? notchManager.ATCBrakeNotch : 0;
+    public int TASCBrakeStep => notchManager != null ? notchManager.TASCBrakeStep : 0;
     public int EmergencyBrakeNotch => trainSpec != null ? trainSpec.GetEmergencyBrakeNotch() : 9;
     public bool IsEmergencyBrakeActive => BrakeNotch >= EmergencyBrakeNotch;
     public float CurrentBrakeDecelMS2 => brakeSystem != null ? brakeSystem.TotalBrakeDecelMS2 : 0f;
@@ -74,7 +77,7 @@ public partial class TrainController : MonoBehaviour
         InitializeTrackState();
 
         SyncCarTrackStatesWithConsist();
-        notchManager.ConfigureLimits(trainSpec.maxPowerNotch, EmergencyBrakeNotch);
+        notchManager.ConfigureLimits(trainSpec.maxPowerNotch, EmergencyBrakeNotch, trainSpec.GetTascBrakeSubstepsPerNotch());
     }
 
     /// <summary>

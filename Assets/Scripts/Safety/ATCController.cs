@@ -26,6 +26,7 @@ public class ATCController : MonoBehaviour
     [SerializeField] private float patternEmergencyAllowSpeedMS = 0f;
     [SerializeField] private float patternTargetDistanceM = 0f;
     [SerializeField] private float patternTargetSpeedMS = 0f;
+    [SerializeField] private string currentPatternSourceLabel = "--";
 
     [Header("Audio")]
     [SerializeField] private AudioSource audioSource;
@@ -36,19 +37,22 @@ public class ATCController : MonoBehaviour
     [SerializeField] private float fallbackPatternDecelerationMS2 = 1.8f;
     [SerializeField] private float atcReleaseMarginKmH = 3f;
     [SerializeField] private float overspeedToleranceMS = 0.1f;
+    [SerializeField] private float patternApproachLampOnMarginKmH = 5f;
+    [SerializeField] private float patternApproachLampOffMarginKmH = 7f;
 
     [Header("Safety Margins")]
     [SerializeField] private float safetyDistance = 50f;
     [SerializeField] private float safetyDecelMS = 0.1f;
     [SerializeField] private float occupiedBlockSafetyMarginM = 50f;
 
-    [Header("Brake Command")]
+    [Header("Brake Command")]    
     [SerializeField] private int atcBrakeNotch = 7;
 
     private bool hasPreviousLimit = false;
     private float previousLimitSpeedMS = 0f;
     private bool isATCBrakeLatched = false;
     [SerializeField] private AtcControlState currentAtcState = AtcControlState.Normal;
+    [SerializeField] private bool isPatternApproachLampActive = false;
     private readonly List<AtcTargetCandidate> candidateBuffer = new();
 
     public float CurrentLimitSpeedKmH => currentLimitSpeedMS * 3.6f;
@@ -56,8 +60,10 @@ public class ATCController : MonoBehaviour
     public float CurrentPatternEmergencyAllowSpeedKmH => patternEmergencyAllowSpeedMS * 3.6f;
     public float CurrentPatternTargetDistanceM => patternTargetDistanceM;
     public float CurrentPatternTargetSpeedKmH => patternTargetSpeedMS * 3.6f;
-    public bool IsPatternApproaching => train != null && patternAllowSpeedMS < currentLimitSpeedMS && patternTargetSpeedMS < train.SpeedMS;
+    public string CurrentPatternSourceLabel => currentPatternSourceLabel;
+    public bool IsPatternApproaching => isPatternApproachLampActive;
     public string CurrentAtcStateLabel => currentAtcState.ToString();
+    public bool IsAtcBrakeLatched => isATCBrakeLatched;
 
     /// <summary>
     /// 役割: ATC 制限候補の情報をひとまとめに保持します。
@@ -114,7 +120,11 @@ public class ATCController : MonoBehaviour
         TrackEdge currentEdge = train.Graph.FindEdge(train.CurrentEdgeId);
         float nextLimitSpeedMS = currentEdge != null ? currentEdge.speedLimitMS : 0f;
 
-        if (hasPreviousLimit && Mathf.Abs(nextLimitSpeedMS - previousLimitSpeedMS) > limitChangeEpsilonMS)
+        bool isLimitRaised =
+            hasPreviousLimit &&
+            nextLimitSpeedMS > previousLimitSpeedMS + Mathf.Max(0f, limitChangeEpsilonMS);
+
+        if (isLimitRaised)
         {
             PlayDing();
         }
@@ -132,6 +142,7 @@ public class ATCController : MonoBehaviour
 
         AtcTargetCandidate selectedCandidate = ChooseMoreRestrictive(candidateBuffer);
         ApplyPatternCandidate(selectedCandidate);
+        UpdatePatternApproachLampState();
         UpdateAtcControlState();
         UpdateATCBrakeLatch();
 
@@ -420,6 +431,44 @@ public class ATCController : MonoBehaviour
         currentAtcState = AtcControlState.Normal;
     }
 
+    /// <summary>
+    /// 役割: 前方接近ランプの点灯状態をヒステリシス付きで更新します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
+    private void UpdatePatternApproachLampState()
+    {
+        if (train == null)
+        {
+            isPatternApproachLampActive = false;
+            return;
+        }
+
+        bool isPatternLowering = patternAllowSpeedMS < currentLimitSpeedMS;
+        if (!isPatternLowering)
+        {
+            isPatternApproachLampActive = false;
+            return;
+        }
+
+        if (train.SpeedMS <= patternTargetSpeedMS)
+        {
+            isPatternApproachLampActive = false;
+            return;
+        }
+
+        float speedDeltaKmH = Mathf.Abs(train.SpeedKmH - CurrentPatternAllowSpeedKmH);
+        float onMarginKmH = Mathf.Max(0f, patternApproachLampOnMarginKmH);
+        float offMarginKmH = Mathf.Max(onMarginKmH, patternApproachLampOffMarginKmH);
+
+        if (!isPatternApproachLampActive)
+        {
+            isPatternApproachLampActive = speedDeltaKmH <= onMarginKmH;
+            return;
+        }
+
+        isPatternApproachLampActive = speedDeltaKmH <= offMarginKmH;
+    }
+
 
     /// <summary>
     /// 役割: 組み立てた ATC 制限候補を現在の表示用状態へ反映します。
@@ -438,6 +487,7 @@ public class ATCController : MonoBehaviour
         patternEmergencyAllowSpeedMS = candidate.allowedEmergencySpeedMS;
         patternTargetDistanceM = train != null ? train.DistanceM + candidate.distanceM : candidate.distanceM;
         patternTargetSpeedMS = candidate.targetSpeedMS;
+        currentPatternSourceLabel = string.IsNullOrEmpty(candidate.sourceLabel) ? "--" : candidate.sourceLabel;
     }
 
     /// <summary>
@@ -482,6 +532,8 @@ public class ATCController : MonoBehaviour
         patternEmergencyAllowSpeedMS = 0f;
         patternTargetDistanceM = 0f;
         patternTargetSpeedMS = 0f;
+        currentPatternSourceLabel = "--";
         currentAtcState = AtcControlState.Normal;
+        isPatternApproachLampActive = false;
     }
 }

@@ -36,6 +36,7 @@ public class TrainSpec : ScriptableObject
     [Header("Notch Count")]
     [Min(1)] public int maxPowerNotch = 5;
     [Min(1)] public int maxBrakeNotch = 8;
+    [Min(1)] public int tascBrakeSubstepsPerNotch = 4;
 
     [Header("Power Notch Ratios")]
     public float[] powerNotchRatios = { 0.2f, 0.4f, 0.6f, 0.8f, 1.0f };
@@ -282,6 +283,52 @@ public class TrainSpec : ScriptableObject
         int index = clampedNotch - 1;
         index = Mathf.Min(index, brakeNotchDecelerations.Length - 1);
         return Mathf.Max(0f, brakeNotchDecelerations[index]);
+    }
+
+    /// <summary>
+    /// 役割: TASC 用に 1 ブレーキノッチを何段へ細分化するかを返します。
+    /// </summary>
+    /// <returns>TASC の 1 ノッチあたり細分化段数を返します。</returns>
+    public int GetTascBrakeSubstepsPerNotch()
+    {
+        return Mathf.Max(1, tascBrakeSubstepsPerNotch);
+    }
+
+    /// <summary>
+    /// 役割: TASC 用の最大連続ブレーキ段数を返します。
+    /// </summary>
+    /// <returns>常用最大ブレーキノッチ数と細分化段数から求めた TASC 最大段数を返します。</returns>
+    public int GetMaxTascBrakeStep()
+    {
+        return Mathf.Max(1, maxBrakeNotch) * GetTascBrakeSubstepsPerNotch();
+    }
+
+    /// <summary>
+    /// 役割: TASC 連続段に対応する要求減速度を返します。
+    /// </summary>
+    /// <param name="tascBrakeStep">TASC の連続ブレーキ段を指定します。</param>
+    /// <returns>指定段に対応する補間済み減速度[m/s^2]を返します。</returns>
+    public float GetTascBrakeStepDeceleration(int tascBrakeStep)
+    {
+        if (tascBrakeStep <= 0)
+        {
+            return 0f;
+        }
+
+        int substeps = GetTascBrakeSubstepsPerNotch();
+        int maxStep = GetMaxTascBrakeStep();
+        int clampedStep = Mathf.Clamp(tascBrakeStep, 1, maxStep);
+        int baseNotch = ((clampedStep - 1) / substeps) + 1;
+        int substepIndex = ((clampedStep - 1) % substeps) + 1;
+
+        float baseDeceleration = GetBrakeDeceleration(baseNotch);
+        float nextDeceleration = baseNotch < maxBrakeNotch
+            ? GetBrakeDeceleration(baseNotch + 1)
+            : baseDeceleration;
+
+        // B1-1 は B1 と同じ値にし、B1-2 以降を次ノッチへ向けて少しずつ補間する。
+        float t = (substepIndex - 1f) / (substeps + 1f);
+        return Mathf.Lerp(baseDeceleration, nextDeceleration, Mathf.Clamp01(t));
     }
 
     /// <summary>

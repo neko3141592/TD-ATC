@@ -56,8 +56,10 @@ public class BrakeSystemController : MonoBehaviour
     /// <param name="speedMS">speedMS を指定します。</param>
     /// <param name="deltaTime">deltaTime を指定します。</param>
     /// <param name="isEmergency">isEmergency を指定します。</param>
+    /// <param name="useTascBrakeStep">TASC の連続ブレーキ段を使う場合は true を指定します。</param>
+    /// <param name="tascBrakeStep">TASC の連続ブレーキ段を指定します。</param>
     /// <remarks>返り値はありません。</remarks>
-    public void UpdateBrake(int brakeNotch, float speedMS, float deltaTime, bool isEmergency)
+    public void UpdateBrake(int brakeNotch, float speedMS, float deltaTime, bool isEmergency, bool useTascBrakeStep = false, int tascBrakeStep = 0)
     {
         // エディタ上の編成変更や初期化漏れに備え、件数を毎フレーム同期する
         EnsureCarBrakeStateCount();
@@ -78,9 +80,9 @@ public class BrakeSystemController : MonoBehaviour
 
         bool isEmergencyByNotch = brakeNotch >= trainSpec.GetEmergencyBrakeNotch();
         bool emergencyActive = isEmergency || isEmergencyByNotch;
-        bool hasBrakeCommand = brakeNotch > 0;
+        bool hasBrakeCommand = brakeNotch > 0 || (useTascBrakeStep && tascBrakeStep > 0);
         float targetTotalBrakeForceN = hasBrakeCommand
-            ? brakeControlUnit.GetTargetTotalBrakeForceN(trainSpec, brakeNotch, CurrentConsistMassKg)
+            ? GetTargetTotalBrakeForceN(brakeNotch, useTascBrakeStep, tascBrakeStep, CurrentConsistMassKg)
             : 0f;
 
         // 非常時は「回生OFF + 全車最大BC」の単純分岐
@@ -93,6 +95,23 @@ public class BrakeSystemController : MonoBehaviour
 
         ApplyNormalBrake(speedMS, deltaTime, hasBrakeCommand, targetTotalBrakeForceN);
         RefreshOutputsFromStates(CurrentConsistMassKg);
+    }
+
+    /// <summary>
+    /// 役割: ブレーキノッチまたは TASC 連続段から編成全体の目標ブレーキ力を求めます。
+    /// </summary>
+    /// <param name="brakeNotch">整数ブレーキノッチを指定します。</param>
+    /// <param name="useTascBrakeStep">TASC の連続ブレーキ段を使う場合は true を指定します。</param>
+    /// <param name="tascBrakeStep">TASC の連続ブレーキ段を指定します。</param>
+    /// <param name="massKg">編成質量[kg]を指定します。</param>
+    /// <returns>編成全体の目標ブレーキ力[N]を返します。</returns>
+    private float GetTargetTotalBrakeForceN(int brakeNotch, bool useTascBrakeStep, int tascBrakeStep, float massKg)
+    {
+        float targetDecelerationMS2 = useTascBrakeStep
+            ? trainSpec.GetTascBrakeStepDeceleration(tascBrakeStep)
+            : trainSpec.GetBrakeDeceleration(brakeNotch);
+
+        return Mathf.Max(0f, targetDecelerationMS2) * Mathf.Max(1f, massKg);
     }
 
     /// <summary>

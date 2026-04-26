@@ -88,6 +88,8 @@ Assets/Scripts/
   ExternalForceCalculator.cs
   NotchManager.cs
   RegenBrakeUnit.cs
+  TASCController.cs
+  TASCProfile.cs
   TractionSystemController.cs
   TrainCar.cs
   TrainController.Consist.cs

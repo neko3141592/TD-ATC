@@ -23,7 +23,6 @@ public class SpeedometerUI : MonoBehaviour
     [Header("ATC Triangle")]
     [SerializeField] private bool hideAtcTriangleWhenNoLimit = true;
     [SerializeField] private float atcTriangleAngleOffset = 0f;
-    [SerializeField] private float atcNoLimitThresholdKmH = 0.1f;
 
     [Header("Motion")]
     [SerializeField] private float smoothing = 10f;
@@ -134,7 +133,9 @@ public class SpeedometerUI : MonoBehaviour
         }
 
         float patternAllowSpeedKmH = atcController != null ? atcController.CurrentPatternAllowSpeedKmH : 0f;
-        bool hasLimit = atcController != null && patternAllowSpeedKmH > atcNoLimitThresholdKmH;
+        bool hasLimit = atcController != null &&
+            !string.IsNullOrEmpty(atcController.CurrentPatternSourceLabel) &&
+            atcController.CurrentPatternSourceLabel != "--";
 
         if (hideAtcTriangleWhenNoLimit)
         {

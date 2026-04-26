@@ -7,6 +7,7 @@ public class TrainHUD : MonoBehaviour
     [Header("References")]
     [SerializeField] private TrainController train;
     [SerializeField] private ATCController atc;
+    [SerializeField] private TASCController tasc;
     [SerializeField] private StationStopController stationStop;
     [SerializeField] private BlockOccupancyManager blockOccupancyManager;
     [SerializeField] private TMP_Text hudText;
@@ -37,22 +38,56 @@ public class TrainHUD : MonoBehaviour
             return;
         }
 
+        if (tasc == null)
+        {
+            tasc = train.GetComponent<TASCController>();
+        }
+
         string atcLimitText = "--";
+        string atcSourceText = "--";
         string atcStateText = "--";
         string atcPatternText = "--";
         string atcEmergencyPatternText = "--";
+        string atcTargetDistanceText = "--";
+        string atcBrakeLatchedText = "--";
         if (atc != null)
         {
             atcLimitText = $"{atc.CurrentLimitSpeedKmH:0.0} km/h";
+            atcSourceText = atc.CurrentPatternSourceLabel;
             atcStateText = atc.CurrentAtcStateLabel;
             atcPatternText = $"{atc.CurrentPatternAllowSpeedKmH:0.0} km/h";
             atcEmergencyPatternText = $"{atc.CurrentPatternEmergencyAllowSpeedKmH:0.0} km/h";
+            atcTargetDistanceText = $"{atc.CurrentPatternTargetDistanceM:0.0} m";
+            atcBrakeLatchedText = atc.IsAtcBrakeLatched ? "On" : "Off";
         }
 
         float totalBrakeForceKN = train.CurrentBrakeForceN / 1000f;
         float regenBrakeForceKN = train.CurrentRegenBrakeForceN / 1000f;
         float airBrakeForceKN = train.CurrentAirBrakeForceN / 1000f;
         var carBrakeStates = train.CurrentCarBrakeStates;
+
+        StringBuilder tascSection = new StringBuilder();
+        tascSection.Append("[TASC]\n");
+        if (tasc == null)
+        {
+            tascSection.Append("Status: --\n");
+            tascSection.Append("Step: --\n");
+            tascSection.Append("Target Step: --\n");
+            tascSection.Append("Base Step: --\n");
+            tascSection.Append("Pattern: --\n");
+            tascSection.Append("Speed Error: --\n");
+            tascSection.Append("Target Distance: --\n");
+        }
+        else
+        {
+            tascSection.Append($"Status: {(tasc.IsTascActive ? "Active" : "Standby")}\n");
+            tascSection.Append($"Step: B{tasc.CurrentTascBrakeStep} ({FormatBrakeNotchLabel(tasc.CurrentTascBrakeNotch)})\n");
+            tascSection.Append($"Target Step: B{tasc.CurrentTargetTascBrakeStep}\n");
+            tascSection.Append($"Base Step: B{tasc.CurrentBaseTascBrakeStep}\n");
+            tascSection.Append($"Pattern: {tasc.CurrentPatternAllowSpeedKmH:0.0} km/h\n");
+            tascSection.Append($"Speed Error: {tasc.CurrentSpeedErrorKmH:+0.0;-0.0;0.0} km/h\n");
+            tascSection.Append($"Target Distance: {tasc.CurrentTargetDistanceM:0.0} m\n");
+        }
 
         // 駅関連の表示は独立したブロックにまとめ、運転中でも手動確認しやすくしています。
         // これにより、対象駅の更新、通過駅のスキップ、過走挙動を一か所で追えます。
@@ -151,10 +186,15 @@ public class TrainHUD : MonoBehaviour
             $"ATC Cmd: {FormatBrakeNotchLabel(train.ATCBrakeNotch)}\n" +
             "\n" +
             "[Safety]\n" +
+            $"ATC Source: {atcSourceText}\n" +
             $"ATC State: {atcStateText}\n" +
             $"ATC Limit: {atcLimitText}\n" +
             $"ATC Pattern: {atcPatternText}\n" +
             $"ATC Emergency Pattern: {atcEmergencyPatternText}\n" +
+            $"ATC Target Distance: {atcTargetDistanceText}\n" +
+            $"ATC Brake Latched: {atcBrakeLatchedText}\n" +
+            "\n" +
+            tascSection.ToString() +
             "\n" +
             stationSection.ToString() +
             "\n" +
