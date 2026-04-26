@@ -52,27 +52,8 @@ public class BrakeDisplayBuilder : MonoBehaviour
     private readonly Dictionary<int, GameObject> notchLabelObjects = new Dictionary<int, GameObject>();
     private GameObject emergencyLabelObject;
     private bool runtimeRefDirty = true;
-    private readonly Queue<NotchSample> notchReadBuffer = new Queue<NotchSample>();
     private int displayedBrakeNotch;
-    private int lastBufferedBrakeNotch = int.MinValue;
-
-    private struct NotchSample
-    {
-        public float timestamp;
-        public int value;
-
-        /// <summary>
-        /// 役割: NotchSample の処理を実行します。
-        /// </summary>
-        /// <param name="timestamp">timestamp を指定します。</param>
-        /// <param name="value">value を指定します。</param>
-        /// <returns>処理結果を返します。</returns>
-        public NotchSample(float timestamp, int value)
-        {
-            this.timestamp = timestamp;
-            this.value = value;
-        }
-    }
+    private float nextReadTime = 0f;
 
     /// <summary>
     /// 役割: Reset の処理を実行します。
@@ -453,7 +434,7 @@ public class BrakeDisplayBuilder : MonoBehaviour
     }
 
     /// <summary>
-    /// 役割: ResolveDelayedBrakeNotch の処理を実行します。
+    /// 役割: 一定間隔ごとに最新のブレーキノッチへ表示を更新します。
     /// </summary>
     /// <param name="rawNotch">rawNotch を指定します。</param>
     /// <returns>処理結果を返します。</returns>
@@ -468,16 +449,10 @@ public class BrakeDisplayBuilder : MonoBehaviour
         }
 
         float now = Time.unscaledTime;
-        if (notchReadBuffer.Count == 0 || rawNotch != lastBufferedBrakeNotch)
+        if (rawNotch != displayedBrakeNotch && now >= nextReadTime)
         {
-            notchReadBuffer.Enqueue(new NotchSample(now, rawNotch));
-            lastBufferedBrakeNotch = rawNotch;
-        }
-
-        float readableTime = now - readDelaySeconds;
-        while (notchReadBuffer.Count > 0 && notchReadBuffer.Peek().timestamp <= readableTime)
-        {
-            displayedBrakeNotch = notchReadBuffer.Dequeue().value;
+            displayedBrakeNotch = rawNotch;
+            nextReadTime = now + readDelaySeconds;
         }
 
         return displayedBrakeNotch;
@@ -491,8 +466,7 @@ public class BrakeDisplayBuilder : MonoBehaviour
     private void ResetBrakeDelayState(int rawNotch)
     {
         displayedBrakeNotch = Mathf.Max(0, rawNotch);
-        notchReadBuffer.Clear();
-        lastBufferedBrakeNotch = displayedBrakeNotch;
+        nextReadTime = Time.unscaledTime + Mathf.Max(0f, readDelaySeconds);
     }
 
     /// <summary>

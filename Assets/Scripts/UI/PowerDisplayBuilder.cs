@@ -45,27 +45,8 @@ public class PowerDisplayBuilder : MonoBehaviour
     private readonly Dictionary<int, GameObject> notchFillObjects = new Dictionary<int, GameObject>();
     private readonly Dictionary<int, GameObject> notchLabelObjects = new Dictionary<int, GameObject>();
     private bool runtimeRefDirty = true;
-    private readonly Queue<NotchSample> notchReadBuffer = new Queue<NotchSample>();
     private int displayedPowerNotch;
-    private int lastBufferedPowerNotch = int.MinValue;
-
-    private struct NotchSample
-    {
-        public float timestamp;
-        public int value;
-
-        /// <summary>
-        /// 役割: NotchSample の処理を実行します。
-        /// </summary>
-        /// <param name="timestamp">timestamp を指定します。</param>
-        /// <param name="value">value を指定します。</param>
-        /// <returns>処理結果を返します。</returns>
-        public NotchSample(float timestamp, int value)
-        {
-            this.timestamp = timestamp;
-            this.value = value;
-        }
-    }
+    private float nextReadTime = 0f;
 
     /// <summary>
     /// 役割: Reset の処理を実行します。
@@ -371,7 +352,7 @@ public class PowerDisplayBuilder : MonoBehaviour
     }
 
     /// <summary>
-    /// 役割: ResolveDelayedPowerNotch の処理を実行します。
+    /// 役割: 一定間隔ごとに最新の力行ノッチへ表示を更新します。
     /// </summary>
     /// <param name="rawNotch">rawNotch を指定します。</param>
     /// <returns>処理結果を返します。</returns>
@@ -386,16 +367,10 @@ public class PowerDisplayBuilder : MonoBehaviour
         }
 
         float now = Time.unscaledTime;
-        if (notchReadBuffer.Count == 0 || rawNotch != lastBufferedPowerNotch)
+        if (rawNotch != displayedPowerNotch && now >= nextReadTime)
         {
-            notchReadBuffer.Enqueue(new NotchSample(now, rawNotch));
-            lastBufferedPowerNotch = rawNotch;
-        }
-
-        float readableTime = now - readDelaySeconds;
-        while (notchReadBuffer.Count > 0 && notchReadBuffer.Peek().timestamp <= readableTime)
-        {
-            displayedPowerNotch = notchReadBuffer.Dequeue().value;
+            displayedPowerNotch = rawNotch;
+            nextReadTime = now + readDelaySeconds;
         }
 
         return displayedPowerNotch;
@@ -409,8 +384,7 @@ public class PowerDisplayBuilder : MonoBehaviour
     private void ResetPowerDelayState(int rawNotch)
     {
         displayedPowerNotch = Mathf.Max(0, rawNotch);
-        notchReadBuffer.Clear();
-        lastBufferedPowerNotch = displayedPowerNotch;
+        nextReadTime = Time.unscaledTime + Mathf.Max(0f, readDelaySeconds);
     }
 
     /// <summary>

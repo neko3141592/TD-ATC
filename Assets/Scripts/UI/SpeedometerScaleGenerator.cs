@@ -35,6 +35,7 @@ public class SpeedometerScaleGenerator : MonoBehaviour
     [Header("Label Settings")]
     [SerializeField] private bool generateLabels = true;
     [SerializeField, Min(1f)] private float labelRadius = 140f;
+    [SerializeField] private Vector2 labelSize = new Vector2(90f, 36f);
     [SerializeField, Min(8f)] private float labelFontSize = 24f;
     [SerializeField] private Color labelColor = Color.black;
     [SerializeField] private TMP_FontAsset labelFont;
@@ -234,7 +235,7 @@ public class SpeedometerScaleGenerator : MonoBehaviour
         labelRt.anchorMin = new Vector2(0.5f, 0.5f);
         labelRt.anchorMax = new Vector2(0.5f, 0.5f);
         labelRt.pivot = new Vector2(0.5f, 0.5f);
-        labelRt.sizeDelta = new Vector2(60f, 30f);
+        labelRt.sizeDelta = new Vector2(Mathf.Max(1f, labelSize.x), Mathf.Max(1f, labelSize.y));
 
         float rad = angle * Mathf.Deg2Rad;
         // Tick と同じ「上方向基準」の回転系に合わせる
@@ -246,6 +247,8 @@ public class SpeedometerScaleGenerator : MonoBehaviour
         text.fontSize = labelFontSize;
         text.color = labelColor;
         text.alignment = TextAlignmentOptions.Center;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.overflowMode = TextOverflowModes.Overflow;
         text.raycastTarget = false;
         if (labelFont != null)
         {

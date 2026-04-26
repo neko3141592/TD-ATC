@@ -41,7 +41,7 @@ MonoBehaviour:
   - farDistanceM: 75
     nearDistanceM: 20
     farPatternBrakeNotch: 6
-    nearPatternBrakeNotch: 3
+    nearPatternBrakeNotch: 4
     interpolationMode: 1
     enterErrorKmH: -1
     releaseErrorKmH: -2
@@ -54,13 +54,13 @@ MonoBehaviour:
     - minSpeedErrorKmH: 1
       baseStepOffset: 4
     - minSpeedErrorKmH: 2
-      baseStepOffset: 8
+      baseStepOffset: 10
     - minSpeedErrorKmH: 3
       baseStepOffset: 20
   - farDistanceM: 20
     nearDistanceM: 0
     farPatternBrakeNotch: 3
-    nearPatternBrakeNotch: 2
+    nearPatternBrakeNotch: 3
     interpolationMode: 1
     enterErrorKmH: -1
     releaseErrorKmH: -2
@@ -69,16 +69,18 @@ MonoBehaviour:
     - minSpeedErrorKmH: -2
       baseStepOffset: -7
     - minSpeedErrorKmH: -1
-      baseStepOffset: -5
+      baseStepOffset: -3
     - minSpeedErrorKmH: -0.5
-      baseStepOffset: -2
+      baseStepOffset: -3
     - minSpeedErrorKmH: 0
-      baseStepOffset: -1
+      baseStepOffset: 0
     - minSpeedErrorKmH: 0.5
       baseStepOffset: 1
     - minSpeedErrorKmH: 1
       baseStepOffset: 3
     - minSpeedErrorKmH: 2
+      baseStepOffset: 6
+    - minSpeedErrorKmH: 3
       baseStepOffset: 8
-    - minSpeedErrorKmH: 4
+    - minSpeedErrorKmH: 5
       baseStepOffset: 12
