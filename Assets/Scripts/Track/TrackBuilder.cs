@@ -9,6 +9,8 @@ public class TrackBuilder
 
     public Vector3 currentPos { get; private set; }
     public Quaternion currentRot { get; private set; }
+    // 現在の接続先ノードを、エディタ生成処理が0mエッジを作らずに再利用できるよう公開します。
+    public TrackNode LastNode => lastNode;
 
     private TrackNode lastNode;
     private readonly List<TrackCurveData> currentCurves = new List<TrackCurveData>();

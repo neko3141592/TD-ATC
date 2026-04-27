@@ -31,297 +31,202 @@ public class TrackGraphEditor : Editor
 
         GUILayout.Space(8);
 
-        if (GUILayout.Button("Create Simple Test Track"))
-        {
-            var graph = (TrackGraph)target;
-            graph.nodes.Clear();
-            graph.edges.Clear();
-            graph.turnoutStates.Clear();
-            graph.stations.Clear(); // 駅データもあわせて初期化します。
-
-            TrackBuilder builder = new TrackBuilder(graph);
-
-            // 開始地点
-            builder.Start(Vector3.zero, Quaternion.identity);
-
-            // 1. 長い始端直線
-            builder.AddStraight(2360f);
-            
-            // 最初の直線の始端寄りに駅を配置します。
-            builder.AddStation("ST_Start", "始発駅", offsetMFromNode: 50f);
-            
-            builder.PutNode("N1");
-
-            // 2. 緩和曲線付きの右曲線
-            float r = 450f;
-            float curveL = (2f * Mathf.PI * r) * (90f / 360f);
-            float clothoidL = 40f;
-            
-            builder.AddClothoidIn(clothoidL, r);
-            builder.AddCurve(curveL, r);
-            builder.AddClothoidOut(clothoidL, r);
-            builder.PutNode("N2");
-
-            // 3. 短い直線
-            builder.AddStraight(400f);
-            builder.PutNode("N3");
-
-            // 4. 緩和曲線付きの左曲線
-            r = 600f;
-            curveL = (2f * Mathf.PI * r) * (70f / 360f);
-            clothoidL = 40f;
-            builder.AddClothoidIn(clothoidL, -r);
-            builder.AddCurve(curveL, -r);
-            builder.AddClothoidOut(clothoidL, -r);
-            builder.PutNode("N4");
-
-            // 5. 終端側の長い直線
-            builder.AddStraight(2500f);
-
-            builder.PutNode("N5");
-
-            r = 300f;
-            curveL = (2f * Mathf.PI * r) * (40f / 360f);
-            clothoidL = 60f;
-            builder.AddClothoidIn(clothoidL, -r);
-            builder.AddCurve(curveL, -r);
-            builder.AddClothoidOut(clothoidL, -r);
-
-            builder.PutNode("N6");
-
-            builder.AddStraight(250f);
-            
-            // 終端側の直線区間に終着駅を配置します。
-            builder.AddStation("ST_End", "終点駅", offsetMFromNode: 50f);
-            
-            builder.PutNode("End");
-
-            graph.UpdateNodeTypesAndJunctionIds();
-            graph.SyncTurnoutStates();
-
-            EditorUtility.SetDirty(graph);
-            AssetDatabase.SaveAssets();
-        }
-
         if (GUILayout.Button("Create TASC 1km Test Track"))
         {
             CreateTascTestTrack();
         }
 
-        if (GUILayout.Button("Create Endless Circle Track"))
+        if (GUILayout.Button("Create 10km Double Track Course"))
         {
-            var graph = (TrackGraph)target;
+            CreateDoubleTrack10kmCourse();
+        }
+    }
 
-            graph.nodes.Clear();
-            graph.edges.Clear();
-            
-            // 半径 100m の円形テストコースを作成します。
-            float radius = 100f;
-            float curveLength = (2f * Mathf.PI * radius) / 4f; // 90 度ぶんの円弧長です。
-        
-            var nodes = new TrackNode[4];
-            for(int i = 0; i < 4; i++)
-            {
-                float angle = i * 90f;
-                // 円周上にノードを置き、ローカル前方が周回方向を向くよう回転を合わせます。
-                nodes[i] = new TrackNode { 
-                    nodeId = $"N{i:000}", 
-                    worldPosition = new Vector3(Mathf.Sin(angle * Mathf.Deg2Rad) * radius, 0, Mathf.Cos(angle * Mathf.Deg2Rad) * radius), 
-                    worldRotation = Quaternion.Euler(0, angle + 90f, 0),
-                    outgoingEdgeIds = new List<string>()
-                };
-                graph.nodes.Add(nodes[i]);
-            }
-            
-            // 4 本の 1/4 円エッジをつないでループを閉じます。
-            for(int i = 0; i < 4; i++)
-            {
-                int nextIndex = (i + 1) % 4;
-                string edgeId = $"E{i:000}";
-                
-                var edge = new TrackEdge { 
-                    edgeId = edgeId, 
-                    fromNodeId = nodes[i].nodeId, 
-                    toNodeId = nodes[nextIndex].nodeId, 
-                    lengthM = curveLength 
-                };
-                
-                // 各エッジは 90 度の単一右曲線です。
-                edge.mathCurves.Add(new TrackCurveData { 
-                    trackCurveType = TrackCurveType.Curve, 
-                    lengthM = curveLength,
-                    radiusM = radius 
-                });
-                
-                graph.edges.Add(edge);
-                nodes[i].outgoingEdgeIds.Add(edgeId); // 列車が周回し続けられるように進路を登録します。
-            }
+    /// <summary>
+    /// 役割: 駅と分岐を多めに含む、約10kmの複線テストコースを生成します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
+    private void CreateDoubleTrack10kmCourse()
+    {
+        var graph = (TrackGraph)target;
+        graph.nodes.Clear();
+        graph.edges.Clear();
+        graph.turnoutStates.Clear();
+        graph.stations.Clear();
 
-            // グラフ再構築後にノード種別と分岐情報を更新します。
-            graph.UpdateNodeTypesAndJunctionIds();
-            graph.SyncTurnoutStates();
+        // 上り線はプレイヤー列車の試験用として、0mから10km方向へ進みます。
+        TrackBuilder upBuilder = new TrackBuilder(graph);
+        upBuilder.Start(new Vector3(-2.2f, 0f, 0f), Quaternion.identity);
 
-            EditorUtility.SetDirty(graph);
-            AssetDatabase.SaveAssets();
+        AddPlainSection(upBuilder, 700f, "UP_00700", "ST_Start", "Start", 300f, 120f);
+        AddPlainSection(upBuilder, 800f, "UP_01500", null, null, 0f, 120f);
+        AddMajorStationWithPassingLoop(upBuilder, graph, "UP_Mid", "ST_Mid", "Mid", 900f, 120f, 45f, -1f);
+        AddPlainSection(upBuilder, 900f, "UP_03300", "ST_Pass", "Pass", 450f, 110f);
+        AddMajorStationWithPassingLoop(upBuilder, graph, "UP_Center", "ST_Center", "Center", 900f, 120f, 45f, -1f);
+        AddPlainSection(upBuilder, 1100f, "UP_05300", "ST_Park", "Park", 650f, 100f);
+        AddMajorStationWithPassingLoop(upBuilder, graph, "UP_Yard", "ST_Yard", "Yard", 900f, 100f, 45f, -1f);
+        AddPlainSection(upBuilder, 1200f, "UP_07400", "ST_Harbor", "Harbor", 600f, 100f);
+        AddMajorStationWithPassingLoop(upBuilder, graph, "UP_EndStation", "ST_End", "End", 900f, 90f, 45f, -1f);
+        AddPlainSection(upBuilder, 1700f, "UP_End", null, null, 0f, 120f);
+
+        // 下り線は10km側から0m側へ戻る方向に作り、見た目と経路データの両方を複線化します。
+        TrackBuilder downBuilder = new TrackBuilder(graph);
+        downBuilder.Start(new Vector3(2.2f, 0f, 10000f), Quaternion.Euler(0f, 180f, 0f));
+
+        AddPlainSection(downBuilder, 700f, "DN_09300", "ST_D_End", "Down End", 300f, 120f);
+        AddPlainSection(downBuilder, 800f, "DN_08500", null, null, 0f, 120f);
+        AddMajorStationWithPassingLoop(downBuilder, graph, "DN_Suburb", "ST_D_Suburb", "Down Suburb", 900f, 120f, 45f, -1f);
+        AddPlainSection(downBuilder, 900f, "DN_06700", "ST_D_Harbor", "Down Harbor", 450f, 110f);
+        AddMajorStationWithPassingLoop(downBuilder, graph, "DN_Yard", "ST_D_Yard", "Down Yard", 900f, 120f, 45f, -1f);
+        AddPlainSection(downBuilder, 1100f, "DN_04700", "ST_D_Park", "Down Park", 650f, 100f);
+        AddMajorStationWithPassingLoop(downBuilder, graph, "DN_Center", "ST_D_Center", "Down Center", 900f, 100f, 45f, -1f);
+        AddPlainSection(downBuilder, 1200f, "DN_02600", "ST_D_River", "Down River", 600f, 100f);
+        AddMajorStationWithPassingLoop(downBuilder, graph, "DN_Town", "ST_D_Town", "Down Town", 900f, 90f, 45f, -1f);
+        AddPlainSection(downBuilder, 1700f, "DN_End", "ST_D_Start", "Down Start", 1300f, 120f);
+
+        AssignSequentialBlockIds(graph);
+
+        graph.UpdateNodeTypesAndJunctionIds();
+        graph.SyncTurnoutStates();
+
+        EditorUtility.SetDirty(graph);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"Created 10km double track course. nodes={graph.nodes.Count}, edges={graph.edges.Count}, stations={graph.stations.Count}", graph);
+    }
+
+    /// <summary>
+    /// 役割: 単純な本線区間を追加し、必要ならその区間上に駅を配置します。
+    /// </summary>
+    /// <param name="builder">線路を追加する TrackBuilder を指定します。</param>
+    /// <param name="lengthM">区間長[m]を指定します。</param>
+    /// <param name="nodeId">区間終端ノードIDを指定します。</param>
+    /// <param name="stationId">駅を置く場合の stationId を指定します。</param>
+    /// <param name="stationName">駅を置く場合の表示名を指定します。</param>
+    /// <param name="stationOffsetM">駅を置く場合のエッジ始点からの距離[m]を指定します。</param>
+    /// <param name="speedLimitKmH">区間の速度制限[km/h]を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
+    private static void AddPlainSection(
+        TrackBuilder builder,
+        float lengthM,
+        string nodeId,
+        string stationId,
+        string stationName,
+        float stationOffsetM,
+        float speedLimitKmH
+    )
+    {
+        builder.AddStraight(lengthM);
+        builder.PutNode(nodeId, speedLimitKmH);
+
+        if (!string.IsNullOrEmpty(stationId))
+        {
+            builder.AddStation(stationId, stationName, Mathf.Clamp(stationOffsetM, 0f, lengthM));
+        }
+    }
+
+    /// <summary>
+    /// 役割: 本線と待避線を持つ主要駅ユニットを追加します。
+    /// </summary>
+    /// <param name="builder">線路を追加する TrackBuilder を指定します。</param>
+    /// <param name="graph">分岐選択を後で本線側へ固定する TrackGraph を指定します。</param>
+    /// <param name="prefix">生成するノードIDの接頭辞を指定します。</param>
+    /// <param name="stationId">駅の stationId を指定します。</param>
+    /// <param name="stationName">駅の表示名を指定します。</param>
+    /// <param name="mainLengthM">主要駅ユニットの本線長[m]を指定します。</param>
+    /// <param name="mainSpeedLimitKmH">本線側の速度制限[km/h]を指定します。</param>
+    /// <param name="sidingSpeedLimitKmH">待避線側の速度制限[km/h]を指定します。</param>
+    /// <param name="sideSign">待避線を出す向きを指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
+    private static void AddMajorStationWithPassingLoop(
+        TrackBuilder builder,
+        TrackGraph graph,
+        string prefix,
+        string stationId,
+        string stationName,
+        float mainLengthM,
+        float mainSpeedLimitKmH,
+        float sidingSpeedLimitKmH,
+        float sideSign
+    )
+    {
+        TrackNode startNode = builder.LastNode;
+        if (startNode == null)
+        {
+            startNode = builder.PutNode($"{prefix}_Start", mainSpeedLimitKmH);
         }
 
-        GUILayout.Space(8);
+        TrackNode endNode = CreatePassingSidingEndNode(builder, startNode, $"{prefix}_End", mainLengthM, sidingSpeedLimitKmH, sideSign);
 
-        if (GUILayout.Button("Create Passing Track (Turnout Demo)"))
+        builder.StartFrom(startNode);
+        builder.AddStraight(mainLengthM);
+        int mainEdgeIndex = graph.edges.Count;
+        builder.ConnectToNode(endNode, mainSpeedLimitKmH);
+        string mainEdgeId = graph.edges[mainEdgeIndex].edgeId;
+        builder.AddStation(stationId, stationName, mainLengthM * 0.5f);
+
+        // 分岐の既定進路は本線にします。待避線を試したい場合は Inspector の turnoutStates で切り替えます。
+        graph.SetTurnoutSelectedEdge(startNode.nodeId, mainEdgeId);
+        builder.StartFrom(endNode);
+    }
+
+    /// <summary>
+    /// 役割: 待避線側を先に生成し、その終点ノードを返します。
+    /// </summary>
+    /// <param name="builder">線路を追加する TrackBuilder を指定します。</param>
+    /// <param name="startNode">待避線の分岐開始ノードを指定します。</param>
+    /// <param name="endNodeId">待避線終点ノードIDを指定します。</param>
+    /// <param name="mainLengthM">本線と同じ前進距離[m]を指定します。</param>
+    /// <param name="speedLimitKmH">待避線側の速度制限[km/h]を指定します。</param>
+    /// <param name="sideSign">待避線を出す向きを指定します。</param>
+    /// <returns>待避線の終点ノードを返します。</returns>
+    private static TrackNode CreatePassingSidingEndNode(
+        TrackBuilder builder,
+        TrackNode startNode,
+        string endNodeId,
+        float mainLengthM,
+        float speedLimitKmH,
+        float sideSign
+    )
+    {
+        float direction = sideSign >= 0f ? 1f : -1f;
+        float transitionLengthM = 35f;
+        float radiusM = 240f * direction;
+        float diagonalLengthM = 35f;
+
+        builder.StartFrom(startNode);
+        builder.AddClothoidInOut(transitionLengthM, radiusM);
+        builder.AddStraight(diagonalLengthM);
+        builder.AddClothoidInOut(transitionLengthM, -radiusM);
+
+        float forwardAdvanceM = Vector3.Dot(
+            builder.currentPos - startNode.worldPosition,
+            startNode.worldRotation * Vector3.forward
+        );
+        float middleStraightM = Mathf.Max(80f, mainLengthM - forwardAdvanceM * 2f);
+        builder.AddStraight(middleStraightM);
+
+        builder.AddClothoidInOut(transitionLengthM, -radiusM);
+        builder.AddStraight(diagonalLengthM);
+        builder.AddClothoidInOut(transitionLengthM, radiusM);
+        return builder.PutNode(endNodeId, speedLimitKmH);
+    }
+
+    /// <summary>
+    /// 役割: 在線管理で使いやすいように、全エッジへ連番の blockId を割り当てます。
+    /// </summary>
+    /// <param name="graph">blockId を割り当てる TrackGraph を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
+    private static void AssignSequentialBlockIds(TrackGraph graph)
+    {
+        for (int i = 0; i < graph.edges.Count; i++)
         {
-            var graph = (TrackGraph)target;
-            graph.nodes.Clear();
-            graph.edges.Clear();
-            graph.turnoutStates.Clear();
+            TrackEdge edge = graph.edges[i];
+            if (edge == null)
+            {
+                continue;
+            }
 
-            TrackBuilder builder = new TrackBuilder(graph);
-
-            // 1. 始端から最初の分岐までの進入区間
-            builder.Start(Vector3.zero, Quaternion.identity);
-            builder.AddStraight(200f);
-            TrackNode pointStart = builder.PutNode("Point_Start");
-
-            // 2. 本線側の通過線と合流点
-            builder.AddStraight(500f);
-            TrackNode pointMerge = builder.PutNode("Point_Merge");
-
-            // 3. 合流後に短い出口直線を追加
-            builder.AddStraight(300f);
-            builder.PutNode("End_Station");
-
-            // 4. Point_Start から Point_Merge までの待避線を構築
-            builder.StartFrom(pointStart);
-            
-            float trL = 30f;  // 緩和曲線を長めにして乗り心地を改善します。
-            float trR = 250f; // 低速本線分岐程度の緩い分岐半径です。
-            float diagonalL = 30f; // 値を大きくすると待避線の間隔が広がります。
-
-            // 緩和曲線を使って右側へ分岐します。
-            builder.AddClothoidInOut(trL, trR);
-
-            if (diagonalL > 0f) builder.AddStraight(diagonalL); // 斜め直線で横方向の間隔を稼ぎます。
-
-            builder.AddClothoidInOut(trL, -trR);
-            
-            // 本線に対する前進量を測り、残りを直線で埋めます。
-            float curveAdvanceZ = Vector3.Dot(builder.currentPos - pointStart.worldPosition, pointStart.worldRotation * Vector3.forward);
-            builder.AddStraight(500f - curveAdvanceZ * 2f);
-            
-            // 逆向きの S 字で本線へ戻します。
-            builder.AddClothoidInOut(trL, -trR);
-
-            if (diagonalL > 0f) builder.AddStraight(diagonalL); // 戻り側も同じ斜め直線を入れます。
-
-            builder.AddClothoidInOut(trL, trR);
-
-            // Point_Merge で本線に合流します。
-            builder.ConnectToNode(pointMerge);
-
-            // グラフ再構築後にノード種別と分岐情報を更新します。
-            graph.UpdateNodeTypesAndJunctionIds();
-            graph.SyncTurnoutStates();
-
-            EditorUtility.SetDirty(graph);
-            AssetDatabase.SaveAssets();
-        }
-
-        GUILayout.Space(8);
-
-        if (GUILayout.Button("Create 5km Course (with Passing Tracks & Clothoids)"))
-        {
-            var graph = (TrackGraph)target;
-            graph.nodes.Clear();
-            graph.edges.Clear();
-            graph.turnoutStates.Clear();
-
-            TrackBuilder builder = new TrackBuilder(graph);
-
-            // 開始位置
-            builder.Start(Vector3.zero, Quaternion.identity);
-            builder.AddStraight(550f);
-            
-            // --- 待避線 1（駅構内想定） ---
-            TrackNode station1Start = builder.PutNode("Station1_Start");
-            
-            // 本線側の通過線
-            builder.AddStraight(550f);
-            TrackNode station1End = builder.PutNode("Station1_End");
-
-            // 緩和曲線ベースの待避線 1
-            float trL = 30f;  // 緩和曲線を長めにして乗り心地を改善します。
-            float trR = 200f; // 低速本線分岐程度の緩い分岐半径です。
-            float diagonalL = 30f; // 値を大きくすると線間が広がります。
-            
-            builder.StartFrom(station1Start);
-            // 分岐して並行な線形に落ち着かせます。
-            builder.AddClothoidInOut(trL, trR);
-            if (diagonalL > 0f) builder.AddStraight(diagonalL); // 斜め直線で横方向の間隔を稼ぎます。
-            builder.AddClothoidInOut(trL, -trR);
-
-            // 本線に対する前進量を測り、残りを直線で埋めます。
-            float curveAdvanceZ1 = Vector3.Dot(builder.currentPos - station1Start.worldPosition, station1Start.worldRotation * Vector3.forward);
-            builder.AddStraight(600f - curveAdvanceZ1 * 2f);
-
-            // 鏡像の分岐形状で合流します。
-            builder.AddClothoidInOut(trL, -trR);
-            if (diagonalL > 0f) builder.AddStraight(diagonalL); // 合流側にも同じ斜め直線を入れます。
-            builder.AddClothoidInOut(trL, trR);
-
-            // 本線に再合流し、分岐側の速度制限を 45 km/h に設定します。
-            builder.ConnectToNode(station1End, 45f);
-
-            // --- 曲線区間（緩和曲線テスト） ---
-            builder.StartFrom(station1End);
-            builder.AddStraight(300f);
-
-            // 右曲線（R = 400 m）
-            builder.AddClothoidIn(40f, 400f); // 緩和曲線
-            builder.AddCurve(300f, 400f);     // 円曲線
-            builder.AddClothoidOut(40f, 400f); // 緩和曲線
-
-            builder.AddStraight(400f);
-
-            // よりきつい左曲線（R = -200 m）で、ノード速度制限を 60 km/h に設定します。
-            builder.PutNode(speedLimitKmH: 60f);
-            builder.AddClothoidIn(50f, -200f);
-            builder.AddCurve(200f, -200f);
-            builder.AddClothoidOut(50f, -200f);
-            builder.PutNode(); // 一時的な速度制限を解除します。
-
-            builder.AddStraight(500f);
-
-            // --- 待避線 2（駅構内想定） ---
-            TrackNode station2Start = builder.PutNode("Station2_Start");
-            
-            // 本線側の通過線
-            builder.AddStraight(500f);
-            TrackNode station2End = builder.PutNode("Station2_End");
-
-            // 同じ分岐形状を使った待避線 2 です。
-            builder.StartFrom(station2Start);
-            builder.AddClothoidInOut(trL, trR);
-            if (diagonalL > 0f) builder.AddStraight(diagonalL); // 横方向の間隔を広げます。
-            builder.AddClothoidInOut(trL, -trR);
-
-            float curveAdvanceZ2 = Vector3.Dot(builder.currentPos - station2Start.worldPosition, station2Start.worldRotation * Vector3.forward);
-            builder.AddStraight(500f - curveAdvanceZ2 * 2f);
-
-            builder.AddClothoidInOut(trL, -trR);
-            if (diagonalL > 0f) builder.AddStraight(diagonalL); // 横方向の間隔を広げます。
-            builder.AddClothoidInOut(trL, trR);
-
-            builder.ConnectToNode(station2End, 45f);
-
-            // --- 終端区間 ---
-            builder.StartFrom(station2End);
-            builder.AddStraight(1000f);
-            builder.PutNode("End_Terminal");
-
-            graph.UpdateNodeTypesAndJunctionIds();
-            graph.SyncTurnoutStates();
-
-            EditorUtility.SetDirty(graph);
-            AssetDatabase.SaveAssets();
+            edge.blockId = $"B{i + 1:000}";
         }
     }
 

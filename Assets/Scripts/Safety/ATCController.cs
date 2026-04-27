@@ -64,7 +64,7 @@ public class ATCController : MonoBehaviour
     public bool IsPatternApproaching => isPatternApproachLampActive;
     public string CurrentAtcStateLabel => currentAtcState.ToString();
     public bool IsAtcBrakeLatched => isATCBrakeLatched;
-    public bool IsAtcServiceBrakeActive => isATCBrakeLatched && currentAtcState != AtcControlState.EmergencyPattern;
+    public bool IsAtcServiceBrakeActive => currentAtcState == AtcControlState.ServicePattern;
     public bool IsAtcEmergencyBrakeActive => currentAtcState == AtcControlState.EmergencyPattern;
 
     /// <summary>
@@ -461,6 +461,12 @@ public class ATCController : MonoBehaviour
         }
 
         if (train.SpeedMS > serviceThresholdMS || hasAtcBrakeCommand)
+        {
+            currentAtcState = AtcControlState.ServicePattern;
+            return;
+        }
+
+        if (isLocking())
         {
             currentAtcState = AtcControlState.ServicePattern;
             return;

@@ -16,44 +16,894 @@ MonoBehaviour:
   - nodeId: N000
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 0, y: 0, z: 0}
+    worldPosition: {x: -2.2, y: 0, z: 0}
     worldRotation: {x: 0, y: 0, z: 0, w: 1}
     outgoingEdgeIds:
     - E001
-  - nodeId: TASC_Test_End
+  - nodeId: UP_00700
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 0, y: 0, z: 1000}
+    worldPosition: {x: -2.2, y: 0, z: 700}
     worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E002
+  - nodeId: UP_01500
+    trackNodeType: 1
+    junctionId: UP_01500
+    worldPosition: {x: -2.2, y: 0, z: 1500}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E003
+    - E004
+  - nodeId: UP_Mid_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -2.2000003, y: 0, z: 2400}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E005
+  - nodeId: UP_03300
+    trackNodeType: 1
+    junctionId: UP_03300
+    worldPosition: {x: -2.2000003, y: 0, z: 3300}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E006
+    - E007
+  - nodeId: UP_Center_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -2.2000003, y: 0, z: 4200.0005}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E008
+  - nodeId: UP_05300
+    trackNodeType: 1
+    junctionId: UP_05300
+    worldPosition: {x: -2.2000003, y: 0, z: 5300.0005}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E009
+    - E010
+  - nodeId: UP_Yard_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -2.2000003, y: 0, z: 6200.0005}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E011
+  - nodeId: UP_07400
+    trackNodeType: 1
+    junctionId: UP_07400
+    worldPosition: {x: -2.2000003, y: 0, z: 7400.0005}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E012
+    - E013
+  - nodeId: UP_EndStation_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -2.2000003, y: 0, z: 8300}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E014
+  - nodeId: UP_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -2.2000003, y: 0, z: 10000}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds: []
+  - nodeId: N011
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 2.2, y: 0, z: 10000}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+    outgoingEdgeIds:
+    - E015
+  - nodeId: DN_09300
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 2.1999388, y: 0, z: 9300}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+    outgoingEdgeIds:
+    - E016
+  - nodeId: DN_08500
+    trackNodeType: 1
+    junctionId: DN_08500
+    worldPosition: {x: 2.199869, y: 0, z: 8500}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+    outgoingEdgeIds:
+    - E017
+    - E018
+  - nodeId: DN_Suburb_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 2.1997895, y: 0, z: 7599.9995}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+    outgoingEdgeIds:
+    - E019
+  - nodeId: DN_06700
+    trackNodeType: 1
+    junctionId: DN_06700
+    worldPosition: {x: 2.1997092, y: 0, z: 6699.9995}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+    outgoingEdgeIds:
+    - E020
+    - E021
+  - nodeId: DN_Yard_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 2.1996293, y: 0, z: 5799.9995}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+    outgoingEdgeIds:
+    - E022
+  - nodeId: DN_04700
+    trackNodeType: 1
+    junctionId: DN_04700
+    worldPosition: {x: 2.199531, y: 0, z: 4699.9995}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+    outgoingEdgeIds:
+    - E023
+    - E024
+  - nodeId: DN_Center_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 2.199452, y: 0, z: 3800}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+    outgoingEdgeIds:
+    - E025
+  - nodeId: DN_02600
+    trackNodeType: 1
+    junctionId: DN_02600
+    worldPosition: {x: 2.1993446, y: 0, z: 2600}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+    outgoingEdgeIds:
+    - E026
+    - E027
+  - nodeId: DN_Town_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 2.199265, y: 0, z: 1700}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+    outgoingEdgeIds:
+    - E028
+  - nodeId: DN_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 2.1991131, y: 0, z: 0}
+    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
     outgoingEdgeIds: []
   edges:
   - edgeId: E001
     fromNodeId: N000
-    toNodeId: TASC_Test_End
-    blockId: B_TASC_TEST
-    lengthM: 1000
-    speedLimitMS: 0
+    toNodeId: UP_00700
+    blockId: B001
+    lengthM: 700
+    speedLimitMS: 33.333336
     mathCurves:
     - trackCurveType: 0
       gradientPermille: 0
-      lengthM: 1000
+      lengthM: 700
       radiusM: 0
-  turnoutStates: []
+  - edgeId: E002
+    fromNodeId: UP_00700
+    toNodeId: UP_01500
+    blockId: B002
+    lengthM: 800
+    speedLimitMS: 33.333336
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 800
+      radiusM: 0
+  - edgeId: E003
+    fromNodeId: UP_01500
+    toNodeId: UP_Mid_End
+    blockId: B003
+    lengthM: 901.8828
+    speedLimitMS: 12.5
+    mathCurves:
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 551.8828
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+  - edgeId: E004
+    fromNodeId: UP_01500
+    toNodeId: UP_Mid_End
+    blockId: B004
+    lengthM: 900
+    speedLimitMS: 33.333336
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 900
+      radiusM: 0
+  - edgeId: E005
+    fromNodeId: UP_Mid_End
+    toNodeId: UP_03300
+    blockId: B005
+    lengthM: 900
+    speedLimitMS: 30.555557
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 900
+      radiusM: 0
+  - edgeId: E006
+    fromNodeId: UP_03300
+    toNodeId: UP_Center_End
+    blockId: B006
+    lengthM: 901.8828
+    speedLimitMS: 12.5
+    mathCurves:
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 551.8828
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+  - edgeId: E007
+    fromNodeId: UP_03300
+    toNodeId: UP_Center_End
+    blockId: B007
+    lengthM: 900
+    speedLimitMS: 33.333336
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 900
+      radiusM: 0
+  - edgeId: E008
+    fromNodeId: UP_Center_End
+    toNodeId: UP_05300
+    blockId: B008
+    lengthM: 1100
+    speedLimitMS: 27.777779
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 1100
+      radiusM: 0
+  - edgeId: E009
+    fromNodeId: UP_05300
+    toNodeId: UP_Yard_End
+    blockId: B009
+    lengthM: 901.88184
+    speedLimitMS: 12.5
+    mathCurves:
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 551.88184
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+  - edgeId: E010
+    fromNodeId: UP_05300
+    toNodeId: UP_Yard_End
+    blockId: B010
+    lengthM: 900
+    speedLimitMS: 27.777779
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 900
+      radiusM: 0
+  - edgeId: E011
+    fromNodeId: UP_Yard_End
+    toNodeId: UP_07400
+    blockId: B011
+    lengthM: 1200
+    speedLimitMS: 27.777779
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 1200
+      radiusM: 0
+  - edgeId: E012
+    fromNodeId: UP_07400
+    toNodeId: UP_EndStation_End
+    blockId: B012
+    lengthM: 901.88184
+    speedLimitMS: 12.5
+    mathCurves:
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 551.88184
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+  - edgeId: E013
+    fromNodeId: UP_07400
+    toNodeId: UP_EndStation_End
+    blockId: B013
+    lengthM: 900
+    speedLimitMS: 25
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 900
+      radiusM: 0
+  - edgeId: E014
+    fromNodeId: UP_EndStation_End
+    toNodeId: UP_End
+    blockId: B014
+    lengthM: 1700
+    speedLimitMS: 33.333336
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 1700
+      radiusM: 0
+  - edgeId: E015
+    fromNodeId: N011
+    toNodeId: DN_09300
+    blockId: B015
+    lengthM: 700
+    speedLimitMS: 33.333336
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 700
+      radiusM: 0
+  - edgeId: E016
+    fromNodeId: DN_09300
+    toNodeId: DN_08500
+    blockId: B016
+    lengthM: 800
+    speedLimitMS: 33.333336
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 800
+      radiusM: 0
+  - edgeId: E017
+    fromNodeId: DN_08500
+    toNodeId: DN_Suburb_End
+    blockId: B017
+    lengthM: 901.8828
+    speedLimitMS: 12.5
+    mathCurves:
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 551.8828
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+  - edgeId: E018
+    fromNodeId: DN_08500
+    toNodeId: DN_Suburb_End
+    blockId: B018
+    lengthM: 900
+    speedLimitMS: 33.333336
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 900
+      radiusM: 0
+  - edgeId: E019
+    fromNodeId: DN_Suburb_End
+    toNodeId: DN_06700
+    blockId: B019
+    lengthM: 900
+    speedLimitMS: 30.555557
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 900
+      radiusM: 0
+  - edgeId: E020
+    fromNodeId: DN_06700
+    toNodeId: DN_Yard_End
+    blockId: B020
+    lengthM: 901.88184
+    speedLimitMS: 12.5
+    mathCurves:
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 551.88184
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+  - edgeId: E021
+    fromNodeId: DN_06700
+    toNodeId: DN_Yard_End
+    blockId: B021
+    lengthM: 900
+    speedLimitMS: 33.333336
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 900
+      radiusM: 0
+  - edgeId: E022
+    fromNodeId: DN_Yard_End
+    toNodeId: DN_04700
+    blockId: B022
+    lengthM: 1100
+    speedLimitMS: 27.777779
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 1100
+      radiusM: 0
+  - edgeId: E023
+    fromNodeId: DN_04700
+    toNodeId: DN_Center_End
+    blockId: B023
+    lengthM: 901.88184
+    speedLimitMS: 12.5
+    mathCurves:
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 551.88184
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+  - edgeId: E024
+    fromNodeId: DN_04700
+    toNodeId: DN_Center_End
+    blockId: B024
+    lengthM: 900
+    speedLimitMS: 27.777779
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 900
+      radiusM: 0
+  - edgeId: E025
+    fromNodeId: DN_Center_End
+    toNodeId: DN_02600
+    blockId: B025
+    lengthM: 1200
+    speedLimitMS: 27.777779
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 1200
+      radiusM: 0
+  - edgeId: E026
+    fromNodeId: DN_02600
+    toNodeId: DN_Town_End
+    blockId: B026
+    lengthM: 901.8828
+    speedLimitMS: 12.5
+    mathCurves:
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 551.8828
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 240
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: 0
+    - trackCurveType: 2
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+    - trackCurveType: 3
+      gradientPermille: 0
+      lengthM: 35
+      radiusM: -240
+  - edgeId: E027
+    fromNodeId: DN_02600
+    toNodeId: DN_Town_End
+    blockId: B027
+    lengthM: 900
+    speedLimitMS: 25
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 900
+      radiusM: 0
+  - edgeId: E028
+    fromNodeId: DN_Town_End
+    toNodeId: DN_End
+    blockId: B028
+    lengthM: 1700
+    speedLimitMS: 33.333336
+    mathCurves:
+    - trackCurveType: 0
+      gradientPermille: 0
+      lengthM: 1700
+      radiusM: 0
+  turnoutStates:
+  - junctionId: UP_01500
+    selectedOutgoingEdgeId: E004
+  - junctionId: UP_03300
+    selectedOutgoingEdgeId: E007
+  - junctionId: UP_05300
+    selectedOutgoingEdgeId: E010
+  - junctionId: UP_07400
+    selectedOutgoingEdgeId: E013
+  - junctionId: DN_08500
+    selectedOutgoingEdgeId: E018
+  - junctionId: DN_06700
+    selectedOutgoingEdgeId: E021
+  - junctionId: DN_04700
+    selectedOutgoingEdgeId: E024
+  - junctionId: DN_02600
+    selectedOutgoingEdgeId: E027
   stations:
   - stationId: ST_Start
-    stationName: TASC Test Start
+    stationName: Start
     edgeId: E001
-    distanceFromEdgeStart: 50
+    distanceFromEdgeStart: 300
     stopMarginM: 5
   - stationId: ST_Mid
-    stationName: TASC Test Stop
-    edgeId: E001
-    distanceFromEdgeStart: 950
+    stationName: Mid
+    edgeId: E004
+    distanceFromEdgeStart: 450
+    stopMarginM: 5
+  - stationId: ST_Pass
+    stationName: Pass
+    edgeId: E005
+    distanceFromEdgeStart: 450
+    stopMarginM: 5
+  - stationId: ST_Center
+    stationName: Center
+    edgeId: E007
+    distanceFromEdgeStart: 450
+    stopMarginM: 5
+  - stationId: ST_Park
+    stationName: Park
+    edgeId: E008
+    distanceFromEdgeStart: 650
+    stopMarginM: 5
+  - stationId: ST_Yard
+    stationName: Yard
+    edgeId: E010
+    distanceFromEdgeStart: 450
+    stopMarginM: 5
+  - stationId: ST_Harbor
+    stationName: Harbor
+    edgeId: E011
+    distanceFromEdgeStart: 600
     stopMarginM: 5
   - stationId: ST_End
-    stationName: TASC Test End
-    edgeId: E001
-    distanceFromEdgeStart: 990
+    stationName: End
+    edgeId: E013
+    distanceFromEdgeStart: 450
+    stopMarginM: 5
+  - stationId: ST_D_End
+    stationName: Down End
+    edgeId: E015
+    distanceFromEdgeStart: 300
+    stopMarginM: 5
+  - stationId: ST_D_Suburb
+    stationName: Down Suburb
+    edgeId: E018
+    distanceFromEdgeStart: 450
+    stopMarginM: 5
+  - stationId: ST_D_Harbor
+    stationName: Down Harbor
+    edgeId: E019
+    distanceFromEdgeStart: 450
+    stopMarginM: 5
+  - stationId: ST_D_Yard
+    stationName: Down Yard
+    edgeId: E021
+    distanceFromEdgeStart: 450
+    stopMarginM: 5
+  - stationId: ST_D_Park
+    stationName: Down Park
+    edgeId: E022
+    distanceFromEdgeStart: 650
+    stopMarginM: 5
+  - stationId: ST_D_Center
+    stationName: Down Center
+    edgeId: E024
+    distanceFromEdgeStart: 450
+    stopMarginM: 5
+  - stationId: ST_D_River
+    stationName: Down River
+    edgeId: E025
+    distanceFromEdgeStart: 600
+    stopMarginM: 5
+  - stationId: ST_D_Town
+    stationName: Down Town
+    edgeId: E027
+    distanceFromEdgeStart: 450
+    stopMarginM: 5
+  - stationId: ST_D_Start
+    stationName: Down Start
+    edgeId: E028
+    distanceFromEdgeStart: 1300
     stopMarginM: 5
   nodeMergeDistanceM: 0.05
   generateReverseEdge: 0
