@@ -32,7 +32,7 @@ MonoBehaviour:
     toNodeId: TASC_Test_End
     blockId: B_TASC_TEST
     lengthM: 1000
-    speedLimitMS: 27.777779
+    speedLimitMS: 0
     mathCurves:
     - trackCurveType: 0
       gradientPermille: 0

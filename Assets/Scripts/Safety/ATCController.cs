@@ -64,6 +64,8 @@ public class ATCController : MonoBehaviour
     public bool IsPatternApproaching => isPatternApproachLampActive;
     public string CurrentAtcStateLabel => currentAtcState.ToString();
     public bool IsAtcBrakeLatched => isATCBrakeLatched;
+    public bool IsAtcServiceBrakeActive => isATCBrakeLatched && currentAtcState != AtcControlState.EmergencyPattern;
+    public bool IsAtcEmergencyBrakeActive => currentAtcState == AtcControlState.EmergencyPattern;
 
     /// <summary>
     /// 役割: ATC 制限候補の情報をひとまとめに保持します。
@@ -146,8 +148,8 @@ public class ATCController : MonoBehaviour
         UpdateAtcControlState();
         UpdateATCBrakeLatch();
 
-        // ATCブレーキ司令を送信
-        SendATCBrake(isATCBrakeLatched ? atcBrakeNotch : 0);
+        // ATCブレーキ司令を送信する。非常パターン時だけ非常ノッチに切り替える。
+        SendATCBrake(ResolveATCBrakeCommandNotch());
     }
 
     /// <summary>
@@ -177,6 +179,26 @@ public class ATCController : MonoBehaviour
         }
 
         notchManager.SetATCBrakeNotch(Mathf.Max(0, brakeNotch));
+    }
+
+    /// <summary>
+    /// 役割: 現在のATC状態から、NotchManagerへ送信するATCブレーキノッチを決定します。
+    /// </summary>
+    /// <returns>送信するATCブレーキノッチを返します。</returns>
+    private int ResolveATCBrakeCommandNotch()
+    {
+        bool shouldApplyATCBrake = isATCBrakeLatched || isLocking();
+        if (!shouldApplyATCBrake)
+        {
+            return 0;
+        }
+
+        if (currentAtcState == AtcControlState.EmergencyPattern && train != null)
+        {
+            return train.EmergencyBrakeNotch;
+        }
+
+        return atcBrakeNotch;
     }
 
     /// <summary>
@@ -334,6 +356,22 @@ public class ATCController : MonoBehaviour
 
         return candidate;
     }
+
+    /// <summary>
+    /// 役割: パターンが0のときに、電車を発進できないようにします。
+    /// </summary>
+    /// <returns></returns>
+    private bool isLocking()
+    {
+
+        if (patternAllowSpeedMS < 0.1f && train.SpeedKmH < 0.5f)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
 
     /// <summary>
     /// 役割: 複数の ATC 制限候補から最も厳しい候補を選びます。

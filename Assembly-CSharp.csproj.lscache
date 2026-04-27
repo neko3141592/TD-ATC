@@ -98,6 +98,7 @@ Assets/Scripts/
   TrainController.Track.cs
   TrainFormationBuilder.cs
  UI/
+  ATCIndicatorDisplay.cs
   ATCSignal.cs
   BrakeDisplayBuilder.cs
   CabNotchTextDisplay.cs
