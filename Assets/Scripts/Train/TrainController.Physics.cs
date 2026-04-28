@@ -59,7 +59,7 @@ public partial class TrainController
 
         if (brakeSystem != null)
         {
-            brakeSystem.UpdateBrake(brakeNotch, speedMS, Time.deltaTime, isEmergencyBrake, useTascBrakeStep, tascBrakeStep);
+            brakeSystem.UpdateBrake(brakeNotch, speedMS, Time.deltaTime, isEmergencyBrake, useTascBrakeStep, tascBrakeStep, ManualPowerNotch);
         }
 
         float massKg = GetCurrentConsistMassKg();

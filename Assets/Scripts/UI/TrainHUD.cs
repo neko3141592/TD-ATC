@@ -80,7 +80,7 @@ public class TrainHUD : MonoBehaviour
         }
         else
         {
-            tascSection.Append($"Status: {(tasc.IsTascActive ? "Active" : "Standby")}\n");
+            tascSection.Append($"Status: {tasc.CurrentControlModeLabel}\n");
             tascSection.Append($"Step: B{tasc.CurrentTascBrakeStep} ({FormatBrakeNotchLabel(tasc.CurrentTascBrakeNotch)})\n");
             tascSection.Append($"Target Step: B{tasc.CurrentTargetTascBrakeStep}\n");
             tascSection.Append($"Base Step: B{tasc.CurrentBaseTascBrakeStep}\n");

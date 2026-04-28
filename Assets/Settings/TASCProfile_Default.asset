@@ -18,6 +18,19 @@ MonoBehaviour:
   stopSpeedThresholdMS: 0.2
   maxServiceBrakeNotch: 7
   stepFollowIntervalSeconds: 0.2
+  holdingEnterDistanceM: 0.3
+  holdingCompleteSpeedKmH: 0.1
+  holdingSpeedRules:
+  - minSpeedKmH: 0
+    brakeNotch: 1
+  - minSpeedKmH: 0.5
+    brakeNotch: 1
+  - minSpeedKmH: 1
+    brakeNotch: 3
+  - minSpeedKmH: 2
+    brakeNotch: 4
+  - minSpeedKmH: 3
+    brakeNotch: 5
   controlZones:
   - farDistanceM: 800
     nearDistanceM: 0

@@ -111,6 +111,7 @@ Assets/Scripts/
   SpeedometerScaleGenerator.cs
   SpeedometerUI.cs
   TASCIndicatorDisplay.cs
+  TrainBrakeIndicatorDisplay.cs
   TrainFormationDisplayBuilder.cs
   TrainHUD.cs
 Assets/TextMesh Pro/Examples & Extras/Scripts/

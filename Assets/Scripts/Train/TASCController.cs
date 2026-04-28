@@ -1,5 +1,12 @@
 using UnityEngine;
 
+public enum TascControlMode
+{
+    Inactive,
+    PatternControl,
+    Holding,
+}
+
 public class TASCController : MonoBehaviour
 {
     [Header("References")]
@@ -19,10 +26,14 @@ public class TASCController : MonoBehaviour
     [SerializeField] private int targetTascBrakeStep = 0;
     [SerializeField] private int currentControlZoneIndex = -1;
     [SerializeField] private int currentPatternBrakeRuleIndex = -1;
+    [SerializeField] private int currentHoldingBrakeRuleIndex = -1;
+    [SerializeField] private TascControlMode currentControlMode = TascControlMode.Inactive;
     [SerializeField] private float stepFollowTimer = 0f;
+    private int lockedHoldingBrakeStep = 0;
     private bool hasLoggedMissingProfile = false;
     private bool hasLoggedInvalidZone = false;
     private bool hasLoggedInvalidRules = false;
+    private bool hasLoggedInvalidHoldingRules = false;
 
     public bool IsTascActive => isTascActive;
     public float CurrentPatternAllowSpeedKmH => patternAllowSpeedMS * 3.6f;
@@ -32,6 +43,7 @@ public class TASCController : MonoBehaviour
     public float CurrentSpeedErrorKmH => currentSpeedErrorKmH;
     public int CurrentBaseTascBrakeStep => currentBaseTascBrakeStep;
     public int CurrentTargetTascBrakeStep => targetTascBrakeStep;
+    public string CurrentControlModeLabel => currentControlMode.ToString();
 
 
     /// <summary>
@@ -58,6 +70,18 @@ public class TASCController : MonoBehaviour
         }
 
         targetDistanceM = Mathf.Max(0f, stationStop.DistanceToStopM - GetSafetyMarginM());
+        if (IsHoldingDistanceActive(stationStop.DistanceToStopM))
+        {
+            patternAllowSpeedMS = 0f;
+            targetTascBrakeStep = ResolveLockedHoldingBrakeStep(Mathf.Abs(train.SpeedKmH));
+            currentTascBrakeStep = MoveStepTowardTarget(currentTascBrakeStep, targetTascBrakeStep);
+            isTascActive = true;
+            currentControlMode = TascControlMode.Holding;
+
+            notchManager.SetTASCBrakeStep(currentTascBrakeStep);
+            return;
+        }
+
         RefreshActiveControlZone(targetDistanceM);
         if (!CanUseActiveControlZone())
         {
@@ -69,6 +93,7 @@ public class TASCController : MonoBehaviour
         targetTascBrakeStep = SolvePatternTargetBrakeStep(train.SpeedMS, patternAllowSpeedMS);
         currentTascBrakeStep = MoveStepTowardTarget(currentTascBrakeStep, targetTascBrakeStep);
         isTascActive = true;
+        currentControlMode = TascControlMode.PatternControl;
 
         notchManager.SetTASCBrakeStep(currentTascBrakeStep);
     }
@@ -106,7 +131,7 @@ public class TASCController : MonoBehaviour
         }
 
         if (Mathf.Abs(stationStop.DistanceToStopM) <= GetStopCompletionDistanceM() &&
-            Mathf.Abs(train.SpeedMS) <= GetStopSpeedThresholdMS())
+            Mathf.Abs(train.SpeedMS) <= GetHoldingCompleteSpeedMS())
         {
             return false;
         }
@@ -220,6 +245,73 @@ public class TASCController : MonoBehaviour
         }
 
         currentPatternBrakeRuleIndex = selectedIndex;
+        return selectedIndex;
+    }
+
+    /// <summary>
+    /// 役割: Holding制御に入る距離範囲か判定します。
+    /// </summary>
+    /// <param name="distanceToStopM">停止目標までの距離[m]を指定します。</param>
+    /// <returns>Holding制御を使う距離なら true、それ以外は false を返します。</returns>
+    private bool IsHoldingDistanceActive(float distanceToStopM)
+    {
+        return distanceToStopM <= GetHoldingEnterDistanceM() &&
+               distanceToStopM >= -GetStopCompletionDistanceM();
+    }
+
+    /// <summary>
+    /// 役割: Holding突入時に速度テーブルからTASC段を一度だけ決め、その後は停止まで同じ段を返します。
+    /// </summary>
+    /// <param name="currentSpeedKmH">現在速度[km/h]を指定します。</param>
+    /// <returns>目標TASC連続ブレーキ段を返します。</returns>
+    private int ResolveLockedHoldingBrakeStep(float currentSpeedKmH)
+    {
+        if (lockedHoldingBrakeStep > 0)
+        {
+            return lockedHoldingBrakeStep;
+        }
+
+        currentSpeedErrorKmH = currentSpeedKmH;
+        currentBaseTascBrakeStep = 0;
+        currentPatternBrakeRuleIndex = -1;
+
+        TascHoldingBrakeRule[] rules = GetHoldingSpeedRules();
+        if (rules == null || rules.Length == 0)
+        {
+            LogInvalidHoldingRulesOnce();
+            currentHoldingBrakeRuleIndex = -1;
+            return 0;
+        }
+
+        int selectedRuleIndex = FindHighestMatchingHoldingRuleIndex(currentSpeedKmH, rules);
+        if (selectedRuleIndex < 0)
+        {
+            currentHoldingBrakeRuleIndex = -1;
+            return 0;
+        }
+
+        currentHoldingBrakeRuleIndex = selectedRuleIndex;
+        lockedHoldingBrakeStep = ConvertBrakeNotchToTascStep(rules[selectedRuleIndex].brakeNotch);
+        return lockedHoldingBrakeStep;
+    }
+
+    /// <summary>
+    /// 役割: 現在速度に該当する最も高いHolding用速度テーブル行を探します。
+    /// </summary>
+    /// <param name="currentSpeedKmH">現在速度[km/h]を指定します。</param>
+    /// <param name="rules">Holding用速度テーブルを指定します。</param>
+    /// <returns>該当する最も高い行番号を返します。該当なしの場合は -1 を返します。</returns>
+    private int FindHighestMatchingHoldingRuleIndex(float currentSpeedKmH, TascHoldingBrakeRule[] rules)
+    {
+        int selectedIndex = -1;
+        for (int i = 0; i < rules.Length; i++)
+        {
+            if (currentSpeedKmH >= rules[i].minSpeedKmH)
+            {
+                selectedIndex = i;
+            }
+        }
+
         return selectedIndex;
     }
 
@@ -344,6 +436,9 @@ public class TASCController : MonoBehaviour
         currentTascBrakeStep = 0;
         currentControlZoneIndex = -1;
         currentPatternBrakeRuleIndex = -1;
+        currentHoldingBrakeRuleIndex = -1;
+        currentControlMode = TascControlMode.Inactive;
+        lockedHoldingBrakeStep = 0;
         stepFollowTimer = 0f;
 
         if (notchManager != null)
@@ -389,6 +484,8 @@ public class TASCController : MonoBehaviour
 
         currentControlZoneIndex = nextZoneIndex;
         currentPatternBrakeRuleIndex = -1;
+        currentHoldingBrakeRuleIndex = -1;
+        lockedHoldingBrakeStep = 0;
     }
 
     /// <summary>
@@ -475,6 +572,15 @@ public class TASCController : MonoBehaviour
     }
 
     /// <summary>
+    /// 役割: Holding制御で使う速度テーブルを返します。
+    /// </summary>
+    /// <returns>Holding用速度テーブルを返します。</returns>
+    private TascHoldingBrakeRule[] GetHoldingSpeedRules()
+    {
+        return tascProfile != null ? tascProfile.holdingSpeedRules : null;
+    }
+
+    /// <summary>
     /// 役割: 現在の制御ゾーン番号が profile 内で有効か判定します。
     /// </summary>
     /// <returns>有効な制御ゾーンを選択している場合は true、それ以外は false を返します。</returns>
@@ -532,6 +638,21 @@ public class TASCController : MonoBehaviour
     }
 
     /// <summary>
+    /// 役割: Holding用速度テーブル未設定エラーを一度だけ出力します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
+    private void LogInvalidHoldingRulesOnce()
+    {
+        if (hasLoggedInvalidHoldingRules)
+        {
+            return;
+        }
+
+        hasLoggedInvalidHoldingRules = true;
+        Debug.LogError($"{nameof(TASCController)} on {name}: TASCProfile has no holding speed rules. Holding control will output B0.", this);
+    }
+
+    /// <summary>
     /// 役割: 停止目標の手前に置く安全余裕距離を取得します。
     /// </summary>
     /// <returns>安全余裕距離[m]を返します。</returns>
@@ -554,6 +675,18 @@ public class TASCController : MonoBehaviour
     /// </summary>
     /// <returns>停止完了速度[m/s]を返します。</returns>
     private float GetStopSpeedThresholdMS() => Mathf.Max(0f, tascProfile.stopSpeedThresholdMS);
+
+    /// <summary>
+    /// 役割: Holding制御へ入る停止目標付近の距離を取得します。
+    /// </summary>
+    /// <returns>Holding開始距離[m]を返します。</returns>
+    private float GetHoldingEnterDistanceM() => Mathf.Max(0f, tascProfile.holdingEnterDistanceM);
+
+    /// <summary>
+    /// 役割: TASCを完全停止扱いで解除する速度を取得します。
+    /// </summary>
+    /// <returns>Holding完了速度[m/s]を返します。</returns>
+    private float GetHoldingCompleteSpeedMS() => Mathf.Max(0f, tascProfile.holdingCompleteSpeedKmH) / 3.6f;
 
     /// <summary>
     /// 役割: TASC が使用してよい最大常用ブレーキノッチを取得します。
@@ -584,4 +717,22 @@ public class TASCController : MonoBehaviour
     /// </summary>
     /// <returns>偏差テーブルのヒステリシス幅[km/h]を返します。</returns>
     private float GetBrakeRuleHysteresisKmH() => Mathf.Max(0f, tascProfile.controlZones[currentControlZoneIndex].brakeRuleHysteresisKmH);
+
+    /// <summary>
+    /// 役割: 整数ブレーキノッチをTASC連続段へ変換します。
+    /// </summary>
+    /// <param name="brakeNotch">整数ブレーキノッチを指定します。</param>
+    /// <returns>対応するTASC連続段を返します。</returns>
+    private int ConvertBrakeNotchToTascStep(int brakeNotch)
+    {
+        if (trainSpec == null || brakeNotch <= 0)
+        {
+            return 0;
+        }
+
+        int maxServiceNotch = GetMaxServiceBrakeNotch();
+        int clampedNotch = Mathf.Clamp(brakeNotch, 1, maxServiceNotch);
+        int substeps = trainSpec.GetTascBrakeSubstepsPerNotch();
+        return ClampTascBrakeStep(((clampedNotch - 1) * substeps) + 1);
+    }
 }

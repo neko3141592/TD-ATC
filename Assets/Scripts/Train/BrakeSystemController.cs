@@ -17,6 +17,22 @@ public class BrakeSystemController : MonoBehaviour
     public IReadOnlyList<CarBrakeState> CarBrakeStates => carBrakeStates;
     public ConsistDefinition ConsistDefinition => consistDefinition;
 
+    [Header("Rolling Prevention")]
+    [SerializeField] private bool isRollingPreventionActive = false;
+    [SerializeField, Min(0f)] private float rollingPreventionEnterSpeedMS = 0.05f;
+    [SerializeField, Min(0f)] private float rollingPreventionMinBCPressureKPa = 100f;
+    public bool IsRollingPreventionActive => isRollingPreventionActive;
+
+    /// <summary>
+    /// 役割: BC圧を決める候補を表します。
+    /// </summary>
+    private struct BCPressureCandidate
+    {
+        public bool isValid;
+        public string sourceLabel;
+        public float targetBCPressureKPa;
+    }
+
     /// <summary>
     /// 役割: Awake の処理を実行します。
     /// </summary>
@@ -37,6 +53,8 @@ public class BrakeSystemController : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
+        rollingPreventionEnterSpeedMS = Mathf.Max(0f, rollingPreventionEnterSpeedMS);
+        rollingPreventionMinBCPressureKPa = Mathf.Max(0f, rollingPreventionMinBCPressureKPa);
         InitializeCarBrakeStates();
     }
 
@@ -58,8 +76,9 @@ public class BrakeSystemController : MonoBehaviour
     /// <param name="isEmergency">isEmergency を指定します。</param>
     /// <param name="useTascBrakeStep">TASC の連続ブレーキ段を使う場合は true を指定します。</param>
     /// <param name="tascBrakeStep">TASC の連続ブレーキ段を指定します。</param>
+    /// <param name="manualPowerNotch">運転士が入力している手動力行ノッチを指定します。</param>
     /// <remarks>返り値はありません。</remarks>
-    public void UpdateBrake(int brakeNotch, float speedMS, float deltaTime, bool isEmergency, bool useTascBrakeStep = false, int tascBrakeStep = 0)
+    public void UpdateBrake(int brakeNotch, float speedMS, float deltaTime, bool isEmergency, bool useTascBrakeStep = false, int tascBrakeStep = 0, int manualPowerNotch = 0)
     {
         // エディタ上の編成変更や初期化漏れに備え、件数を毎フレーム同期する
         EnsureCarBrakeStateCount();
@@ -93,8 +112,10 @@ public class BrakeSystemController : MonoBehaviour
             return;
         }
 
+        UpdateRollingPreventionState(speedMS, manualPowerNotch);
         ApplyNormalBrake(speedMS, deltaTime, hasBrakeCommand, targetTotalBrakeForceN);
         RefreshOutputsFromStates(CurrentConsistMassKg);
+
     }
 
     /// <summary>
@@ -144,6 +165,31 @@ public class BrakeSystemController : MonoBehaviour
             float targetBCPressureKPa = Mathf.Max(0f, carSpec.bcMaxPressureKPa);
             state.bcPressureKPa = airBrakeUnit.UpdateBCPressureKPa(trainSpec, carSpec, state.bcPressureKPa, targetBCPressureKPa, deltaTime);
             state.airForceN = airBrakeUnit.GetAirBrakeForceN(trainSpec, carSpec, state.bcPressureKPa, speedMS);
+        }
+    }
+
+    /// <summary>
+    /// 役割: 停止中に転動防止を有効化し、手動力行が入ったら解除します。
+    /// </summary>
+    /// <param name="speedMS">現在速度[m/s]を指定します。</param>
+    /// <param name="manualPowerNotch">運転士が入力している手動力行ノッチを指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
+    private void UpdateRollingPreventionState(float speedMS, int manualPowerNotch)
+    {
+        if (manualPowerNotch > 0)
+        {
+            isRollingPreventionActive = false;
+            return;
+        }
+
+        if (isRollingPreventionActive)
+        {
+            return;
+        }
+
+        if (Mathf.Abs(speedMS) <= rollingPreventionEnterSpeedMS)
+        {
+            isRollingPreventionActive = true;
         }
     }
 
@@ -259,9 +305,8 @@ public class BrakeSystemController : MonoBehaviour
                 }
 
                 float targetAirForceN = i < allTargetAirForcesN.Length ? allTargetAirForcesN[i] : 0f;
-                float targetBCPressureKPa = airBrakeUnit.GetTargetBCPressureKPa(trainSpec, carSpec, targetAirForceN, speedMS, hasBrakeCommand);
-                state.bcPressureKPa = airBrakeUnit.UpdateBCPressureKPa(trainSpec, carSpec, state.bcPressureKPa, targetBCPressureKPa, deltaTime);
-                state.airForceN = airBrakeUnit.GetAirBrakeForceN(trainSpec, carSpec, state.bcPressureKPa, speedMS);
+                BCPressureCandidate normalCandidate = BuildNormalBCPressureCandidate(carSpec, targetAirForceN, speedMS, hasBrakeCommand);
+                ApplyBCPressureCandidate(carSpec, state, normalCandidate, speedMS, deltaTime);
             }
 
             return;
@@ -297,15 +342,8 @@ public class BrakeSystemController : MonoBehaviour
             }
 
             float targetAirForceN = i < trailerTargetAirForcesN.Length ? trailerTargetAirForcesN[i] : 0f;
-
-            // 力[N]から必要BC圧[kPa]を逆算（協調時最低圧もここで反映）
-            float targetBCPressureKPa = airBrakeUnit.GetTargetBCPressureKPa(trainSpec, carSpec, targetAirForceN, speedMS, hasBrakeCommand);
-
-            // BC圧の応答遅れ（込め/抜き）を通した実BC圧
-            state.bcPressureKPa = airBrakeUnit.UpdateBCPressureKPa(trainSpec, carSpec, state.bcPressureKPa, targetBCPressureKPa, deltaTime);
-
-            // 実BC圧から実空気力[N]を算出
-            state.airForceN = airBrakeUnit.GetAirBrakeForceN(trainSpec, carSpec, state.bcPressureKPa, speedMS);
+            BCPressureCandidate normalCandidate = BuildNormalBCPressureCandidate(carSpec, targetAirForceN, speedMS, hasBrakeCommand);
+            ApplyBCPressureCandidate(carSpec, state, normalCandidate, speedMS, deltaTime);
             totalTrailerAirActualN += state.airForceN;
         }
 
@@ -341,16 +379,115 @@ public class BrakeSystemController : MonoBehaviour
             }
 
             float targetAirForceN = i < motorTargetAirForcesN.Length ? motorTargetAirForcesN[i] : 0f;
-
-            // 力[N]から必要BC圧[kPa]を逆算
-            float targetBCPressureKPa = airBrakeUnit.GetTargetBCPressureKPa(trainSpec, carSpec, targetAirForceN, speedMS, hasBrakeCommand);
-
-            // BC圧の遅れを反映
-            state.bcPressureKPa = airBrakeUnit.UpdateBCPressureKPa(trainSpec, carSpec, state.bcPressureKPa, targetBCPressureKPa, deltaTime);
-
-            // 実空気力[N]を更新
-            state.airForceN = airBrakeUnit.GetAirBrakeForceN(trainSpec, carSpec, state.bcPressureKPa, speedMS);
+            BCPressureCandidate normalCandidate = BuildNormalBCPressureCandidate(carSpec, targetAirForceN, speedMS, hasBrakeCommand);
+            ApplyBCPressureCandidate(carSpec, state, normalCandidate, speedMS, deltaTime);
         }
+    }
+
+    /// <summary>
+    /// 役割: 通常ブレーキ計算からBC圧候補を作ります。
+    /// </summary>
+    /// <param name="carSpec">対象車両の仕様を指定します。</param>
+    /// <param name="targetAirForceN">対象車両に要求する空気ブレーキ力[N]を指定します。</param>
+    /// <param name="speedMS">現在速度[m/s]を指定します。</param>
+    /// <param name="hasBrakeCommand">通常ブレーキ指令がある場合は true を指定します。</param>
+    /// <returns>通常ブレーキ由来のBC圧候補を返します。</returns>
+    private BCPressureCandidate BuildNormalBCPressureCandidate(CarSpec carSpec, float targetAirForceN, float speedMS, bool hasBrakeCommand)
+    {
+        return new BCPressureCandidate
+        {
+            isValid = true,
+            sourceLabel = "Normal",
+            targetBCPressureKPa = airBrakeUnit.GetTargetBCPressureKPa(
+                trainSpec,
+                carSpec,
+                targetAirForceN,
+                speedMS,
+                hasBrakeCommand
+            )
+        };
+    }
+
+    /// <summary>
+    /// 役割: 転動防止ブレーキ由来のBC圧候補を作ります。
+    /// </summary>
+    /// <param name="carSpec">対象車両の仕様を指定します。</param>
+    /// <returns>転動防止由来のBC圧候補を返します。</returns>
+    private BCPressureCandidate BuildRollingPreventionBCPressureCandidate(CarSpec carSpec)
+    {
+        if (!isRollingPreventionActive || carSpec == null)
+        {
+            return new BCPressureCandidate
+            {
+                isValid = false,
+                sourceLabel = "Rolling Prevention",
+                targetBCPressureKPa = 0f
+            };
+        }
+
+        return new BCPressureCandidate
+        {
+            isValid = true,
+            sourceLabel = "Rolling Prevention",
+            targetBCPressureKPa = Mathf.Clamp(rollingPreventionMinBCPressureKPa, 0f, carSpec.bcMaxPressureKPa)
+        };
+    }
+
+    /// <summary>
+    /// 役割: 2つのBC圧候補から高いBC圧を要求する候補を選びます。
+    /// </summary>
+    /// <param name="normalCandidate">通常ブレーキ由来のBC圧候補を指定します。</param>
+    /// <param name="rollingPreventionCandidate">転動防止由来のBC圧候補を指定します。</param>
+    /// <returns>採用するBC圧候補を返します。</returns>
+    private BCPressureCandidate ChooseHigherBCPressureCandidate(
+        BCPressureCandidate normalCandidate,
+        BCPressureCandidate rollingPreventionCandidate
+    )
+    {
+        if (!normalCandidate.isValid)
+        {
+            return rollingPreventionCandidate;
+        }
+
+        if (!rollingPreventionCandidate.isValid)
+        {
+            return normalCandidate;
+        }
+
+        return rollingPreventionCandidate.targetBCPressureKPa > normalCandidate.targetBCPressureKPa
+            ? rollingPreventionCandidate
+            : normalCandidate;
+    }
+
+    /// <summary>
+    /// 役割: BC圧候補を選択し、実BC圧と空気ブレーキ力を更新します。
+    /// </summary>
+    /// <param name="carSpec">対象車両の仕様を指定します。</param>
+    /// <param name="state">対象車両のブレーキ状態を指定します。</param>
+    /// <param name="normalCandidate">通常ブレーキ由来のBC圧候補を指定します。</param>
+    /// <param name="speedMS">現在速度[m/s]を指定します。</param>
+    /// <param name="deltaTime">前フレームからの経過時間[秒]を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
+    private void ApplyBCPressureCandidate(
+        CarSpec carSpec,
+        CarBrakeState state,
+        BCPressureCandidate normalCandidate,
+        float speedMS,
+        float deltaTime
+    )
+    {
+        BCPressureCandidate rollingCandidate = BuildRollingPreventionBCPressureCandidate(carSpec);
+        BCPressureCandidate selectedCandidate = ChooseHigherBCPressureCandidate(normalCandidate, rollingCandidate);
+        float targetBCPressureKPa = selectedCandidate.isValid ? selectedCandidate.targetBCPressureKPa : 0f;
+
+        state.bcPressureKPa = airBrakeUnit.UpdateBCPressureKPa(
+            trainSpec,
+            carSpec,
+            state.bcPressureKPa,
+            targetBCPressureKPa,
+            deltaTime
+        );
+        state.airForceN = airBrakeUnit.GetAirBrakeForceN(trainSpec, carSpec, state.bcPressureKPa, speedMS);
     }
 
     /// <summary>
@@ -514,5 +651,6 @@ public class BrakeSystemController : MonoBehaviour
         CurrentAirDecelMS2 = 0f;
         TotalBrakeDecelMS2 = 0f;
         CurrentConsistMassKg = 0f;
+        isRollingPreventionActive = false;
     }
 }

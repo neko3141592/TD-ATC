@@ -53,6 +53,7 @@ public partial class TrainController : MonoBehaviour
     public float CurrentAirBrakeForceN => brakeSystem != null ? brakeSystem.CurrentAirForceN : 0f;
     public float CurrentTractionForceN => tractionSystem != null ? tractionSystem.CurrentTotalTractionForceN : 0f;
     public float CurrentBCPressureKPa => brakeSystem != null ? brakeSystem.CurrentBCPressureKPa : 0f;
+    public bool IsRollingPreventionActive => brakeSystem != null && brakeSystem.IsRollingPreventionActive;
     public float CurrentAccelerationMS2 => currentAccelerationMS2;
     public IReadOnlyList<CarBrakeState> CurrentCarBrakeStates => brakeSystem != null ? brakeSystem.CarBrakeStates : null;
     public IReadOnlyList<CarTractionState> CurrentCarTractionStates => tractionSystem != null ? tractionSystem.CarTractionStates : null;

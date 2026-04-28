@@ -13,6 +13,18 @@ public class TASCProfile : ScriptableObject
     [Min(1)] public int maxServiceBrakeNotch = 7;
     [Min(0.01f)] public float stepFollowIntervalSeconds = 0.2f;
 
+    [Header("Holding")]
+    [Min(0f)] public float holdingEnterDistanceM = 0.3f;
+    [Min(0f)] public float holdingCompleteSpeedKmH = 0.1f;
+    public TascHoldingBrakeRule[] holdingSpeedRules =
+    {
+        new TascHoldingBrakeRule { minSpeedKmH = 0f, brakeNotch = 1 },
+        new TascHoldingBrakeRule { minSpeedKmH = 0.5f, brakeNotch = 1 },
+        new TascHoldingBrakeRule { minSpeedKmH = 1.0f, brakeNotch = 3 },
+        new TascHoldingBrakeRule { minSpeedKmH = 2.0f, brakeNotch = 4 },
+        new TascHoldingBrakeRule { minSpeedKmH = 3.0f, brakeNotch = 5 },
+    };
+
     [Header("Control Zones")]
     public TascControlZone[] controlZones =
     {
@@ -76,6 +88,9 @@ public class TASCProfile : ScriptableObject
         stopSpeedThresholdMS = Mathf.Max(0f, stopSpeedThresholdMS);
         maxServiceBrakeNotch = Mathf.Max(1, maxServiceBrakeNotch);
         stepFollowIntervalSeconds = Mathf.Max(0.01f, stepFollowIntervalSeconds);
+        holdingEnterDistanceM = Mathf.Max(0f, holdingEnterDistanceM);
+        holdingCompleteSpeedKmH = Mathf.Max(0f, holdingCompleteSpeedKmH);
+        NormalizeHoldingRules(holdingSpeedRules);
 
         if (controlZones == null)
         {
@@ -120,6 +135,29 @@ public class TASCProfile : ScriptableObject
             previousThresholdKmH = rule.minSpeedErrorKmH;
         }
     }
+
+    /// <summary>
+    /// 役割: Holding用速度テーブルのしきい値とノッチを安全な範囲へ補正します。
+    /// </summary>
+    /// <param name="rules">補正対象の Holding 用速度テーブルを指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
+    private void NormalizeHoldingRules(TascHoldingBrakeRule[] rules)
+    {
+        if (rules == null || rules.Length == 0)
+        {
+            return;
+        }
+
+        float previousThresholdKmH = 0f;
+        for (int i = 0; i < rules.Length; i++)
+        {
+            TascHoldingBrakeRule rule = rules[i];
+            rule.minSpeedKmH = Mathf.Max(previousThresholdKmH, rule.minSpeedKmH);
+            rule.brakeNotch = Mathf.Max(0, rule.brakeNotch);
+            rules[i] = rule;
+            previousThresholdKmH = rule.minSpeedKmH;
+        }
+    }
 }
 
 [System.Serializable]
@@ -148,6 +186,13 @@ public struct TascSpeedErrorBrakeRule
 {
     public float minSpeedErrorKmH;
     public int baseStepOffset;
+}
+
+[System.Serializable]
+public struct TascHoldingBrakeRule
+{
+    [Min(0f)] public float minSpeedKmH;
+    [Min(0)] public int brakeNotch;
 }
 
 public enum TascPatternInterpolationMode

@@ -37,6 +37,7 @@ public class ATCController : MonoBehaviour
     [SerializeField] private float fallbackPatternDecelerationMS2 = 1.8f;
     [SerializeField] private float atcReleaseMarginKmH = 3f;
     [SerializeField] private float overspeedToleranceMS = 0.1f;
+    [SerializeField] private float safetyMarginKmH = 5f;
     [SerializeField] private float patternApproachLampOnMarginKmH = 5f;
     [SerializeField] private float patternApproachLampOffMarginKmH = 7f;
 
@@ -282,10 +283,15 @@ public class ATCController : MonoBehaviour
                     servicePatternDecelerationMS2,
                     accumulatedDistM - safetyDistance
                 );
-                float emergencyAllowSpeedMS = ATCPatternCalculator.CalculateAllowSpeedMS(
+                float rawEmergencyAllowSpeedMS = ATCPatternCalculator.CalculateAllowSpeedMS(
                     nextLimitSpeedMS,
                     emergencyPatternDecelerationMS2,
                     accumulatedDistM - safetyDistance
+                );
+
+                float emergencyAllowSpeedMS = Mathf.Max(
+                    rawEmergencyAllowSpeedMS,
+                    allowSpeedMS + (safetyMarginKmH / 3.6f)
                 );
 
                 if (allowSpeedMS < candidate.allowedSpeedMS)
