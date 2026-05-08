@@ -1,5 +1,4 @@
 using UnityEngine;
-using System;
 
 public readonly struct ComplexValue
 {
@@ -28,7 +27,7 @@ public readonly struct ComplexValue
 
     public static ComplexValue operator *(ComplexValue a, ComplexValue b)
     {
-        return new ComplexValue (
+        return new ComplexValue(
             a.Real * b.Real - a.Imag * b.Imag,
             a.Real * b.Imag + a.Imag * b.Real
         );
@@ -36,7 +35,7 @@ public readonly struct ComplexValue
 
     public static ComplexValue operator *(float scalar, ComplexValue value)
     {
-        return new ComplexValue (
+        return new ComplexValue(
             value.Real * scalar, value.Imag * scalar
         );
     }
@@ -72,7 +71,6 @@ public readonly struct ComplexValue
 
     public override string ToString()
     {
-        return $"{Real:F3} + j{Imag:F3}";
+        return $"{Real:F3} {(Imag >= 0f ? "+" : "-")} j{Mathf.Abs(Imag):F3}";
     }
-
 }

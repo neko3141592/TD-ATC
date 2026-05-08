@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class VVVFRuntimeProbe : MonoBehaviour
@@ -28,7 +27,13 @@ public class VVVFRuntimeProbe : MonoBehaviour
 
     private float phaseRad;
 
-
+    private void Awake()
+    {
+        if (train == null)
+        {
+            train = GetComponent<TrainController>();
+        }
+    }
 
     private void Update()
     {
@@ -41,13 +46,14 @@ public class VVVFRuntimeProbe : MonoBehaviour
         TrainSpec spec = train.Spec;
 
         WheelRpm = VVVFMath.GetWheelRpm(train.SpeedMS, spec.wheelRadiusM);
+        MotorRpm = VVVFMath.GetMotorRpm(WheelRpm, spec.gearRatio);
 
         phaseRad += 2f * Mathf.PI * FrequencyHz * Time.deltaTime;
         phaseRad = Mathf.Repeat(phaseRad, 2f * Mathf.PI);
 
         float u = Mathf.Sin(phaseRad);
-        float v = Mathf.Sin(phaseRad + 2f * Mathf.PI / 3f);
-        float w = Mathf.Sin(phaseRad - 2f * Mathf.PI / 3f);
+        float v = Mathf.Sin(phaseRad - 2f * Mathf.PI / 3f);
+        float w = Mathf.Sin(phaseRad + 2f * Mathf.PI / 3f);
 
         UPhaseV = phaseVoltagePeakV * u;
         VPhaseV = phaseVoltagePeakV * v;
@@ -70,5 +76,4 @@ public class VVVFRuntimeProbe : MonoBehaviour
         VWLineV = 0f;
         WULineV = 0f;
     }
-    
 }
