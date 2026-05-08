@@ -46,10 +46,8 @@ public class TrackMeshGenerator : MonoBehaviour
         {
             float currentDist = Mathf.Min(i * segmentLengthM, totalLengthM);
 
-            if (resolver.TryResolvePose(graph, edgeId, currentDist, out Vector3 pos, out Vector3 tangent))
+            if (resolver.TryResolvePose(graph, edgeId, currentDist, out Vector3 pos, out Vector3 tangent, out Quaternion rotation))
             {
-                Quaternion rotation = tangent != Vector3.zero ? Quaternion.LookRotation(tangent, Vector3.up) : Quaternion.identity;
-
                 for (int j = 0; j < vertsInShape; j++)
                 {
                     int index = i * vertsInShape + j;

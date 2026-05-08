@@ -11,12 +11,13 @@ public partial class TrainController
         SyncCarTrackStatesWithConsist();
         EnsureRuntimeResolver();
 
-        if (!TryResolveHeadPose(out Vector3 pos, out Vector3 tan))
+        if (!TryResolveHeadPose(out Vector3 pos, out Vector3 tan, out Quaternion rot))
         {
             return;
         }
 
-        ApplyHeadPose(pos, tan);
+        UpdateCurrentTrackProfileStatus();
+        ApplyHeadPose(pos, tan, rot);
 
         float requiredHistoryLengthM = GetRequiredHistoryLengthM();
         EnsureActiveEdgeHistory(requiredHistoryLengthM);
@@ -223,10 +224,11 @@ public partial class TrainController
     /// <param name="pos">出力結果を受け取る pos です。</param>
     /// <param name="tan">出力結果を受け取る tan です。</param>
     /// <returns>処理が成功した場合は true、それ以外は false を返します。</returns>
-    private bool TryResolveHeadPose(out Vector3 pos, out Vector3 tan)
+    private bool TryResolveHeadPose(out Vector3 pos, out Vector3 tan, out Quaternion rot)
     {
         pos = default;
         tan = default;
+        rot = Quaternion.identity;
 
         if (trackGraph == null)
         {
@@ -240,7 +242,7 @@ public partial class TrainController
             return false;
         }
 
-        if (!resolver.TryResolvePose(trackGraph, currentEdgeId, distanceOnEdgeM, out pos, out tan))
+        if (!resolver.TryResolvePose(trackGraph, currentEdgeId, distanceOnEdgeM, out pos, out tan, out rot))
         {
             Debug.LogError(
                 $"{nameof(TrainController)} on {name}: failed to resolve pose. edgeId={currentEdgeId}, distanceOnEdgeM={distanceOnEdgeM:0.###}",
@@ -258,13 +260,27 @@ public partial class TrainController
     /// <param name="pos">pos を指定します。</param>
     /// <param name="tan">tan を指定します。</param>
     /// <remarks>返り値はありません。</remarks>
-    private void ApplyHeadPose(Vector3 pos, Vector3 tan)
+    private void ApplyHeadPose(Vector3 pos, Vector3 tan, Quaternion rot)
     {
         transform.position = pos;
         if (tan.sqrMagnitude > 0.000001f)
         {
-            transform.rotation = Quaternion.LookRotation(tan);
+            transform.rotation = rot;
         }
+    }
+
+    private void UpdateCurrentTrackProfileStatus()
+    {
+        currentGradientPermille = 0f;
+        currentCantMm = 0f;
+
+        if (resolver == null || trackGraph == null || string.IsNullOrEmpty(currentEdgeId))
+        {
+            return;
+        }
+
+        resolver.TryGetGradientPermille(trackGraph, currentEdgeId, distanceOnEdgeM, out currentGradientPermille);
+        resolver.TryGetCantMm(trackGraph, currentEdgeId, distanceOnEdgeM, out currentCantMm);
     }
 
     /// <summary>

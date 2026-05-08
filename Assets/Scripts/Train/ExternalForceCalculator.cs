@@ -47,6 +47,13 @@ internal static class ExternalForceCalculator
         return GetRollingResistanceForceN(spec, speedMS) + GetAerodynamicDragForceN(spec, speedMS);
     }
 
+    public static float GetGradeResistanceForceN(float massKg, float gradientPermille)
+    {
+        const float gravityMS2 = 9.80665f;
+        float safeMassKg = Mathf.Max(1f, massKg);
+        return safeMassKg * gravityMS2 * gradientPermille / 1000f;
+    }
+
     /// <summary>
     /// 役割: GetCoastExtraResistanceForceN の処理を実行します。
     /// </summary>

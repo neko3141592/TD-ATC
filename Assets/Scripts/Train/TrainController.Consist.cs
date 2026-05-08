@@ -46,10 +46,11 @@ public partial class TrainController
         state.edgeId = edgeId;
         state.distanceOnEdgeM = distOnEdge;
 
-        if (resolver.TryResolvePose(trackGraph, edgeId, distOnEdge, out Vector3 carPos, out Vector3 carTan))
+        if (resolver.TryResolvePose(trackGraph, edgeId, distOnEdge, out Vector3 carPos, out Vector3 carTan, out Quaternion carRot))
         {
             state.position = carPos;
             state.tangent = carTan;
+            state.rotation = carRot;
         }
     }
 

@@ -16,894 +16,1062 @@ MonoBehaviour:
   - nodeId: N000
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: -2.2, y: 0, z: 0}
+    worldPosition: {x: 0, y: 0, z: 0}
     worldRotation: {x: 0, y: 0, z: 0, w: 1}
     outgoingEdgeIds:
     - E001
-  - nodeId: UP_00700
+  - nodeId: G20_00961
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: -2.2, y: 0, z: 700}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    worldPosition: {x: -71.72136, y: 0, z: 956.4629}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
     outgoingEdgeIds:
     - E002
-  - nodeId: UP_01500
-    trackNodeType: 1
-    junctionId: UP_01500
-    worldPosition: {x: -2.2, y: 0, z: 1500}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+  - nodeId: G20_01671
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -177.59747, y: -7.1993027, z: 1658.4656}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
     outgoingEdgeIds:
     - E003
+  - nodeId: G20_02890
+    trackNodeType: 1
+    junctionId: G20_02890
+    worldPosition: {x: -359.31146, y: -8.519302, z: 2863.305}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
+    outgoingEdgeIds:
     - E004
-  - nodeId: UP_Mid_End
+    - E005
+  - nodeId: G20_Loop_04_End
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: -2.2000003, y: 0, z: 2400}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
-    outgoingEdgeIds:
-    - E005
-  - nodeId: UP_03300
-    trackNodeType: 1
-    junctionId: UP_03300
-    worldPosition: {x: -2.2000003, y: 0, z: 3300}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    worldPosition: {x: -495.52768, y: -8.519302, z: 3766.4749}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
     outgoingEdgeIds:
     - E006
-    - E007
-  - nodeId: UP_Center_End
+  - nodeId: G20_04894
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: -2.2000003, y: 0, z: 4200.0005}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    worldPosition: {x: -658.1472, y: 13.050146, z: 4844.71}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
+    outgoingEdgeIds:
+    - E007
+  - nodeId: G20_06350
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -875.29456, y: 42.391342, z: 6284.487}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
     outgoingEdgeIds:
     - E008
-  - nodeId: UP_05300
+  - nodeId: G20_07110
     trackNodeType: 1
-    junctionId: UP_05300
-    worldPosition: {x: -2.2000003, y: 0, z: 5300.0005}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    junctionId: G20_07110
+    worldPosition: {x: -988.7045, y: 44.591343, z: 7036.4424}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
     outgoingEdgeIds:
     - E009
     - E010
-  - nodeId: UP_Yard_End
+  - nodeId: G20_Loop_08_End
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: -2.2000003, y: 0, z: 6200.0005}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    worldPosition: {x: -1187.0037, y: 44.591343, z: 8351.249}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
     outgoingEdgeIds:
     - E011
-  - nodeId: UP_07400
-    trackNodeType: 1
-    junctionId: UP_07400
-    worldPosition: {x: -2.2000003, y: 0, z: 7400.0005}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+  - nodeId: G20_09388
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -1328.3829, y: 26.155245, z: 9288.652}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
     outgoingEdgeIds:
     - E012
-    - E013
-  - nodeId: UP_EndStation_End
+  - nodeId: G20_10293
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: -2.2000003, y: 0, z: 8300}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    worldPosition: {x: -1463.347, y: 7.8354683, z: 10183.5205}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
+    outgoingEdgeIds:
+    - E013
+  - nodeId: G20_11705
+    trackNodeType: 1
+    junctionId: G20_11705
+    worldPosition: {x: -1673.923, y: 5.6354685, z: 11579.727}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
     outgoingEdgeIds:
     - E014
-  - nodeId: UP_End
-    trackNodeType: 0
-    junctionId: 
-    worldPosition: {x: -2.2000003, y: 0, z: 10000}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
-    outgoingEdgeIds: []
-  - nodeId: N011
-    trackNodeType: 0
-    junctionId: 
-    worldPosition: {x: 2.2, y: 0, z: 10000}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
-    outgoingEdgeIds:
     - E015
-  - nodeId: DN_09300
+  - nodeId: G20_Loop_12_End
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 2.1999388, y: 0, z: 9300}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+    worldPosition: {x: -1809.8833, y: 5.6354685, z: 12481.203}
+    worldRotation: {x: 0, y: -0.0747761, z: 0, w: 0.9972003}
     outgoingEdgeIds:
     - E016
-  - nodeId: DN_08500
-    trackNodeType: 1
-    junctionId: DN_08500
-    worldPosition: {x: 2.199869, y: 0, z: 8500}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+  - nodeId: G20_13715
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -2028.69, y: -9.190586, z: 13556.304}
+    worldRotation: {x: 0, y: -0.1256014, z: 0, w: 0.9920808}
     outgoingEdgeIds:
     - E017
-    - E018
-  - nodeId: DN_Suburb_End
+  - nodeId: G20_15113
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 2.1997895, y: 0, z: 7599.9995}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+    worldPosition: {x: -2529.5256, y: -10.840586, z: 14852.715}
+    worldRotation: {x: 0, y: -0.24035148, z: 0, w: 0.97068596}
+    outgoingEdgeIds:
+    - E018
+  - nodeId: G20_16347
+    trackNodeType: 1
+    junctionId: G20_16347
+    worldPosition: {x: -3105.3623, y: -10.840586, z: 15944.214}
+    worldRotation: {x: 0, y: -0.24035148, z: 0, w: 0.97068596}
     outgoingEdgeIds:
     - E019
-  - nodeId: DN_06700
-    trackNodeType: 1
-    junctionId: DN_06700
-    worldPosition: {x: 2.1997092, y: 0, z: 6699.9995}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
-    outgoingEdgeIds:
     - E020
-    - E021
-  - nodeId: DN_Yard_End
+  - nodeId: G20_Loop_16_End
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 2.1996293, y: 0, z: 5799.9995}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+    worldPosition: {x: -3534.3606, y: -10.840586, z: 16757.383}
+    worldRotation: {x: 0, y: -0.2403515, z: 0, w: 0.97068596}
+    outgoingEdgeIds:
+    - E021
+  - nodeId: G20_18145
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -3944.3665, y: -10.840586, z: 17534.549}
+    worldRotation: {x: 0, y: -0.2403515, z: 0, w: 0.97068596}
     outgoingEdgeIds:
     - E022
-  - nodeId: DN_04700
-    trackNodeType: 1
-    junctionId: DN_04700
-    worldPosition: {x: 2.199531, y: 0, z: 4699.9995}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+  - nodeId: G20_19291
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: -4479.223, y: -33.63823, z: 18548.37}
+    worldRotation: {x: 0, y: -0.2403515, z: 0, w: 0.97068596}
     outgoingEdgeIds:
     - E023
-    - E024
-  - nodeId: DN_Center_End
+  - nodeId: G20_End
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 2.199452, y: 0, z: 3800}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
-    outgoingEdgeIds:
-    - E025
-  - nodeId: DN_02600
-    trackNodeType: 1
-    junctionId: DN_02600
-    worldPosition: {x: 2.1993446, y: 0, z: 2600}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
-    outgoingEdgeIds:
-    - E026
-    - E027
-  - nodeId: DN_Town_End
-    trackNodeType: 0
-    junctionId: 
-    worldPosition: {x: 2.199265, y: 0, z: 1700}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
-    outgoingEdgeIds:
-    - E028
-  - nodeId: DN_End
-    trackNodeType: 0
-    junctionId: 
-    worldPosition: {x: 2.1991131, y: 0, z: 0}
-    worldRotation: {x: 0, y: 1, z: 0, w: -0.000000044673776}
+    worldPosition: {x: -4809.8564, y: -36.058228, z: 19175.086}
+    worldRotation: {x: 0, y: -0.2403515, z: 0, w: 0.97068596}
     outgoingEdgeIds: []
   edges:
   - edgeId: E001
     fromNodeId: N000
-    toNodeId: UP_00700
+    toNodeId: G20_00961
     blockId: B001
-    lengthM: 700
-    speedLimitMS: 33.333336
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 700
+    lengthM: 961.438
+    speedLimitMS: 25.45888
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 340.38916
+      trackCurveType: 0
       radiusM: 0
+    - startDistanceM: 340.38916
+      lengthM: 80
+      trackCurveType: 2
+      radiusM: -1340.4841
+    - startDistanceM: 420.38916
+      lengthM: 120.659645
+      trackCurveType: 1
+      radiusM: -1340.4841
+    - startDistanceM: 541.0488
+      lengthM: 80
+      trackCurveType: 3
+      radiusM: -1340.4841
+    - startDistanceM: 621.0488
+      lengthM: 340.38916
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: 0
+      endGradientPermille: 0
+    - startDistanceM: 220
+      lengthM: 741.438
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 340.38916
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 340.38916
+      lengthM: 80
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 420.38916
+      lengthM: 120.659645
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 541.0488
+      lengthM: 80
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 621.0488
+      lengthM: 340.38916
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E002
-    fromNodeId: UP_00700
-    toNodeId: UP_01500
+    fromNodeId: G20_00961
+    toNodeId: G20_01671
     blockId: B002
-    lengthM: 800
-    speedLimitMS: 33.333336
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 800
+    lengthM: 709.9419
+    speedLimitMS: 28.219248
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 709.9419
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: 0
+      endGradientPermille: -12
+    - startDistanceM: 220
+      lengthM: 489.9419
+      startGradientPermille: -12
+      endGradientPermille: -12
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 709.9419
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E003
-    fromNodeId: UP_01500
-    toNodeId: UP_Mid_End
+    fromNodeId: G20_01671
+    toNodeId: G20_02890
     blockId: B003
-    lengthM: 901.8828
-    speedLimitMS: 12.5
-    mathCurves:
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
+    lengthM: 1218.4653
+    speedLimitMS: 25.200457
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1218.4653
+      trackCurveType: 0
       radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 551.8828
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: -12
+      endGradientPermille: 0
+    - startDistanceM: 220
+      lengthM: 998.46533
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1218.4653
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E004
-    fromNodeId: UP_01500
-    toNodeId: UP_Mid_End
+    fromNodeId: G20_02890
+    toNodeId: G20_Loop_04_End
     blockId: B004
-    lengthM: 900
-    speedLimitMS: 33.333336
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 900
+    lengthM: 915.2672
+    speedLimitMS: 13.839105
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: -240
+    - startDistanceM: 35
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: -240
+    - startDistanceM: 70
+      lengthM: 35
+      trackCurveType: 0
       radiusM: 0
+    - startDistanceM: 105
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: 240
+    - startDistanceM: 140
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: 240
+    - startDistanceM: 175
+      lengthM: 565.2672
+      trackCurveType: 0
+      radiusM: 0
+    - startDistanceM: 740.2672
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: 240
+    - startDistanceM: 775.2672
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: 240
+    - startDistanceM: 810.2672
+      lengthM: 35
+      trackCurveType: 0
+      radiusM: 0
+    - startDistanceM: 845.2672
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: -240
+    - startDistanceM: 880.2672
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: -240
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 915.2672
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments: []
   - edgeId: E005
-    fromNodeId: UP_Mid_End
-    toNodeId: UP_03300
+    fromNodeId: G20_02890
+    toNodeId: G20_Loop_04_End
     blockId: B005
-    lengthM: 900
-    speedLimitMS: 30.555557
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 900
+    lengthM: 913.38446
+    speedLimitMS: 23.862453
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 913.38446
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 913.38446
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 913.38446
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E006
-    fromNodeId: UP_03300
-    toNodeId: UP_Center_End
+    fromNodeId: G20_Loop_04_End
+    toNodeId: G20_04894
     blockId: B006
-    lengthM: 901.8828
-    speedLimitMS: 12.5
-    mathCurves:
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
+    lengthM: 1090.4294
+    speedLimitMS: 29.379229
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1090.4294
+      trackCurveType: 0
       radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 551.8828
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: 0
+      endGradientPermille: 22
+    - startDistanceM: 220
+      lengthM: 870.42944
+      startGradientPermille: 22
+      endGradientPermille: 22
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1090.4294
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E007
-    fromNodeId: UP_03300
-    toNodeId: UP_Center_End
+    fromNodeId: G20_04894
+    toNodeId: G20_06350
     blockId: B007
-    lengthM: 900
-    speedLimitMS: 33.333336
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 900
+    lengthM: 1456.0599
+    speedLimitMS: 31.763086
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1456.0599
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: 22
+      endGradientPermille: 20
+    - startDistanceM: 220
+      lengthM: 1236.0599
+      startGradientPermille: 20
+      endGradientPermille: 20
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1456.0599
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E008
-    fromNodeId: UP_Center_End
-    toNodeId: UP_05300
+    fromNodeId: G20_06350
+    toNodeId: G20_07110
     blockId: B008
-    lengthM: 1100
-    speedLimitMS: 27.777779
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 1100
+    lengthM: 760.4595
+    speedLimitMS: 24.47673
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 760.4595
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: 20
+      endGradientPermille: 0
+    - startDistanceM: 220
+      lengthM: 540.4595
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 760.4595
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E009
-    fromNodeId: UP_05300
-    toNodeId: UP_Yard_End
+    fromNodeId: G20_07110
+    toNodeId: G20_Loop_08_End
     blockId: B009
-    lengthM: 901.88184
-    speedLimitMS: 12.5
-    mathCurves:
-    - trackCurveType: 2
-      gradientPermille: 0
+    lengthM: 1331.5586
+    speedLimitMS: 13.897611
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
       lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
+      trackCurveType: 2
+      radiusM: 240
+    - startDistanceM: 35
       lengthM: 35
-      radiusM: -240
-    - trackCurveType: 0
-      gradientPermille: 0
+      trackCurveType: 3
+      radiusM: 240
+    - startDistanceM: 70
       lengthM: 35
+      trackCurveType: 0
       radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
+    - startDistanceM: 105
       lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 551.88184
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
+      trackCurveType: 2
       radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
+    - startDistanceM: 140
       lengthM: 35
+      trackCurveType: 3
       radiusM: -240
+    - startDistanceM: 175
+      lengthM: 981.55865
+      trackCurveType: 0
+      radiusM: 0
+    - startDistanceM: 1156.5586
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: -240
+    - startDistanceM: 1191.5586
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: -240
+    - startDistanceM: 1226.5586
+      lengthM: 35
+      trackCurveType: 0
+      radiusM: 0
+    - startDistanceM: 1261.5586
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: 240
+    - startDistanceM: 1296.5586
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: 240
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 1331.5586
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments: []
   - edgeId: E010
-    fromNodeId: UP_05300
-    toNodeId: UP_Yard_End
+    fromNodeId: G20_07110
+    toNodeId: G20_Loop_08_End
     blockId: B010
-    lengthM: 900
-    speedLimitMS: 27.777779
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 900
+    lengthM: 1329.6752
+    speedLimitMS: 19.605133
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1329.6752
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 1329.6752
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1329.6752
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E011
-    fromNodeId: UP_Yard_End
-    toNodeId: UP_07400
+    fromNodeId: G20_Loop_08_End
+    toNodeId: G20_09388
     blockId: B011
-    lengthM: 1200
-    speedLimitMS: 27.777779
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 1200
+    lengthM: 948.00446
+    speedLimitMS: 28.480011
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 948.00446
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: 0
+      endGradientPermille: -22
+    - startDistanceM: 220
+      lengthM: 728.00446
+      startGradientPermille: -22
+      endGradientPermille: -22
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 948.00446
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E012
-    fromNodeId: UP_07400
-    toNodeId: UP_EndStation_End
+    fromNodeId: G20_09388
+    toNodeId: G20_10293
     blockId: B012
-    lengthM: 901.88184
-    speedLimitMS: 12.5
-    mathCurves:
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
+    lengthM: 904.98883
+    speedLimitMS: 24.216736
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 904.98883
+      trackCurveType: 0
       radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 551.88184
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: -22
+      endGradientPermille: -20
+    - startDistanceM: 220
+      lengthM: 684.98883
+      startGradientPermille: -20
+      endGradientPermille: -20
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 904.98883
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E013
-    fromNodeId: UP_07400
-    toNodeId: UP_EndStation_End
+    fromNodeId: G20_10293
+    toNodeId: G20_11705
     blockId: B013
-    lengthM: 900
-    speedLimitMS: 25
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 900
+    lengthM: 1411.9961
+    speedLimitMS: 24.464848
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1411.9961
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: -20
+      endGradientPermille: 0
+    - startDistanceM: 220
+      lengthM: 1191.9961
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1411.9961
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E014
-    fromNodeId: UP_EndStation_End
-    toNodeId: UP_End
+    fromNodeId: G20_11705
+    toNodeId: G20_Loop_12_End
     blockId: B014
-    lengthM: 1700
-    speedLimitMS: 33.333336
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 1700
+    lengthM: 913.5537
+    speedLimitMS: 14.827487
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: -240
+    - startDistanceM: 35
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: -240
+    - startDistanceM: 70
+      lengthM: 35
+      trackCurveType: 0
       radiusM: 0
+    - startDistanceM: 105
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: 240
+    - startDistanceM: 140
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: 240
+    - startDistanceM: 175
+      lengthM: 563.5537
+      trackCurveType: 0
+      radiusM: 0
+    - startDistanceM: 738.5537
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: 240
+    - startDistanceM: 773.5537
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: 240
+    - startDistanceM: 808.5537
+      lengthM: 35
+      trackCurveType: 0
+      radiusM: 0
+    - startDistanceM: 843.5537
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: -240
+    - startDistanceM: 878.5537
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: -240
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 913.5537
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments: []
   - edgeId: E015
-    fromNodeId: N011
-    toNodeId: DN_09300
+    fromNodeId: G20_11705
+    toNodeId: G20_Loop_12_End
     blockId: B015
-    lengthM: 700
-    speedLimitMS: 33.333336
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 700
+    lengthM: 911.67334
+    speedLimitMS: 24.311863
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 911.67334
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 911.67334
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 911.67334
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E016
-    fromNodeId: DN_09300
-    toNodeId: DN_08500
+    fromNodeId: G20_Loop_12_End
+    toNodeId: G20_13715
     blockId: B016
-    lengthM: 800
-    speedLimitMS: 33.333336
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 800
+    lengthM: 1098.4037
+    speedLimitMS: 25.726128
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 419.85468
+      trackCurveType: 0
       radiusM: 0
+    - startDistanceM: 419.85468
+      lengthM: 80
+      trackCurveType: 2
+      radiusM: -1748.8861
+    - startDistanceM: 499.85468
+      lengthM: 98.69434
+      trackCurveType: 1
+      radiusM: -1748.8861
+    - startDistanceM: 598.549
+      lengthM: 80
+      trackCurveType: 3
+      radiusM: -1748.8861
+    - startDistanceM: 678.549
+      lengthM: 419.85468
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: 0
+      endGradientPermille: -15
+    - startDistanceM: 220
+      lengthM: 878.4037
+      startGradientPermille: -15
+      endGradientPermille: -15
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 419.85468
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 419.85468
+      lengthM: 80
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 499.85468
+      lengthM: 98.69434
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 598.549
+      lengthM: 80
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 678.549
+      lengthM: 419.85468
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E017
-    fromNodeId: DN_08500
-    toNodeId: DN_Suburb_End
+    fromNodeId: G20_13715
+    toNodeId: G20_15113
     blockId: B017
-    lengthM: 901.8828
-    speedLimitMS: 12.5
-    mathCurves:
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
+    lengthM: 1398.0767
+    speedLimitMS: 27.508703
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 528.3289
+      trackCurveType: 0
       radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 551.8828
+    - startDistanceM: 528.3289
+      lengthM: 80
+      trackCurveType: 2
+      radiusM: -1119.1456
+    - startDistanceM: 608.3289
+      lengthM: 181.41882
+      trackCurveType: 1
+      radiusM: -1119.1456
+    - startDistanceM: 789.74774
+      lengthM: 80
+      trackCurveType: 3
+      radiusM: -1119.1456
+    - startDistanceM: 869.74774
+      lengthM: 528.3289
+      trackCurveType: 0
       radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: -15
+      endGradientPermille: 0
+    - startDistanceM: 220
+      lengthM: 1178.0767
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 528.3289
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 528.3289
+      lengthM: 80
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 608.3289
+      lengthM: 181.41882
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 789.74774
+      lengthM: 80
+      startCantMm: 0
+      endCantMm: 0
+    - startDistanceM: 869.74774
+      lengthM: 528.3289
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E018
-    fromNodeId: DN_08500
-    toNodeId: DN_Suburb_End
+    fromNodeId: G20_15113
+    toNodeId: G20_16347
     blockId: B018
-    lengthM: 900
-    speedLimitMS: 33.333336
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 900
+    lengthM: 1234.0815
+    speedLimitMS: 27.377216
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1234.0815
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: 0
+      endGradientPermille: 0
+    - startDistanceM: 220
+      lengthM: 1014.08154
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1234.0815
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E019
-    fromNodeId: DN_Suburb_End
-    toNodeId: DN_06700
+    fromNodeId: G20_16347
+    toNodeId: G20_Loop_16_End
     blockId: B019
-    lengthM: 900
-    speedLimitMS: 30.555557
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 900
+    lengthM: 921.274
+    speedLimitMS: 14.613335
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: 240
+    - startDistanceM: 35
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: 240
+    - startDistanceM: 70
+      lengthM: 35
+      trackCurveType: 0
       radiusM: 0
+    - startDistanceM: 105
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: -240
+    - startDistanceM: 140
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: -240
+    - startDistanceM: 175
+      lengthM: 571.274
+      trackCurveType: 0
+      radiusM: 0
+    - startDistanceM: 746.274
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: -240
+    - startDistanceM: 781.274
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: -240
+    - startDistanceM: 816.274
+      lengthM: 35
+      trackCurveType: 0
+      radiusM: 0
+    - startDistanceM: 851.274
+      lengthM: 35
+      trackCurveType: 2
+      radiusM: 240
+    - startDistanceM: 886.274
+      lengthM: 35
+      trackCurveType: 3
+      radiusM: 240
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 921.274
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments: []
   - edgeId: E020
-    fromNodeId: DN_06700
-    toNodeId: DN_Yard_End
+    fromNodeId: G20_16347
+    toNodeId: G20_Loop_16_End
     blockId: B020
-    lengthM: 901.88184
-    speedLimitMS: 12.5
-    mathCurves:
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
+    lengthM: 919.3933
+    speedLimitMS: 23.12387
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 919.3933
+      trackCurveType: 0
       radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 551.88184
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 919.3933
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 919.3933
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E021
-    fromNodeId: DN_06700
-    toNodeId: DN_Yard_End
+    fromNodeId: G20_Loop_16_End
+    toNodeId: G20_18145
     blockId: B021
-    lengthM: 900
-    speedLimitMS: 33.333336
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 900
+    lengthM: 878.68756
+    speedLimitMS: 26.025618
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 878.68756
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: 0
+      endGradientPermille: 0
+    - startDistanceM: 220
+      lengthM: 658.68756
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 878.68756
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E022
-    fromNodeId: DN_Yard_End
-    toNodeId: DN_04700
+    fromNodeId: G20_18145
+    toNodeId: G20_19291
     blockId: B022
-    lengthM: 1100
-    speedLimitMS: 27.777779
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 1100
+    lengthM: 1146.2566
+    speedLimitMS: 28.018335
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1146.2566
+      trackCurveType: 0
       radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: 0
+      endGradientPermille: -22
+    - startDistanceM: 220
+      lengthM: 926.2566
+      startGradientPermille: -22
+      endGradientPermille: -22
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1146.2566
+      startCantMm: 0
+      endCantMm: 0
   - edgeId: E023
-    fromNodeId: DN_04700
-    toNodeId: DN_Center_End
+    fromNodeId: G20_19291
+    toNodeId: G20_End
     blockId: B023
-    lengthM: 901.88184
-    speedLimitMS: 12.5
-    mathCurves:
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
+    lengthM: 708.584
+    speedLimitMS: 24.88344
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 708.584
+      trackCurveType: 0
       radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 551.88184
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-  - edgeId: E024
-    fromNodeId: DN_04700
-    toNodeId: DN_Center_End
-    blockId: B024
-    lengthM: 900
-    speedLimitMS: 27.777779
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 900
-      radiusM: 0
-  - edgeId: E025
-    fromNodeId: DN_Center_End
-    toNodeId: DN_02600
-    blockId: B025
-    lengthM: 1200
-    speedLimitMS: 27.777779
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 1200
-      radiusM: 0
-  - edgeId: E026
-    fromNodeId: DN_02600
-    toNodeId: DN_Town_End
-    blockId: B026
-    lengthM: 901.8828
-    speedLimitMS: 12.5
-    mathCurves:
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 551.8828
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 240
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: 0
-    - trackCurveType: 2
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-    - trackCurveType: 3
-      gradientPermille: 0
-      lengthM: 35
-      radiusM: -240
-  - edgeId: E027
-    fromNodeId: DN_02600
-    toNodeId: DN_Town_End
-    blockId: B027
-    lengthM: 900
-    speedLimitMS: 25
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 900
-      radiusM: 0
-  - edgeId: E028
-    fromNodeId: DN_Town_End
-    toNodeId: DN_End
-    blockId: B028
-    lengthM: 1700
-    speedLimitMS: 33.333336
-    mathCurves:
-    - trackCurveType: 0
-      gradientPermille: 0
-      lengthM: 1700
-      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 220
+      startGradientPermille: -22
+      endGradientPermille: 0
+    - startDistanceM: 220
+      lengthM: 488.58398
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 708.584
+      startCantMm: 0
+      endCantMm: 0
   turnoutStates:
-  - junctionId: UP_01500
-    selectedOutgoingEdgeId: E004
-  - junctionId: UP_03300
-    selectedOutgoingEdgeId: E007
-  - junctionId: UP_05300
+  - junctionId: G20_02890
+    selectedOutgoingEdgeId: E005
+  - junctionId: G20_07110
     selectedOutgoingEdgeId: E010
-  - junctionId: UP_07400
-    selectedOutgoingEdgeId: E013
-  - junctionId: DN_08500
-    selectedOutgoingEdgeId: E018
-  - junctionId: DN_06700
-    selectedOutgoingEdgeId: E021
-  - junctionId: DN_04700
-    selectedOutgoingEdgeId: E024
-  - junctionId: DN_02600
-    selectedOutgoingEdgeId: E027
+  - junctionId: G20_11705
+    selectedOutgoingEdgeId: E015
+  - junctionId: G20_16347
+    selectedOutgoingEdgeId: E020
   stations:
   - stationId: ST_Start
     stationName: Start
     edgeId: E001
-    distanceFromEdgeStart: 300
+    distanceFromEdgeStart: 50
+    stopMarginM: 5
+  - stationId: ST_G20_01
+    stationName: G20-01
+    edgeId: E001
+    distanceFromEdgeStart: 881.438
+    stopMarginM: 5
+  - stationId: ST_G20_02
+    stationName: G20-02
+    edgeId: E002
+    distanceFromEdgeStart: 629.9419
+    stopMarginM: 5
+  - stationId: ST_G20_03
+    stationName: G20-03
+    edgeId: E003
+    distanceFromEdgeStart: 1138.4653
+    stopMarginM: 5
+  - stationId: ST_G20_04
+    stationName: G20-04
+    edgeId: E005
+    distanceFromEdgeStart: 833.38446
+    stopMarginM: 5
+  - stationId: ST_G20_05
+    stationName: G20-05
+    edgeId: E006
+    distanceFromEdgeStart: 1010.42944
+    stopMarginM: 5
+  - stationId: ST_G20_06
+    stationName: G20-06
+    edgeId: E007
+    distanceFromEdgeStart: 1376.0599
+    stopMarginM: 5
+  - stationId: ST_G20_07
+    stationName: G20-07
+    edgeId: E008
+    distanceFromEdgeStart: 680.4595
+    stopMarginM: 5
+  - stationId: ST_G20_08
+    stationName: G20-08
+    edgeId: E010
+    distanceFromEdgeStart: 1249.6752
+    stopMarginM: 5
+  - stationId: ST_G20_09
+    stationName: G20-09
+    edgeId: E011
+    distanceFromEdgeStart: 868.00446
     stopMarginM: 5
   - stationId: ST_Mid
     stationName: Mid
-    edgeId: E004
-    distanceFromEdgeStart: 450
+    edgeId: E012
+    distanceFromEdgeStart: 824.98883
     stopMarginM: 5
-  - stationId: ST_Pass
-    stationName: Pass
-    edgeId: E005
-    distanceFromEdgeStart: 450
+  - stationId: ST_G20_11
+    stationName: G20-11
+    edgeId: E013
+    distanceFromEdgeStart: 1331.9961
     stopMarginM: 5
-  - stationId: ST_Center
-    stationName: Center
-    edgeId: E007
-    distanceFromEdgeStart: 450
+  - stationId: ST_G20_12
+    stationName: G20-12
+    edgeId: E015
+    distanceFromEdgeStart: 831.67334
     stopMarginM: 5
-  - stationId: ST_Park
-    stationName: Park
-    edgeId: E008
-    distanceFromEdgeStart: 650
+  - stationId: ST_G20_13
+    stationName: G20-13
+    edgeId: E016
+    distanceFromEdgeStart: 1018.4037
     stopMarginM: 5
-  - stationId: ST_Yard
-    stationName: Yard
-    edgeId: E010
-    distanceFromEdgeStart: 450
+  - stationId: ST_G20_14
+    stationName: G20-14
+    edgeId: E017
+    distanceFromEdgeStart: 1318.0767
     stopMarginM: 5
-  - stationId: ST_Harbor
-    stationName: Harbor
-    edgeId: E011
-    distanceFromEdgeStart: 600
+  - stationId: ST_G20_15
+    stationName: G20-15
+    edgeId: E018
+    distanceFromEdgeStart: 1154.0815
+    stopMarginM: 5
+  - stationId: ST_G20_16
+    stationName: G20-16
+    edgeId: E020
+    distanceFromEdgeStart: 839.3933
+    stopMarginM: 5
+  - stationId: ST_G20_17
+    stationName: G20-17
+    edgeId: E021
+    distanceFromEdgeStart: 798.68756
+    stopMarginM: 5
+  - stationId: ST_G20_18
+    stationName: G20-18
+    edgeId: E022
+    distanceFromEdgeStart: 1066.2566
     stopMarginM: 5
   - stationId: ST_End
     stationName: End
-    edgeId: E013
-    distanceFromEdgeStart: 450
-    stopMarginM: 5
-  - stationId: ST_D_End
-    stationName: Down End
-    edgeId: E015
-    distanceFromEdgeStart: 300
-    stopMarginM: 5
-  - stationId: ST_D_Suburb
-    stationName: Down Suburb
-    edgeId: E018
-    distanceFromEdgeStart: 450
-    stopMarginM: 5
-  - stationId: ST_D_Harbor
-    stationName: Down Harbor
-    edgeId: E019
-    distanceFromEdgeStart: 450
-    stopMarginM: 5
-  - stationId: ST_D_Yard
-    stationName: Down Yard
-    edgeId: E021
-    distanceFromEdgeStart: 450
-    stopMarginM: 5
-  - stationId: ST_D_Park
-    stationName: Down Park
-    edgeId: E022
-    distanceFromEdgeStart: 650
-    stopMarginM: 5
-  - stationId: ST_D_Center
-    stationName: Down Center
-    edgeId: E024
-    distanceFromEdgeStart: 450
-    stopMarginM: 5
-  - stationId: ST_D_River
-    stationName: Down River
-    edgeId: E025
-    distanceFromEdgeStart: 600
-    stopMarginM: 5
-  - stationId: ST_D_Town
-    stationName: Down Town
-    edgeId: E027
-    distanceFromEdgeStart: 450
-    stopMarginM: 5
-  - stationId: ST_D_Start
-    stationName: Down Start
-    edgeId: E028
-    distanceFromEdgeStart: 1300
+    edgeId: E023
+    distanceFromEdgeStart: 628.584
     stopMarginM: 5
   nodeMergeDistanceM: 0.05
   generateReverseEdge: 0

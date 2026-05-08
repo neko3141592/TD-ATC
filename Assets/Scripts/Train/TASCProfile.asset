@@ -34,8 +34,8 @@ MonoBehaviour:
   controlZones:
   - farDistanceM: 250
     nearDistanceM: 75
-    farPatternBrakeNotch: 6
-    nearPatternBrakeNotch: 6
+    farPatternBrakeNotch: 5
+    nearPatternBrakeNotch: 5
     interpolationMode: 0
     enterErrorKmH: -1
     releaseErrorKmH: -2
@@ -73,24 +73,24 @@ MonoBehaviour:
   - farDistanceM: 20
     nearDistanceM: 0
     farPatternBrakeNotch: 3
-    nearPatternBrakeNotch: 3
+    nearPatternBrakeNotch: 2
     interpolationMode: 1
     enterErrorKmH: -1
     releaseErrorKmH: -2
-    brakeRuleHysteresisKmH: 0.2
+    brakeRuleHysteresisKmH: 0.1
     speedErrorRules:
     - minSpeedErrorKmH: -2
       baseStepOffset: -7
     - minSpeedErrorKmH: -1
       baseStepOffset: -3
     - minSpeedErrorKmH: -0.5
-      baseStepOffset: -3
+      baseStepOffset: -2
     - minSpeedErrorKmH: 0
       baseStepOffset: 0
     - minSpeedErrorKmH: 0.5
-      baseStepOffset: 1
+      baseStepOffset: 2
     - minSpeedErrorKmH: 1
-      baseStepOffset: 3
+      baseStepOffset: 4
     - minSpeedErrorKmH: 2
       baseStepOffset: 6
     - minSpeedErrorKmH: 3

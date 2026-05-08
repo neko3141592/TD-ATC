@@ -16,6 +16,9 @@ public partial class TrainController : MonoBehaviour
     private float distance = 0f;
 
     private float currentAccelerationMS2 = 0f;
+    private float currentGradientPermille = 0f;
+    private float currentCantMm = 0f;
+    private float currentGradeResistanceForceN = 0f;
 
     private TrackRuntimeResolver resolver;
 
@@ -55,6 +58,9 @@ public partial class TrainController : MonoBehaviour
     public float CurrentBCPressureKPa => brakeSystem != null ? brakeSystem.CurrentBCPressureKPa : 0f;
     public bool IsRollingPreventionActive => brakeSystem != null && brakeSystem.IsRollingPreventionActive;
     public float CurrentAccelerationMS2 => currentAccelerationMS2;
+    public float CurrentGradientPermille => currentGradientPermille;
+    public float CurrentCantMm => currentCantMm;
+    public float CurrentGradeResistanceForceN => currentGradeResistanceForceN;
     public IReadOnlyList<CarBrakeState> CurrentCarBrakeStates => brakeSystem != null ? brakeSystem.CarBrakeStates : null;
     public IReadOnlyList<CarTractionState> CurrentCarTractionStates => tractionSystem != null ? tractionSystem.CarTractionStates : null;
     public IReadOnlyList<CarTrackState> CarTrackStates => carTrackStates;

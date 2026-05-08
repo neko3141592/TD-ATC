@@ -13,7 +13,9 @@ public class TrackBuilder
     public TrackNode LastNode => lastNode;
 
     private TrackNode lastNode;
-    private readonly List<TrackCurveData> currentCurves = new List<TrackCurveData>();
+    private readonly List<TrackHorizontalSegment> currentHorizontalSegments = new List<TrackHorizontalSegment>();
+    private readonly List<TrackVerticalSegment> currentVerticalSegments = new List<TrackVerticalSegment>();
+    private readonly List<TrackCantSegment> currentCantSegments = new List<TrackCantSegment>();
     private float currentEdgeLength = 0f;
 
     /// <summary>
@@ -49,7 +51,9 @@ public class TrackBuilder
         currentRot = node.worldRotation;
         lastNode = node;
         
-        currentCurves.Clear();
+        currentHorizontalSegments.Clear();
+        currentVerticalSegments.Clear();
+        currentCantSegments.Clear();
         currentEdgeLength = 0f;
     }
 
@@ -147,13 +151,17 @@ public class TrackBuilder
             newEdge.speedLimitMS = speedLimitKmH / 3.6f;
         }
 
-        newEdge.mathCurves.AddRange(currentCurves);
+        newEdge.horizontalSegments.AddRange(currentHorizontalSegments);
+        newEdge.verticalSegments.AddRange(currentVerticalSegments);
+        newEdge.cantSegments.AddRange(currentCantSegments);
 
         targetGraph.edges.Add(newEdge);
         if (lastNode.outgoingEdgeIds == null) lastNode.outgoingEdgeIds = new List<string>();
         lastNode.outgoingEdgeIds.Add(newEdge.edgeId);
 
-        currentCurves.Clear();
+        currentHorizontalSegments.Clear();
+        currentVerticalSegments.Clear();
+        currentCantSegments.Clear();
         currentEdgeLength = 0f;
         lastNode = targetNode;
     }
@@ -208,13 +216,30 @@ public class TrackBuilder
     /// <remarks>返り値はありません。</remarks>
     private void AppendCurveSegment(TrackCurveType type, float lengthM, float radiusM)
     {
-        currentCurves.Add(new TrackCurveData
+        float safeLengthM = Mathf.Max(0f, lengthM);
+        currentHorizontalSegments.Add(new TrackHorizontalSegment
         {
+            startDistanceM = currentEdgeLength,
+            lengthM = safeLengthM,
             trackCurveType = type,
-            lengthM = lengthM,
             radiusM = radiusM
         });
-        currentEdgeLength += lengthM;
+        currentVerticalSegments.Add(new TrackVerticalSegment
+        {
+            startDistanceM = currentEdgeLength,
+            lengthM = safeLengthM,
+            startGradientPermille = 0f,
+            endGradientPermille = 0f
+        });
+        currentCantSegments.Add(new TrackCantSegment
+        {
+            startDistanceM = currentEdgeLength,
+            lengthM = safeLengthM,
+            startCantMm = 0f,
+            endCantMm = 0f
+        });
+
+        currentEdgeLength += safeLengthM;
     }
 
     /// <summary>

@@ -65,7 +65,7 @@ public partial class TrainController
         float massKg = GetCurrentConsistMassKg();
         GetBrakeOutputs(brakeNotch, useTascBrakeStep, tascBrakeStep, massKg, out float brakeDeceleration, out float brakeForceN);
 
-        float externalForceN = GetExternalResistanceForceN(powerNotch, brakeDeceleration);
+        float externalForceN = GetExternalResistanceForceN(powerNotch, brakeDeceleration, massKg);
         float tractionForceN = GetTractionForceN(powerNotch, massKg, externalForceN);
         float vehicleForceN = tractionForceN - brakeForceN;
 
@@ -134,9 +134,10 @@ public partial class TrainController
     /// <param name="powerNotch">powerNotch を指定します。</param>
     /// <param name="brakeDecelerationMS2">brakeDecelerationMS2 を指定します。</param>
     /// <returns>計算または参照した値を返します。</returns>
-    private float GetExternalResistanceForceN(int powerNotch, float brakeDecelerationMS2)
+    private float GetExternalResistanceForceN(int powerNotch, float brakeDecelerationMS2, float massKg)
     {
         float runningResistanceForceN = ExternalForceCalculator.GetRunningResistanceForceN(trainSpec, speedMS);
+        currentGradeResistanceForceN = ExternalForceCalculator.GetGradeResistanceForceN(massKg, GetCurrentGradientPermilleForPhysics());
         float coastResistanceForceN = 0f;
         if (powerNotch <= 0 && brakeDecelerationMS2 <= 0f)
         {
@@ -144,7 +145,21 @@ public partial class TrainController
             coastResistanceForceN = ExternalForceCalculator.GetCoastExtraResistanceForceN(trainSpec, speedMS);
         }
 
-        return runningResistanceForceN + coastResistanceForceN;
+        return runningResistanceForceN + coastResistanceForceN + currentGradeResistanceForceN;
+    }
+
+    private float GetCurrentGradientPermilleForPhysics()
+    {
+        EnsureRuntimeResolver();
+
+        if (resolver == null || trackGraph == null || string.IsNullOrEmpty(currentEdgeId))
+        {
+            currentGradientPermille = 0f;
+            return currentGradientPermille;
+        }
+
+        resolver.TryGetGradientPermille(trackGraph, currentEdgeId, distanceOnEdgeM, out currentGradientPermille);
+        return currentGradientPermille;
     }
 
     /// <summary>

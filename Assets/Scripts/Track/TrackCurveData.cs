@@ -10,13 +10,28 @@ public enum TrackCurveType
 }
 
 [Serializable]
-public class TrackCurveData
+public class TrackHorizontalSegment
 {
+    public float startDistanceM;
+    public float lengthM = 100f;
     public TrackCurveType trackCurveType;
-    
-    [Min(0f)] 
-    public float gradientPermille = 0f;
-    public float lengthM = 100f; // 区間長[m]です。
-    
-    public float radiusM = 500f; // 半径[m]です。正なら右曲線、負なら左曲線です。
+    public float radiusM = 500f;
+}
+
+[Serializable]
+public class TrackVerticalSegment
+{
+    public float startDistanceM;
+    public float lengthM = 100f;
+    public float startGradientPermille;
+    public float endGradientPermille;
+}
+
+[Serializable]
+public class TrackCantSegment
+{
+    public float startDistanceM;
+    public float lengthM = 100f;
+    public float startCantMm;
+    public float endCantMm;
 }

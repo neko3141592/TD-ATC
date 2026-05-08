@@ -9,4 +9,5 @@ public class CarTrackState
     public float distanceOnEdgeM;      // その線路のどこにいるか
     public Vector3 position;           // 3D空間の座標
     public Vector3 tangent;            // レールの向き（接線）
+    public Quaternion rotation;         // 勾配・カントを含む線路上の姿勢
 }

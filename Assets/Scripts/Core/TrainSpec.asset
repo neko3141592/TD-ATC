@@ -19,7 +19,7 @@ MonoBehaviour:
   maxTractionPowerW: 3200000
   motorPowerPerUnitW: 170000
   tractionPowerSpeedFloorMS: 1
-  maxTargetAccelerationMS2: 0.833
+  maxTargetAccelerationMS2: 0.917
   accelControlEndSpeedMS: 10
   torqueControlEndSpeedMS: 15
   maxMotorTorqueNm: 25000
@@ -116,8 +116,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.2919765
-      value: 0.99959636
+      time: 0.20714305
+      value: 0.99877715
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -125,8 +125,17 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 1.5190972
-      value: 0.20628679
+      time: 0.7716298
+      value: 0.19883701
+      inSlope: -0.6429732
+      outSlope: -0.6429732
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.1884378
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1.4747154
+      value: 0.02315697
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -148,8 +157,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.6198309
-      value: 0.99667567
+      time: 0.9422186
+      value: 0.99874324
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -157,8 +166,17 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 3.4676402
-      value: 0.02067864
+      time: 2.0315075
+      value: 0.21481484
+      inSlope: -0.6296352
+      outSlope: -0.6296352
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 3.2908823
+      value: -0.0047730207
       inSlope: 0
       outSlope: 0
       tangentMode: 0

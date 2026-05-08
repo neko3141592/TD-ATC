@@ -14,7 +14,10 @@ public class TrackEdge
     // このエッジ上を走行するための基本データです。
     [Min(0f)] public float lengthM;
     [Min(0f)] public float speedLimitMS = 33.33f;
+    [Min(0.001f)] public float gaugeM = 1.067f;
 
     [Header("Rail Data")]
-    public List<TrackCurveData> mathCurves = new List<TrackCurveData>();
+    public List<TrackHorizontalSegment> horizontalSegments = new List<TrackHorizontalSegment>();
+    public List<TrackVerticalSegment> verticalSegments = new List<TrackVerticalSegment>();
+    public List<TrackCantSegment> cantSegments = new List<TrackCantSegment>();
 }

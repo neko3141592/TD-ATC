@@ -99,9 +99,8 @@ public class TrackVisualizer : MonoBehaviour
         parent.transform.SetParent(this.transform);
         for (float dist = 0f; dist <= edge.lengthM; dist++)
         {
-            if (resolver.TryResolvePose(graph, edge.edgeId, dist, out Vector3 pos, out Vector3 tangent))
+            if (resolver.TryResolvePose(graph, edge.edgeId, dist, out Vector3 pos, out Vector3 tangent, out Quaternion rotation))
             {
-                Quaternion rotation = Quaternion.LookRotation(tangent, Vector3.up);
                 pos.y -= 0.22f;
                 if (sleeperPrefab != null)
                 {

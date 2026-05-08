@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 public class TrackRuntimeResolver
 {
@@ -118,8 +119,20 @@ public class TrackRuntimeResolver
         out Vector3 position,
         out Vector3 tangent)
     {
+        return TryResolvePose(graph, edgeId, distanceOnEdgeM, out position, out tangent, out _);
+    }
+
+    public bool TryResolvePose(
+        TrackGraph graph,
+        string edgeId,
+        float distanceOnEdgeM,
+        out Vector3 position,
+        out Vector3 tangent,
+        out Quaternion rotation)
+    {
         position = Vector3.zero;
         tangent = Vector3.forward;
+        rotation = Quaternion.identity;
 
         if (graph == null || string.IsNullOrEmpty(edgeId)) return false;
 
@@ -129,101 +142,170 @@ public class TrackRuntimeResolver
         TrackNode fromNode = graph.FindNode(edge.fromNodeId);
         if (fromNode == null) return false;
 
-        // 1. スタート地点（ノード）のワールド座標と向きを基準にする
-        Vector3 currentPos = fromNode.worldPosition;
-        // Nodeの水平方向の向きだけを抽出してベースにする
-        Vector3 forwardXZ = fromNode.worldRotation * Vector3.forward;
-        forwardXZ.y = 0;
-        Quaternion currentRot = forwardXZ.sqrMagnitude > 0.001f ? Quaternion.LookRotation(forwardXZ.normalized) : Quaternion.identity;
+        float clampedDistanceOnEdgeM = Mathf.Clamp(distanceOnEdgeM, 0f, Mathf.Max(0f, edge.lengthM));
+        return TryResolveProfilePose(edge, fromNode, clampedDistanceOnEdgeM, out position, out tangent, out rotation);
+    }
 
-        float remainingDist = Mathf.Max(0f, distanceOnEdgeM);
-        float currentPermille = 0f;
+    public bool TryGetGradientPermille(
+        TrackGraph graph,
+        string edgeId,
+        float distanceOnEdgeM,
+        out float gradientPermille)
+    {
+        gradientPermille = 0f;
 
-        // 2. エッジが持っている「カーブレシピ（mathCurves）」を順番に計算していく
-        if (edge.mathCurves == null || edge.mathCurves.Count == 0)
+        if (graph == null || string.IsNullOrEmpty(edgeId))
         {
-            Debug.LogError($"TrackEdge {edgeId} に有効なカーブレシピ(mathCurves)が設定されていません。データが壊れている可能性があります。");
             return false;
         }
 
-        for (int i = 0; i < edge.mathCurves.Count; i++)
+        TrackEdge edge = graph.FindEdge(edgeId);
+        if (edge == null)
         {
-            TrackCurveData curve = edge.mathCurves[i];
-
-            if (remainingDist > curve.lengthM)
-            {
-                CalculateHorizontalAndAltitude(curve.lengthM, curve.lengthM, curve.trackCurveType, curve.radiusM, curve.gradientPermille, ref currentPos, ref currentRot);
-                remainingDist -= curve.lengthM; 
-            }
-            else
-            {
-                CalculateHorizontalAndAltitude(remainingDist, curve.lengthM, curve.trackCurveType, curve.radiusM, curve.gradientPermille, ref currentPos, ref currentRot);
-                currentPermille = curve.gradientPermille;
-                remainingDist = 0f; 
-                break; 
-            }
+            return false;
         }
 
-        if (remainingDist > 0.001f)
+        float clampedDistanceOnEdgeM = Mathf.Clamp(distanceOnEdgeM, 0f, Mathf.Max(0f, edge.lengthM));
+        gradientPermille = TrackGradientUtility.GetGradientPermilleAt(edge.verticalSegments, clampedDistanceOnEdgeM);
+        return true;
+    }
+
+    public bool TryGetCantMm(
+        TrackGraph graph,
+        string edgeId,
+        float distanceOnEdgeM,
+        out float cantMm)
+    {
+        cantMm = 0f;
+
+        if (graph == null || string.IsNullOrEmpty(edgeId))
         {
-            CalculateHorizontalAndAltitude(remainingDist, remainingDist, TrackCurveType.Straight, 0f, 0f, ref currentPos, ref currentRot);
-            currentPermille = 0f;
+            return false;
         }
 
-        // 3. 最終的な計算結果をセットする
+        TrackEdge edge = graph.FindEdge(edgeId);
+        if (edge == null)
+        {
+            return false;
+        }
+
+        float clampedDistanceOnEdgeM = Mathf.Clamp(distanceOnEdgeM, 0f, Mathf.Max(0f, edge.lengthM));
+        cantMm = TrackGradientUtility.GetCantMmAt(edge.cantSegments, clampedDistanceOnEdgeM);
+        return true;
+    }
+
+    private bool TryResolveProfilePose(
+        TrackEdge edge,
+        TrackNode fromNode,
+        float distanceOnEdgeM,
+        out Vector3 position,
+        out Vector3 tangent,
+        out Quaternion rotation)
+    {
+        position = Vector3.zero;
+        tangent = Vector3.forward;
+        rotation = Quaternion.identity;
+
+        Vector3 currentPos = fromNode.worldPosition;
+        Quaternion currentRot = GetPlanRotation(fromNode.worldRotation);
+
+        if (!TryResolveHorizontalPosition(edge.horizontalSegments, distanceOnEdgeM, ref currentPos, ref currentRot))
+        {
+            return false;
+        }
+
+        float heightM = TrackGradientUtility.GetVerticalHeightAt(edge.verticalSegments, distanceOnEdgeM);
+        float currentPermille = TrackGradientUtility.GetGradientPermilleAt(edge.verticalSegments, distanceOnEdgeM);
+
         position = currentPos;
-        
-        // 接線（タンジェント）に対して、「現在乗っている勾配」のぶんだけピッチを適用する
+        position.y = fromNode.worldPosition.y + heightM;
+
         float pitchDegree = -Mathf.Atan(currentPermille / 1000f) * Mathf.Rad2Deg;
-        tangent = currentRot * Quaternion.Euler(pitchDegree, 0f, 0f) * Vector3.forward;
+        float cantMm = TrackGradientUtility.GetCantMmAt(edge.cantSegments, distanceOnEdgeM);
+        float rollDegree = Mathf.Atan2(cantMm / 1000f, Mathf.Max(0.001f, edge.gaugeM)) * Mathf.Rad2Deg;
+        rotation = currentRot * Quaternion.Euler(pitchDegree, 0f, rollDegree);
+        tangent = rotation * Vector3.forward;
+        return true;
+    }
+
+    private static bool TryResolveHorizontalPosition(
+        List<TrackHorizontalSegment> segments,
+        float distanceOnEdgeM,
+        ref Vector3 currentPos,
+        ref Quaternion currentRot)
+    {
+        if (segments == null || segments.Count == 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < segments.Count; i++)
+        {
+            TrackHorizontalSegment segment = segments[i];
+            if (segment == null)
+            {
+                continue;
+            }
+
+            float segmentStartM = Mathf.Max(0f, segment.startDistanceM);
+            float segmentLengthM = Mathf.Max(0f, segment.lengthM);
+            float segmentEndM = segmentStartM + segmentLengthM;
+
+            if (distanceOnEdgeM <= segmentStartM)
+            {
+                break;
+            }
+
+            float localDistanceM = Mathf.Min(distanceOnEdgeM, segmentEndM) - segmentStartM;
+            if (localDistanceM <= 0f)
+            {
+                continue;
+            }
+
+            CalculateHorizontal(segment.trackCurveType, localDistanceM, segmentLengthM, segment.radiusM, out float localX, out float localZ, out float angleDegree);
+            currentPos += currentRot * new Vector3(localX, 0f, localZ);
+            currentRot *= Quaternion.Euler(0f, angleDegree, 0f);
+
+            if (distanceOnEdgeM <= segmentEndM)
+            {
+                return true;
+            }
+        }
 
         return true;
     }
 
-    // --- 計算を合体させる魔法の補助関数 ---
-    /// <summary>
-    /// 役割: CalculateHorizontalAndAltitude の処理を実行します。
-    /// </summary>
-    /// <param name="l">l を指定します。</param>
-    /// <param name="totalL">totalL を指定します。</param>
-    /// <param name="type">type を指定します。</param>
-    /// <param name="R">R を指定します。</param>
-    /// <param name="permille">permille を指定します。</param>
-    /// <param name="currentPos">currentPos を指定します。</param>
-    /// <param name="currentRot">currentRot を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void CalculateHorizontalAndAltitude(float l, float totalL, TrackCurveType type, float R, float permille, ref Vector3 currentPos, ref Quaternion currentRot)
+    private static void CalculateHorizontal(
+        TrackCurveType type,
+        float localDistanceM,
+        float segmentLengthM,
+        float radiusM,
+        out float localX,
+        out float localZ,
+        out float angleDegree)
     {
-        float pitchRad = Mathf.Atan(permille / 1000f);
-        
-        // 斜辺(l) から、高さ(Y)と平面上の進み(horizontalL)を分解
-        float localY = l * Mathf.Sin(pitchRad);
-        float horizontalL = l * Mathf.Cos(pitchRad);
-        float horizontalTotalL = totalL * Mathf.Cos(pitchRad);
-
-        float localX, localZ, angleDegree;
-
-        // カーブ計算には分解した水平距離(horizontalL)を使う
-        if (type == TrackCurveType.Straight) {
-            CalculateStraight(horizontalL, out localX, out localZ, out angleDegree);
-        } else if (type == TrackCurveType.Curve) {
-            CalculateCircularCurve(horizontalL, R, out localX, out localZ, out angleDegree);
-        } else if (type == TrackCurveType.TransitionIn) {
-            CalculateClothoidIn(horizontalL, horizontalTotalL, R, out localX, out localZ, out angleDegree);
-        } else if (type == TrackCurveType.TransitionOut) {
-            CalculateClothoidOut(horizontalL, horizontalTotalL, R, out localX, out localZ, out angleDegree);
-        } else {
-            CalculateStraight(horizontalL, out localX, out localZ, out angleDegree);
+        switch (type)
+        {
+            case TrackCurveType.Curve:
+                CalculateCircularCurve(localDistanceM, radiusM, out localX, out localZ, out angleDegree);
+                break;
+            case TrackCurveType.TransitionIn:
+                CalculateClothoidIn(localDistanceM, segmentLengthM, radiusM, out localX, out localZ, out angleDegree);
+                break;
+            case TrackCurveType.TransitionOut:
+                CalculateClothoidOut(localDistanceM, segmentLengthM, radiusM, out localX, out localZ, out angleDegree);
+                break;
+            default:
+                CalculateStraight(localDistanceM, out localX, out localZ, out angleDegree);
+                break;
         }
-
-        // 水平面での移動ベクトルを作り、現在の向いている方向(currentRot)に添わせて足す
-        Vector3 horizontalOffset = new Vector3(localX, 0f, localZ);
-        currentPos += currentRot * horizontalOffset;
-        
-        // 高さは単純にワールドのY座標に足す！（ピッチが累積して破綻するのを防ぐため）
-        currentPos.y += localY;
-
-        // Y軸の回転（ヨー角＝左右の曲がり）だけを累積させる
-        currentRot *= Quaternion.Euler(0f, angleDegree, 0f);
     }
+
+    private static Quaternion GetPlanRotation(Quaternion worldRotation)
+    {
+        Vector3 forwardXZ = worldRotation * Vector3.forward;
+        forwardXZ.y = 0f;
+        return forwardXZ.sqrMagnitude > 0.001f ? Quaternion.LookRotation(forwardXZ.normalized) : Quaternion.identity;
+    }
+
 }

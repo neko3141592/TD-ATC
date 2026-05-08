@@ -54,7 +54,7 @@ public class TrainCar : MonoBehaviour
         
         if (myState.tangent.sqrMagnitude > 0.000001f)
         {
-            Quaternion logicalRotation = Quaternion.LookRotation(myState.tangent);
+            Quaternion logicalRotation = myState.rotation == default(Quaternion) ? Quaternion.LookRotation(myState.tangent) : myState.rotation;
             Quaternion modelRotation = Quaternion.Euler(0f, generatedYawOffsetDegrees, 0f) * Quaternion.Euler(modelRotationOffset);
             
             transform.position = myState.position + (logicalRotation * modelPositionOffset);

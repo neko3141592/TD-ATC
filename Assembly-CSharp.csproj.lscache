@@ -70,6 +70,7 @@ Assets/Scripts/
   TrackBuilder.cs
   TrackCurveData.cs
   TrackEdge.cs
+  TrackGradientUtility.cs
   TrackGraph.cs
   TrackMeshGenerator.cs
   TrackNode.cs
@@ -114,6 +115,11 @@ Assets/Scripts/
   TrainBrakeIndicatorDisplay.cs
   TrainFormationDisplayBuilder.cs
   TrainHUD.cs
+ VVVF/
+  VVVFComplex.cs
+  VVVFMath.cs
+  VVVFRpmDebugProbe.cs
+  VVVFRuntimeProbe.cs
 Assets/TextMesh Pro/Examples & Extras/Scripts/
  Benchmark01.cs
  Benchmark01_UGUI.cs
