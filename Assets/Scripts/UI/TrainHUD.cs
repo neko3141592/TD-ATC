@@ -12,9 +12,6 @@ public class TrainHUD : MonoBehaviour
     [SerializeField] private BlockOccupancyManager blockOccupancyManager;
     [SerializeField] private TMP_Text hudText;
 
-    [Header("VVVF Debug")]
-    [SerializeField] private bool showVvvfRpmSection = true;
-
     /// <summary>
     /// 役割: FormatBrakeNotchLabel の処理を表示用に整形します。
     /// </summary>
@@ -68,30 +65,6 @@ public class TrainHUD : MonoBehaviour
         float regenBrakeForceKN = train.CurrentRegenBrakeForceN / 1000f;
         float airBrakeForceKN = train.CurrentAirBrakeForceN / 1000f;
         var carBrakeStates = train.CurrentCarBrakeStates;
-
-        StringBuilder vvvfSection = new StringBuilder();
-        if (showVvvfRpmSection)
-        {
-            TrainSpec spec = train.Spec;
-            if (spec == null)
-            {
-                vvvfSection.Append("[VVVF]\n");
-                vvvfSection.Append("RPM: --\n");
-                vvvfSection.Append("\n");
-            }
-            else
-            {
-                float wheelRpm = VVVFMath.GetWheelRpm(train.SpeedMS, spec.wheelRadiusM);
-                float motorRpm = VVVFMath.GetMotorRpm(wheelRpm, spec.gearRatio);
-
-                vvvfSection.Append("[VVVF]\n");
-                vvvfSection.Append($"Wheel RPM: {wheelRpm:0.0}\n");
-                vvvfSection.Append($"Motor RPM: {motorRpm:0.0}\n");
-                vvvfSection.Append($"Wheel Radius: {spec.wheelRadiusM:0.000} m\n");
-                vvvfSection.Append($"Gear Ratio: {spec.gearRatio:0.00}\n");
-                vvvfSection.Append("\n");
-            }
-        }
 
         StringBuilder tascSection = new StringBuilder();
         tascSection.Append("[TASC]\n");
@@ -210,7 +183,6 @@ public class TrainHUD : MonoBehaviour
             $"Cant: {train.CurrentCantMm:+0.0;-0.0;0.0} mm\n" +
             $"Grade Force: {train.CurrentGradeResistanceForceN / 1000f:+0.0;-0.0;0.0} kN\n" +
             "\n" +
-            vvvfSection.ToString() +
             "[Control]\n" +
             $"Applied: P{train.PowerNotch} / {FormatBrakeNotchLabel(train.BrakeNotch)}\n" +
             $"Manual: P{train.ManualPowerNotch} / {FormatBrakeNotchLabel(train.ManualBrakeNotch)}\n" +

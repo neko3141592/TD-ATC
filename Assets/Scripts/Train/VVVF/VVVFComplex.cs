@@ -11,6 +11,17 @@ public readonly struct ComplexValue
         Imag = imag;
     }
 
+    public static implicit operator ComplexValue(float real)
+    {
+        return new ComplexValue(real, 0);
+    }
+
+    public static readonly ComplexValue Zero = new ComplexValue(0f, 0f);
+
+    public static readonly ComplexValue One = new ComplexValue(1f, 0f);
+
+    public static readonly ComplexValue J = new ComplexValue(0f, 1f);
+
     public float Magnitude => Mathf.Sqrt(Real * Real + Imag * Imag);
     public float PhaseRad => Mathf.Atan2(Imag, Real);
     public float PhaseDeg => PhaseRad * Mathf.Rad2Deg;
@@ -53,6 +64,11 @@ public readonly struct ComplexValue
             (a.Real * b.Real + a.Imag * b.Imag) / denominator,
             (a.Imag * b.Real - a.Real * b.Imag) / denominator
         );
+    }
+
+    public static ComplexValue operator /(float scalar, ComplexValue value)
+    {
+        return new ComplexValue(scalar, 0f) / value;
     }
 
     public static ComplexValue FromPolar(float magnitude, float phaseRad)

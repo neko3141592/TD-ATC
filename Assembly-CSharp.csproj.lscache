@@ -79,18 +79,16 @@ Assets/Scripts/
   TrackTraceSegment.cs
   TrackVisualizer.cs
   TurnoutState.cs
- Train/
+ Train/Brake/
   AirBrakeUnit.cs
   BrakeControlUnit.cs
   BrakeSystemController.cs
   CarBrakeState.cs
+  RegenBrakeUnit.cs
+ Train/Controller/
   CarTrackState.cs
   CarTractionState.cs
   ExternalForceCalculator.cs
-  NotchManager.cs
-  RegenBrakeUnit.cs
-  TASCController.cs
-  TASCProfile.cs
   TractionSystemController.cs
   TrainCar.cs
   TrainController.Consist.cs
@@ -98,6 +96,20 @@ Assets/Scripts/
   TrainController.Physics.cs
   TrainController.Track.cs
   TrainFormationBuilder.cs
+ Train/Motor/
+  MotorModel.cs
+  MotorSpec.cs
+ Train/
+  Operation/NotchManager.cs
+  TASC/
+   TASCController.cs
+   TASCProfile.cs
+  VVVF/
+   VVVFComplex.cs
+   VVVFController.cs
+   VVVFDebugHUD.cs
+   VVVFMath.cs
+   VVVFRpmDebugProbe.cs
  UI/
   ATCIndicatorDisplay.cs
   ATCSignal.cs
@@ -115,11 +127,6 @@ Assets/Scripts/
   TrainBrakeIndicatorDisplay.cs
   TrainFormationDisplayBuilder.cs
   TrainHUD.cs
- VVVF/
-  VVVFComplex.cs
-  VVVFMath.cs
-  VVVFRpmDebugProbe.cs
-  VVVFRuntimeProbe.cs
 Assets/TextMesh Pro/Examples & Extras/Scripts/
  Benchmark01.cs
  Benchmark01_UGUI.cs
