@@ -6,6 +6,9 @@ public class CarTractionState
     [Tooltip("現在の力行力[N]")]
     public float tractionForceN = 0f;
 
+    [Tooltip("現在のモーター電流[A]")]
+    public float motorCurrentA = 0f;
+
     /// <summary>
     /// 役割: Reset の処理を実行します。
     /// </summary>
@@ -13,5 +16,6 @@ public class CarTractionState
     public void Reset()
     {
         tractionForceN = 0f;
+        motorCurrentA = 0f;
     }
 }

@@ -1,0 +1,158 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b3db27ee0c4d4e919384306f7e597e9, type: 3}
+  m_Name: TrackGraph_DoubleStraight1km
+  m_EditorClassIdentifier: Assembly-CSharp::TrackGraph
+  nodes:
+  - nodeId: DS1_Main_Start
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 0, y: 0, z: 0}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E001
+  - nodeId: DS1_Main_Mid
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 0, y: 0, z: 1000}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E003
+  - nodeId: DS1_Main_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 0, y: 0, z: 2000}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds: []
+  - nodeId: DS1_Parallel_Start
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 3.8, y: 0, z: 0}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E002
+  - nodeId: DS1_Parallel_Mid
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 3.8, y: 0, z: 1000}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds:
+    - E004
+  - nodeId: DS1_Parallel_End
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 3.8, y: 0, z: 2000}
+    worldRotation: {x: 0, y: 0, z: 0, w: 1}
+    outgoingEdgeIds: []
+  edges:
+  - edgeId: E001
+    fromNodeId: DS1_Main_Start
+    toNodeId: DS1_Main_Mid
+    blockId: B001
+    lengthM: 1000
+    speedLimitMS: 27.77778
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      startCantMm: 0
+      endCantMm: 0
+  - edgeId: E003
+    fromNodeId: DS1_Main_Mid
+    toNodeId: DS1_Main_End
+    blockId: B003
+    lengthM: 1000
+    speedLimitMS: 27.77778
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      startCantMm: 0
+      endCantMm: 0
+  - edgeId: E002
+    fromNodeId: DS1_Parallel_Start
+    toNodeId: DS1_Parallel_Mid
+    blockId: B002
+    lengthM: 1000
+    speedLimitMS: 27.77778
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      startCantMm: 0
+      endCantMm: 0
+  - edgeId: E004
+    fromNodeId: DS1_Parallel_Mid
+    toNodeId: DS1_Parallel_End
+    blockId: B004
+    lengthM: 1000
+    speedLimitMS: 27.77778
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1000
+      startCantMm: 0
+      endCantMm: 0
+  turnoutStates: []
+  stations:
+  - stationId: ST_Start
+    stationName: Start
+    edgeId: E001
+    distanceFromEdgeStart: 50
+    stopMarginM: 5
+  - stationId: ST_End
+    stationName: End
+    edgeId: E003
+    distanceFromEdgeStart: 950
+    stopMarginM: 5
+  nodeMergeDistanceM: 0.05
+  generateReverseEdge: 0

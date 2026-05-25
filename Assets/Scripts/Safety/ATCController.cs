@@ -14,6 +14,8 @@ public class ATCController : MonoBehaviour
         EmergencyPattern,
     }
 
+    private const float MinimumEmergencyPatternGapKmH = 10f;
+
     [Header("References")]
     [SerializeField] private TrainController train;
     [SerializeField] private TrainSpec trainSpec;
@@ -242,7 +244,10 @@ public class ATCController : MonoBehaviour
             distanceM = 0f,
             targetSpeedMS = currentLimitSpeedMS,
             allowedSpeedMS = currentLimitSpeedMS,
-            allowedEmergencySpeedMS = currentLimitSpeedMS,
+            allowedEmergencySpeedMS = EnsureEmergencyPatternAboveServicePattern(
+                currentLimitSpeedMS,
+                currentLimitSpeedMS
+            ),
         };
 
         if (train == null || train.Graph == null || currentEdge == null)
@@ -289,9 +294,9 @@ public class ATCController : MonoBehaviour
                     accumulatedDistM - safetyDistance
                 );
 
-                float emergencyAllowSpeedMS = Mathf.Max(
+                float emergencyAllowSpeedMS = EnsureEmergencyPatternAboveServicePattern(
                     rawEmergencyAllowSpeedMS,
-                    allowSpeedMS + (safetyMarginKmH / 3.6f)
+                    allowSpeedMS
                 );
 
                 if (allowSpeedMS < candidate.allowedSpeedMS)
@@ -354,13 +359,23 @@ public class ATCController : MonoBehaviour
             decel,
             targetDistanceM
         );
-        candidate.allowedEmergencySpeedMS = ATCPatternCalculator.CalculateAllowSpeedMS(
+        float rawEmergencyAllowSpeedMS = ATCPatternCalculator.CalculateAllowSpeedMS(
             0f,
             emergencyDecel,
             targetDistanceM
         );
+        candidate.allowedEmergencySpeedMS = EnsureEmergencyPatternAboveServicePattern(
+            rawEmergencyAllowSpeedMS,
+            candidate.allowedSpeedMS
+        );
 
         return candidate;
+    }
+
+    private float EnsureEmergencyPatternAboveServicePattern(float emergencyAllowSpeedMS, float serviceAllowSpeedMS)
+    {
+        float minimumGapMS = Mathf.Max(safetyMarginKmH, MinimumEmergencyPatternGapKmH) / 3.6f;
+        return Mathf.Max(emergencyAllowSpeedMS, serviceAllowSpeedMS + minimumGapMS);
     }
 
     /// <summary>

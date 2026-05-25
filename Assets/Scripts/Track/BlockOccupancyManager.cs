@@ -125,10 +125,13 @@ public class BlockOccupancyManager : MonoBehaviour
             return false;
         }
 
-        // 先頭車中心が乗っているエッジの block を必ず含めます。
-        AddBlockForEdge(activeTrackGraph, targetTrain.CurrentEdgeId, results);
+        TrackEdge currentEdge = activeTrackGraph.FindEdge(targetTrain.CurrentEdgeId);
+        string currentBlockId = GetBlockIdAt(currentEdge, targetTrain.DistanceOnEdgeM);
+        if (!string.IsNullOrEmpty(currentBlockId))
+        {
+            results.Add(currentBlockId);
+        }
 
-        // 最後尾端まで後方をたどり、またいでいる block を追加します。
         float tailOffsetM = Mathf.Max(0f, targetTrain.GetTailEndOffsetFromHeadM());
         if (tailOffsetM > 0f &&
             TrackRouteTracer.TryTraceBehind(
@@ -170,7 +173,14 @@ public class BlockOccupancyManager : MonoBehaviour
     {
         for (int i = 0; i < segments.Count; i++)
         {
-            AddBlockForEdge(graph, segments[i].edgeId, results);
+            TrackTraceSegment segment = segments[i];
+            TrackEdge edge = graph.FindEdge(segment.edgeId);
+            CollectBlockIdsInRange(
+                edge,
+                segment.startDistanceOnEdgeM,
+                segment.endDistanceOnEdgeM,
+                results
+            );
         }
     }
 
@@ -181,21 +191,105 @@ public class BlockOccupancyManager : MonoBehaviour
     /// <param name="edgeId">blockId を調べる edgeId を指定します。</param>
     /// <param name="results">blockId を追加する集合です。</param>
     /// <remarks>返り値はありません。</remarks>
-    private void AddBlockForEdge(TrackGraph graph, string edgeId, HashSet<string> results)
+    // private void AddBlockForEdge(TrackGraph graph, string edgeId, HashSet<string> results)
+    // {
+    //     TrackEdge edge = graph.FindEdge(edgeId);
+    //     if (edge == null)
+    //     {
+    //         return;
+    //     }
+
+    //     if (string.IsNullOrEmpty(edge.blockId))
+    //     {
+    //         Debug.LogWarning($"{nameof(BlockOccupancyManager)} on {name}: edge '{edgeId}' does not have a blockId.", this);
+    //         return;
+    //     }
+
+    //     results.Add(edge.blockId);
+    // }
+
+    private string GetBlockIdAt(TrackEdge edge, float distanceM)
     {
-        TrackEdge edge = graph.FindEdge(edgeId);
+        if (edge == null) {
+            return null;
+        }
+
+        if (edge.blockSections != null && edge.blockSections.Count > 0)
+        {
+            float clampedDistanceM = Mathf.Clamp(distanceM, 0f, Mathf.Max(0f, edge.lengthM));
+
+            for (int i = 0; i < edge.blockSections.Count; i++)
+            {
+                BlockSection currentSection = edge.blockSections[i];
+                if (currentSection == null || string.IsNullOrEmpty(currentSection.blockId))
+                {
+                    continue;
+                }
+
+                bool isLastSection = i == edge.blockSections.Count - 1;
+
+                if (isLastSection)
+                {
+                    if (clampedDistanceM >= currentSection.startDistanceM && clampedDistanceM <= currentSection.endDistanceM)
+                    {
+                        return currentSection.blockId;
+                    }
+                } 
+                else
+                {
+                    if (clampedDistanceM >= currentSection.startDistanceM && clampedDistanceM < currentSection.endDistanceM)
+                    {
+                        return currentSection.blockId;
+                    }
+                }
+            }
+        }
+
+        // 旧互換フォールバック
+        return edge.blockId;
+    }
+
+    public bool CollectBlockIdsInRange(TrackEdge edge, float startDistanceM, float endDistanceM, HashSet<string> results)
+    {
         if (edge == null)
         {
-            return;
+            return false;
         }
 
-        if (string.IsNullOrEmpty(edge.blockId))
+        if (edge.blockSections != null && edge.blockSections.Count > 0)
         {
-            Debug.LogWarning($"{nameof(BlockOccupancyManager)} on {name}: edge '{edgeId}' does not have a blockId.", this);
-            return;
-        }
 
-        results.Add(edge.blockId);
+            float clampedStartDistanceM = Mathf.Clamp(startDistanceM, 0f, edge.lengthM);
+            float clampedEndDistanceM = Mathf.Clamp(endDistanceM, 0f,  edge.lengthM);
+
+            for (int i = 0; i < edge.blockSections.Count; i++)
+            {
+                BlockSection currentSection = edge.blockSections[i];
+                if (currentSection == null || string.IsNullOrEmpty(currentSection.blockId))
+                {
+                    continue;
+                }
+
+                if (isOverlap(currentSection.startDistanceM, currentSection.endDistanceM, clampedStartDistanceM, clampedEndDistanceM))
+                {
+                    results.Add(currentSection.blockId);
+                }
+                
+            }
+
+            return true;
+        } 
+        else
+        {
+             //　旧互換フォールバック
+            results.Add(edge.blockId);
+            return true;
+        } 
+    }
+
+    private bool isOverlap(float a, float b, float c, float d)
+    {
+        return Mathf.Max(a, c) < Mathf.Min(b, d);
     }
 
     /// <summary>

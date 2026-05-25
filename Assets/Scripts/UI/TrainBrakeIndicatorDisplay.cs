@@ -4,6 +4,7 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private TrainController train;
+    [SerializeField] private NTIMController ntim;
 
     [Header("Indicators")]
     [SerializeField] private IndicatorObjectPair rollingPrevent;
@@ -15,6 +16,7 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
 
     private float nextReadTime = 0f;
     private bool displayedRollingPreventOn = false;
+    private bool displayedKeepOn = false;
 
     [System.Serializable]
     private struct IndicatorObjectPair
@@ -72,6 +74,13 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
         {
             train = GetComponentInParent<TrainController>();
         }
+
+        if (ntim == null)
+        {
+            ntim = train != null
+                ? train.GetComponentInChildren<NTIMController>()
+                : GetComponentInParent<NTIMController>();
+        }
     }
 
     /// <summary>
@@ -96,6 +105,7 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
     private void ReadCurrentBrakeState()
     {
         displayedRollingPreventOn = train != null && train.IsRollingPreventionActive;
+        displayedKeepOn = ntim != null && ntim.SpeedHoldActive;
     }
 
     /// <summary>
@@ -105,8 +115,8 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
     private void ApplyIndicators()
     {
         rollingPrevent.SetLit(displayedRollingPreventOn);
-        keep.SetLit(false);
-        regenReleased.SetLit(false);
+        keep.SetLit(displayedKeepOn);
+        regenReleased.SetLit(true);
     }
 
     /// <summary>

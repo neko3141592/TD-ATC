@@ -64,6 +64,11 @@ public class TrackGraphEditor : Editor
             CreateGradeTestTrack();
         }
 
+        if (GUILayout.Button("Create 2km Double Straight Course"))
+        {
+            CreateDoubleStraight2kmCourse();
+        }
+
         if (GUILayout.Button("Create 10km Single Track Course"))
         {
             CreateSingleTrack10kmCourse();
@@ -80,6 +85,134 @@ public class TrackGraphEditor : Editor
         public string mainEdgeId;
         public string sidingEdgeId;
         public float lengthM;
+    }
+
+    private void CreateDoubleStraight2kmCourse()
+    {
+        var graph = (TrackGraph)target;
+        Undo.RecordObject(graph, "Create 2km Double Straight Course");
+
+        graph.nodes.Clear();
+        graph.edges.Clear();
+        graph.turnoutStates.Clear();
+        graph.stations.Clear();
+
+        const float edgeLengthM = 1000f;
+        const float totalLengthM = 2000f;
+        const float trackCenterSpacingM = 3.8f;
+        const float speedLimitKmH = 100f;
+
+        graph.nodes.Add(CreateNode("DS1_Main_Start", new Vector3(0f, 0f, 0f), Quaternion.identity, "E001"));
+        graph.nodes.Add(CreateNode("DS1_Main_Mid", new Vector3(0f, 0f, edgeLengthM), Quaternion.identity, "E003"));
+        graph.nodes.Add(CreateNode("DS1_Main_End", new Vector3(0f, 0f, totalLengthM), Quaternion.identity));
+        graph.nodes.Add(CreateNode("DS1_Parallel_Start", new Vector3(trackCenterSpacingM, 0f, 0f), Quaternion.identity, "E002"));
+        graph.nodes.Add(CreateNode("DS1_Parallel_Mid", new Vector3(trackCenterSpacingM, 0f, edgeLengthM), Quaternion.identity, "E004"));
+        graph.nodes.Add(CreateNode("DS1_Parallel_End", new Vector3(trackCenterSpacingM, 0f, totalLengthM), Quaternion.identity));
+
+        graph.edges.Add(CreateStraightEdge("E001", "DS1_Main_Start", "DS1_Main_Mid", "B001", edgeLengthM, speedLimitKmH));
+        graph.edges.Add(CreateStraightEdge("E003", "DS1_Main_Mid", "DS1_Main_End", "B003", edgeLengthM, speedLimitKmH));
+        graph.edges.Add(CreateStraightEdge("E002", "DS1_Parallel_Start", "DS1_Parallel_Mid", "B002", edgeLengthM, speedLimitKmH));
+        graph.edges.Add(CreateStraightEdge("E004", "DS1_Parallel_Mid", "DS1_Parallel_End", "B004", edgeLengthM, speedLimitKmH));
+
+        graph.stations.Add(new StationData
+        {
+            stationId = "ST_Start",
+            stationName = "Start",
+            edgeId = "E001",
+            distanceFromEdgeStart = 50f,
+            stopMarginM = 5f
+        });
+        graph.stations.Add(new StationData
+        {
+            stationId = "ST_End",
+            stationName = "End",
+            edgeId = "E003",
+            distanceFromEdgeStart = 950f,
+            stopMarginM = 5f
+        });
+
+        graph.UpdateNodeTypesAndJunctionIds();
+        graph.SyncTurnoutStates();
+
+        EditorUtility.SetDirty(graph);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"Created 2km double straight course. main=E001->E003, parallel=E002->E004, spacing={trackCenterSpacingM}m.", graph);
+    }
+
+    private static TrackNode CreateNode(string nodeId, Vector3 worldPosition, Quaternion worldRotation, params string[] outgoingEdgeIds)
+    {
+        TrackNode node = new TrackNode
+        {
+            nodeId = nodeId,
+            trackNodeType = TrackNodeType.Normal,
+            junctionId = string.Empty,
+            worldPosition = worldPosition,
+            worldRotation = worldRotation,
+            outgoingEdgeIds = new List<string>()
+        };
+
+        if (outgoingEdgeIds != null)
+        {
+            for (int i = 0; i < outgoingEdgeIds.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(outgoingEdgeIds[i]))
+                {
+                    node.outgoingEdgeIds.Add(outgoingEdgeIds[i]);
+                }
+            }
+        }
+
+        return node;
+    }
+
+    private static TrackEdge CreateStraightEdge(
+        string edgeId,
+        string fromNodeId,
+        string toNodeId,
+        string blockId,
+        float lengthM,
+        float speedLimitKmH)
+    {
+        return new TrackEdge
+        {
+            edgeId = edgeId,
+            fromNodeId = fromNodeId,
+            toNodeId = toNodeId,
+            blockId = blockId,
+            lengthM = lengthM,
+            speedLimitMS = speedLimitKmH / 3.6f,
+            gaugeM = 1.067f,
+            horizontalSegments = new List<TrackHorizontalSegment>
+            {
+                new TrackHorizontalSegment
+                {
+                    startDistanceM = 0f,
+                    lengthM = lengthM,
+                    trackCurveType = TrackCurveType.Straight,
+                    radiusM = 0f
+                }
+            },
+            verticalSegments = new List<TrackVerticalSegment>
+            {
+                new TrackVerticalSegment
+                {
+                    startDistanceM = 0f,
+                    lengthM = lengthM,
+                    startGradientPermille = 0f,
+                    endGradientPermille = 0f
+                }
+            },
+            cantSegments = new List<TrackCantSegment>
+            {
+                new TrackCantSegment
+                {
+                    startDistanceM = 0f,
+                    lengthM = lengthM,
+                    startCantMm = 0f,
+                    endCantMm = 0f
+                }
+            }
+        };
     }
 
     /// <summary>

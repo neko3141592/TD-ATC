@@ -7,6 +7,7 @@ public partial class TrainController : MonoBehaviour
     [SerializeField] private NotchManager notchManager;
     [SerializeField] private BrakeSystemController brakeSystem;
     [SerializeField] private TractionSystemController tractionSystem;
+    [SerializeField] private VVVFController[] vvvfControllers;
     [SerializeField] private TrackGraph trackGraph;
     [SerializeField] private bool acceptPlayerInput = true;
     [SerializeField] private string trainId = "PlayerTrain";
@@ -19,6 +20,7 @@ public partial class TrainController : MonoBehaviour
     private float currentGradientPermille = 0f;
     private float currentCantMm = 0f;
     private float currentGradeResistanceForceN = 0f;
+    private float currentTractionForceN = 0f;
 
     private TrackRuntimeResolver resolver;
 
@@ -54,15 +56,17 @@ public partial class TrainController : MonoBehaviour
     public float CurrentBrakeForceN => brakeSystem != null ? brakeSystem.TotalBrakeForceN : 0f;
     public float CurrentRegenBrakeForceN => brakeSystem != null ? brakeSystem.CurrentRegenForceN : 0f;
     public float CurrentAirBrakeForceN => brakeSystem != null ? brakeSystem.CurrentAirForceN : 0f;
-    public float CurrentTractionForceN => tractionSystem != null ? tractionSystem.CurrentTotalTractionForceN : 0f;
+    public float CurrentTractionForceN => currentTractionForceN;
     public float CurrentBCPressureKPa => brakeSystem != null ? brakeSystem.CurrentBCPressureKPa : 0f;
     public bool IsRollingPreventionActive => brakeSystem != null && brakeSystem.IsRollingPreventionActive;
     public float CurrentAccelerationMS2 => currentAccelerationMS2;
+    public float CurrentConsistMassKg => GetCurrentConsistMassKg();
     public float CurrentGradientPermille => currentGradientPermille;
     public float CurrentCantMm => currentCantMm;
     public float CurrentGradeResistanceForceN => currentGradeResistanceForceN;
     public IReadOnlyList<CarBrakeState> CurrentCarBrakeStates => brakeSystem != null ? brakeSystem.CarBrakeStates : null;
     public IReadOnlyList<CarTractionState> CurrentCarTractionStates => tractionSystem != null ? tractionSystem.CarTractionStates : null;
+    public VVVFController[] VVVFControllers => vvvfControllers;
     public IReadOnlyList<CarTrackState> CarTrackStates => carTrackStates;
     public ConsistDefinition ConsistDefinition => ResolveConsistDefinition();
 
@@ -124,5 +128,20 @@ public partial class TrainController : MonoBehaviour
         {
             tractionSystem = GetComponent<TractionSystemController>();
         }
+
+        if (vvvfControllers == null || vvvfControllers.Length == 0)
+        {
+            RefreshVVVFControllersFromChildren();
+        }
+    }
+
+    public void SetVVVFControllers(VVVFController[] controllers)
+    {
+        vvvfControllers = controllers ?? System.Array.Empty<VVVFController>();
+    }
+
+    public void RefreshVVVFControllersFromChildren()
+    {
+        vvvfControllers = GetComponentsInChildren<VVVFController>(true);
     }
 }

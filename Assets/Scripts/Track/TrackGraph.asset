@@ -162,7 +162,7 @@ MonoBehaviour:
     toNodeId: G20_00961
     blockId: B001
     lengthM: 961.438
-    speedLimitMS: 25.45888
+    speedLimitMS: 27.777779
     gaugeM: 1.067
     horizontalSegments:
     - startDistanceM: 0
@@ -220,7 +220,7 @@ MonoBehaviour:
     toNodeId: G20_01671
     blockId: B002
     lengthM: 709.9419
-    speedLimitMS: 28.219248
+    speedLimitMS: 25
     gaugeM: 1.067
     horizontalSegments:
     - startDistanceM: 0
@@ -246,7 +246,7 @@ MonoBehaviour:
     toNodeId: G20_02890
     blockId: B003
     lengthM: 1218.4653
-    speedLimitMS: 25.200457
+    speedLimitMS: 33.33333
     gaugeM: 1.067
     horizontalSegments:
     - startDistanceM: 0
@@ -330,7 +330,7 @@ MonoBehaviour:
     toNodeId: G20_Loop_04_End
     blockId: B005
     lengthM: 913.38446
-    speedLimitMS: 23.862453
+    speedLimitMS: 33.333332
     gaugeM: 1.067
     horizontalSegments:
     - startDistanceM: 0

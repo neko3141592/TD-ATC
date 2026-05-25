@@ -8,6 +8,8 @@ public class TrainHUD : MonoBehaviour
     [SerializeField] private TrainController train;
     [SerializeField] private ATCController atc;
     [SerializeField] private TASCController tasc;
+    [SerializeField] private NTIMController ntim;
+    [SerializeField] private VVVFController[] vvvfControllers;
     [SerializeField] private StationStopController stationStop;
     [SerializeField] private BlockOccupancyManager blockOccupancyManager;
     [SerializeField] private TMP_Text hudText;
@@ -43,6 +45,16 @@ public class TrainHUD : MonoBehaviour
             tasc = train.GetComponent<TASCController>();
         }
 
+        if (ntim == null)
+        {
+            ntim = train.GetComponentInChildren<NTIMController>();
+        }
+
+        if (vvvfControllers == null || vvvfControllers.Length == 0)
+        {
+            vvvfControllers = train.GetComponentsInChildren<VVVFController>();
+        }
+
         string atcLimitText = "--";
         string atcSourceText = "--";
         string atcStateText = "--";
@@ -64,6 +76,7 @@ public class TrainHUD : MonoBehaviour
         float totalBrakeForceKN = train.CurrentBrakeForceN / 1000f;
         float regenBrakeForceKN = train.CurrentRegenBrakeForceN / 1000f;
         float airBrakeForceKN = train.CurrentAirBrakeForceN / 1000f;
+        float tractionForceKN = train.CurrentTractionForceN / 1000f;
         var carBrakeStates = train.CurrentCarBrakeStates;
 
         StringBuilder tascSection = new StringBuilder();
@@ -174,6 +187,119 @@ public class TrainHUD : MonoBehaviour
             }
         }
 
+        float totalVvvfTargetForceKN = 0f;
+        float totalVvvfMotorForceKN = 0f;
+        float firstTargetTorqueNm = 0f;
+        float firstMotorTorqueNm = 0f;
+        float firstSlipPercent = 0f;
+        float firstLineVoltageV = 0f;
+        float firstFrequencyHz = 0f;
+        int vvvfCount = 0;
+        if (vvvfControllers != null)
+        {
+            for (int i = 0; i < vvvfControllers.Length; i++)
+            {
+                VVVFController vvvf = vvvfControllers[i];
+                if (vvvf == null)
+                {
+                    continue;
+                }
+
+                vvvfCount++;
+                totalVvvfTargetForceKN += vvvf.TargetTractionForceN / 1000f;
+                totalVvvfMotorForceKN += vvvf.TotalMotorTractionForceN / 1000f;
+
+                if (vvvfCount == 1)
+                {
+                    MotorModel motor = vvvf.PrimaryMotor;
+                    firstTargetTorqueNm = vvvf.TargetMotorTorqueNm;
+                    firstMotorTorqueNm = motor != null ? motor.MotorTorqueNm : 0f;
+                    firstSlipPercent = vvvf.SlipRatio * 100f;
+                    firstLineVoltageV = vvvf.LineVoltageRmsV;
+                    firstFrequencyHz = vvvf.FrequencyHz;
+                }
+            }
+        }
+
+        StringBuilder ntimSection = new StringBuilder();
+        ntimSection.Append("[NTIM]\n");
+        if (ntim == null)
+        {
+            ntimSection.Append("Controller: --\n");
+        }
+        else
+        {
+            ntimSection.Append($"Region: {ntim.CurrentRegionLabel}\n");
+            ntimSection.Append($"Target Force: {ntim.TargetForceN / 1000f:0.0} kN\n");
+            ntimSection.Append($"Per VVVF: {ntim.TargetForcePerVvvfN / 1000f:0.0} kN\n");
+            ntimSection.Append($"Target Accel: {ntim.TargetAccelerationMS2:0.000} m/s^2\n");
+            ntimSection.Append($"Rated Power: {ntim.CurrentRatedConsistPowerW / 1000f:0.0} kW\n");
+            ntimSection.Append($"Active VVVF: {ntim.ActiveVvvfCount}\n");
+        }
+
+        StringBuilder speedHoldSection = new StringBuilder();
+        speedHoldSection.Append("[Speed Hold]\n");
+        if (ntim == null)
+        {
+            speedHoldSection.Append("State: --\n");
+            speedHoldSection.Append("Target: --\n");
+            speedHoldSection.Append("Error: --\n");
+        }
+        else
+        {
+            speedHoldSection.Append($"State: {ntim.SpeedHoldStateLabel}\n");
+            if (ntim.SpeedHoldActive)
+            {
+                float targetSpeedKmH = ntim.SpeedHoldTargetMS * 3.6f;
+                float speedErrorKmH = targetSpeedKmH - train.SpeedKmH;
+                speedHoldSection.Append($"Target: {targetSpeedKmH:0.0} km/h\n");
+                speedHoldSection.Append($"Error: {speedErrorKmH:+0.0;-0.0;0.0} km/h\n");
+            }
+            else
+            {
+                speedHoldSection.Append("Target: --\n");
+                speedHoldSection.Append("Error: --\n");
+            }
+        }
+
+        StringBuilder driveSection = new StringBuilder();
+        driveSection.Append("[Drive Debug]\n");
+        driveSection.Append($"VVVF Count: {vvvfCount}\n");
+        driveSection.Append($"Target Sum: {totalVvvfTargetForceKN:0.0} kN\n");
+        driveSection.Append($"Motor Sum: {totalVvvfMotorForceKN:0.0} kN\n");
+        driveSection.Append($"First Target T: {firstTargetTorqueNm:0.0} Nm\n");
+        driveSection.Append($"First Motor T: {firstMotorTorqueNm:0.0} Nm\n");
+        driveSection.Append($"First Slip: {firstSlipPercent:0.00}%\n");
+        driveSection.Append($"First Freq: {firstFrequencyHz:0.0} Hz\n");
+        driveSection.Append($"First Line V: {firstLineVoltageV:0.0} V\n");
+        if (vvvfControllers != null)
+        {
+            for (int i = 0; i < vvvfControllers.Length; i++)
+            {
+                VVVFController vvvf = vvvfControllers[i];
+                if (vvvf == null)
+                {
+                    continue;
+                }
+
+                MotorModel[] motors = vvvf.Motors;
+                if (motors == null || motors.Length == 0)
+                {
+                    driveSection.Append($"VVVF {i + 1}: no motors\n");
+                    continue;
+                }
+
+                driveSection.Append($"VVVF {i + 1} I:");
+                for (int motorIndex = 0; motorIndex < motors.Length; motorIndex++)
+                {
+                    MotorModel motor = motors[motorIndex];
+                    float currentA = motor != null ? motor.MotorCurrentRmsA : 0f;
+                    driveSection.Append($" M{motorIndex + 1} {currentA:0}");
+                }
+                driveSection.Append(" A\n");
+            }
+        }
+
         hudText.text =
             "[Train]\n" +
             $"Speed: {train.SpeedKmH:0.0} km/h\n" +
@@ -181,6 +307,7 @@ public class TrainHUD : MonoBehaviour
             $"Accel: {train.CurrentAccelerationMS2:+0.00;-0.00;0.00} m/s^2\n" +
             $"Gradient: {train.CurrentGradientPermille:+0.0;-0.0;0.0} permille\n" +
             $"Cant: {train.CurrentCantMm:+0.0;-0.0;0.0} mm\n" +
+            $"Traction Force: {tractionForceKN:0.0} kN\n" +
             $"Grade Force: {train.CurrentGradeResistanceForceN / 1000f:+0.0;-0.0;0.0} kN\n" +
             "\n" +
             "[Control]\n" +
@@ -200,6 +327,12 @@ public class TrainHUD : MonoBehaviour
             tascSection.ToString() +
             "\n" +
             stationSection.ToString() +
+            "\n" +
+            speedHoldSection.ToString() +
+            "\n" +
+            ntimSection.ToString() +
+            "\n" +
+            driveSection.ToString() +
             "\n" +
             blockSection.ToString() +
             "\n" +

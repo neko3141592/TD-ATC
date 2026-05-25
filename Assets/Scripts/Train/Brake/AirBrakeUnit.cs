@@ -49,12 +49,6 @@ internal class AirBrakeUnit
         float targetBCPressureKPa = forcePerKPa > 0f ? safeTargetAirForceN / forcePerKPa : 0f;
         targetBCPressureKPa = Mathf.Clamp(targetBCPressureKPa, 0f, maxBCPressureKPa);
 
-        if (hasBrakeCommand)
-        {
-            float minCooperativePressure = Mathf.Clamp(trainSpec.bcMinPressureDuringCooperativeKPa, 0f, maxBCPressureKPa);
-            targetBCPressureKPa = Mathf.Max(targetBCPressureKPa, minCooperativePressure);
-        }
-
         return targetBCPressureKPa;
     }
 

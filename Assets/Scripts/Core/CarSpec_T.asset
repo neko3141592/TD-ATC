@@ -12,12 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb5314aa25ce04f40ae93459be00f14c, type: 3}
   m_Name: CarSpec_T
   m_EditorClassIdentifier: Assembly-CSharp::CarSpec
+  carPrefab: {fileID: 5647409716619711997, guid: d49d336e4f4cb6f4ebf9be0bb9d35afa, type: 3}
+  carRole: 0
+  cabEnd: 0
   carType: 1
+  lengthM: 20
   massKg: 25000
+  capacity: 150
   motorCount: 0
-  maxRegenDecelMS2: 1.1
+  vvvfPrefab: {fileID: 0}
+  vvvfUnitCount: 0
+  maxRegenDecelMS2: 0
   bcCylinderAreaM2: 0.02
   bcCylinderCount: 4
-  brakeLeverageRatio: 4.5
+  brakeLeverageRatio: 4.7
   brakeMechanicalEfficiency: 0.9
   bcMaxPressureKPa: 420

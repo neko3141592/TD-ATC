@@ -35,6 +35,7 @@
 *.apk
 *.aab
 *.ipa
+*.zip
 
 # OS / editor temp files
 .DS_Store

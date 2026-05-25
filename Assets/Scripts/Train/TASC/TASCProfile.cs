@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Train/TASC Profile", fileName = "TASCProfile")]
+[CreateAssetMenu(menuName = "Train/TASC/TASC Profile", fileName = "TASCProfile")]
 public class TASCProfile : ScriptableObject
 {
     [Header("Activation")]

@@ -7,10 +7,7 @@ public class BrakeSystemController : MonoBehaviour
     [SerializeField] private TrainSpec trainSpec;
     [SerializeField] private ConsistDefinition consistDefinition;
 
-    [Header("Brake Distribution")]
-    [SerializeField, Min(0f)] private float mtAirDistributionThresholdKmH = 120f; // この速度以下で「M回生 -> MT空気」に切替
     private readonly BrakeControlUnit brakeControlUnit = new BrakeControlUnit();
-    private readonly RegenBrakeUnit regenBrakeUnit = new RegenBrakeUnit();
     private readonly AirBrakeUnit airBrakeUnit = new AirBrakeUnit();
 
     private readonly List<CarBrakeState> carBrakeStates = new List<CarBrakeState>();
@@ -159,7 +156,7 @@ public class BrakeSystemController : MonoBehaviour
                 continue;
             }
 
-            regenBrakeUnit.ResetCarState(state);
+            ResetRegenState(state);
 
             // 車両ごとの最大BC圧を目標に、遅れを通して実圧へ更新
             float targetBCPressureKPa = Mathf.Max(0f, carSpec.bcMaxPressureKPa);
@@ -203,16 +200,8 @@ public class BrakeSystemController : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void ApplyNormalBrake(float speedMS, float deltaTime, bool hasBrakeCommand, float targetTotalBrakeForceN)
     {
-        // ------------------------------------------------------------
-        // 通常ブレーキ時の配分フロー
-        // 1) M車回生を先に使う
-        // 2) 残差をT車空気に配る
-        // 3) さらに残差があればM車空気に配る
-        // ------------------------------------------------------------
-
         int carCount = carBrakeStates.Count;
-
-        float[] regenCapsN = new float[carCount];
+        float[] airCapsN = new float[carCount];
         for (int i = 0; i < carCount; i++)
         {
             CarSpec carSpec = GetCarSpec(i);
@@ -222,30 +211,17 @@ public class BrakeSystemController : MonoBehaviour
                 continue;
             }
 
+            ResetRegenState(state);
             if (carSpec == null)
             {
                 state.Reset();
                 continue;
             }
 
-            // 回生ノイズシードなど、車両ごとの回生状態を初期化
-            regenBrakeUnit.InitializeCarState(state);
-
-            // ブレーキ指令なし、またはT車なら回生無効
-            bool disableRegen = !hasBrakeCommand || carSpec.carType != CarType.Motor;
-
-            // 「今回のブレーキ操作で回生を使えるか」をラッチ更新
-            regenBrakeUnit.UpdateBrakeApplicationState(trainSpec, carSpec, state, hasBrakeCommand, speedMS, disableRegen);
-
-            // 現在速度・車両特性を踏まえた回生上限[N]
-            regenCapsN[i] = regenBrakeUnit.GetRegenCapForceN(trainSpec, carSpec, state, speedMS);
+            airCapsN[i] = airBrakeUnit.GetAirBrakeCapForceN(trainSpec, carSpec, speedMS);
         }
 
-        // 目標制動力を、M回生capの範囲でなるべく均等配分（各車の回生目標力[N]）
-        float[] regenTargetForcesN = brakeControlUnit.AllocateEvenlyWithSaturation(regenCapsN, targetTotalBrakeForceN);
-
-        // ===== 1-b) 回生目標を「実回生力」に反映（立上/立下や揺らぎを通す） =====
-        float totalRegenActualN = 0f;
+        float[] targetAirForcesN = brakeControlUnit.AllocateEvenlyWithSaturation(airCapsN, targetTotalBrakeForceN);
         for (int i = 0; i < carCount; i++)
         {
             CarSpec carSpec = GetCarSpec(i);
@@ -255,133 +231,23 @@ public class BrakeSystemController : MonoBehaviour
                 continue;
             }
 
-            // M車以外、またはブレーキ非指令時は回生を落とす
-            bool disableRegen = !hasBrakeCommand || carSpec.carType != CarType.Motor;
-            float targetRegenForceN = i < regenTargetForcesN.Length ? regenTargetForcesN[i] : 0f;
-
-            // 回生の遅れ・揺らぎ・低速失効を含んだ実回生力[N]
-            float actualRegenForceN = regenBrakeUnit.UpdateRegenForceN(
-                trainSpec,
-                carSpec,
-                state,
-                targetRegenForceN,
-                speedMS,
-                deltaTime,
-                disableRegen
-            );
-            state.regenForceN = actualRegenForceN;
-            totalRegenActualN += actualRegenForceN;
+            float targetAirForceN = i < targetAirForcesN.Length ? targetAirForcesN[i] : 0f;
+            BCPressureCandidate normalCandidate = BuildNormalBCPressureCandidate(carSpec, targetAirForceN, speedMS, hasBrakeCommand);
+            ApplyBCPressureCandidate(carSpec, state, normalCandidate, speedMS, deltaTime);
         }
+    }
 
-        // 回生で賄えなかった不足分（次段の空気ブレーキに回す）
-        float remainAfterRegenN = Mathf.Max(0f, targetTotalBrakeForceN - totalRegenActualN);
-
-        // 低速域では、T優先ではなく「M回生 -> MT空気（全車）」に切り替える
-        float thresholdMS = Mathf.Max(0f, mtAirDistributionThresholdKmH / 3.6f);
-        bool useMTAirAllocation = speedMS <= thresholdMS;
-        if (useMTAirAllocation)
+    private void ResetRegenState(CarBrakeState state)
+    {
+        if (state == null)
         {
-            float[] allAirCapsN = new float[carCount];
-            for (int i = 0; i < carCount; i++)
-            {
-                CarSpec carSpec = GetCarSpec(i);
-                if (carSpec == null)
-                {
-                    allAirCapsN[i] = 0f;
-                    continue;
-                }
-
-                allAirCapsN[i] = airBrakeUnit.GetAirBrakeCapForceN(trainSpec, carSpec, speedMS);
-            }
-
-            float[] allTargetAirForcesN = brakeControlUnit.AllocateEvenlyWithSaturation(allAirCapsN, remainAfterRegenN);
-            for (int i = 0; i < carCount; i++)
-            {
-                CarSpec carSpec = GetCarSpec(i);
-                CarBrakeState state = carBrakeStates[i];
-                if (state == null || carSpec == null)
-                {
-                    continue;
-                }
-
-                float targetAirForceN = i < allTargetAirForcesN.Length ? allTargetAirForcesN[i] : 0f;
-                BCPressureCandidate normalCandidate = BuildNormalBCPressureCandidate(carSpec, targetAirForceN, speedMS, hasBrakeCommand);
-                ApplyBCPressureCandidate(carSpec, state, normalCandidate, speedMS, deltaTime);
-            }
-
             return;
         }
 
-        // ===== 2) T車空気ブレーキの上限capを作る =====
-        float[] trailerAirCapsN = new float[carCount];
-        for (int i = 0; i < carCount; i++)
-        {
-            CarSpec carSpec = GetCarSpec(i);
-            if (carSpec == null || carSpec.carType != CarType.Trailer)
-            {
-                trailerAirCapsN[i] = 0f;
-                continue;
-            }
-
-            // そのT車が現在速度で出せる空気ブレーキ上限[N]
-            trailerAirCapsN[i] = airBrakeUnit.GetAirBrakeCapForceN(trainSpec, carSpec, speedMS);
-        }
-
-        // 不足分をT車空気capの範囲で、なるべく均等に配分（各T車の目標空気力[N]）
-        float[] trailerTargetAirForcesN = brakeControlUnit.AllocateEvenlyWithSaturation(trailerAirCapsN, remainAfterRegenN);
-
-        // ===== 2-b) T車の目標空気力 -> 目標BC圧 -> 遅れ後BC圧 -> 実空気力 =====
-        float totalTrailerAirActualN = 0f;
-        for (int i = 0; i < carCount; i++)
-        {
-            CarSpec carSpec = GetCarSpec(i);
-            CarBrakeState state = carBrakeStates[i];
-            if (state == null || carSpec == null || carSpec.carType != CarType.Trailer)
-            {
-                continue;
-            }
-
-            float targetAirForceN = i < trailerTargetAirForcesN.Length ? trailerTargetAirForcesN[i] : 0f;
-            BCPressureCandidate normalCandidate = BuildNormalBCPressureCandidate(carSpec, targetAirForceN, speedMS, hasBrakeCommand);
-            ApplyBCPressureCandidate(carSpec, state, normalCandidate, speedMS, deltaTime);
-            totalTrailerAirActualN += state.airForceN;
-        }
-
-        // T車空気まで使った後の残差（必要ならM車空気で補う）
-        float remainAfterTrailerAirN = Mathf.Max(0f, targetTotalBrakeForceN - totalRegenActualN - totalTrailerAirActualN);
-
-        // ===== 3) M車空気ブレーキの上限capを作る =====
-        float[] motorAirCapsN = new float[carCount];
-        for (int i = 0; i < carCount; i++)
-        {
-            CarSpec carSpec = GetCarSpec(i);
-            if (carSpec == null || carSpec.carType != CarType.Motor)
-            {
-                motorAirCapsN[i] = 0f;
-                continue;
-            }
-
-            // そのM車が現在速度で出せる空気ブレーキ上限[N]
-            motorAirCapsN[i] = airBrakeUnit.GetAirBrakeCapForceN(trainSpec, carSpec, speedMS);
-        }
-
-        // 残差をM車空気capで配分（各M車の目標空気力[N]）
-        float[] motorTargetAirForcesN = brakeControlUnit.AllocateWithSaturation(motorAirCapsN, remainAfterTrailerAirN);
-
-        // ===== 3-b) M車の目標空気力 -> 目標BC圧 -> 遅れ後BC圧 -> 実空気力 =====
-        for (int i = 0; i < carCount; i++)
-        {
-            CarSpec carSpec = GetCarSpec(i);
-            CarBrakeState state = carBrakeStates[i];
-            if (state == null || carSpec == null || carSpec.carType != CarType.Motor)
-            {
-                continue;
-            }
-
-            float targetAirForceN = i < motorTargetAirForcesN.Length ? motorTargetAirForcesN[i] : 0f;
-            BCPressureCandidate normalCandidate = BuildNormalBCPressureCandidate(carSpec, targetAirForceN, speedMS, hasBrakeCommand);
-            ApplyBCPressureCandidate(carSpec, state, normalCandidate, speedMS, deltaTime);
-        }
+        state.regenForceN = 0f;
+        state.regenBrakeApplicationActive = false;
+        state.regenLatchedForCurrentBrake = false;
+        state.regenNoiseTime = 0f;
     }
 
     /// <summary>
@@ -621,9 +487,7 @@ public class BrakeSystemController : MonoBehaviour
     /// <returns>処理結果を返します。</returns>
     private CarBrakeState CreateBrakeState()
     {
-        CarBrakeState state = new CarBrakeState();
-        regenBrakeUnit.InitializeCarState(state);
-        return state;
+        return new CarBrakeState();
     }
 
     /// <summary>

@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class NotchManager : MonoBehaviour
 {
+
+    [SerializeField] private TrainController train;
     private int maxPowerNotch = 5;
     private int maxBrakeNotch = 8;
     private int maxTascServiceBrakeNotch = 7;
@@ -12,6 +14,8 @@ public class NotchManager : MonoBehaviour
     private int atcBrakeNotch = 0;
     private int tascBrakeStep = 0;
 
+    private bool speedHoldRequested = false;
+
     public int ManualPowerNotch => manualPowerNotch;
     public int ManualBrakeNotch => manualBrakeNotch;
     public int ATCBrakeNotch => atcBrakeNotch;
@@ -21,6 +25,14 @@ public class NotchManager : MonoBehaviour
     public int ResolvedPowerNotch { get; private set; }
     public int ResolvedBrakeNotch { get; private set; }
     public bool IsTASCBrakeSelected { get; private set; }
+
+    private void Awake()
+    {
+        if (train == null)
+        {
+            train = GetComponent<TrainController>();
+        }
+    }
 
     /// <summary>
     /// 役割: ConfigureLimits の処理を実行します。
@@ -58,8 +70,29 @@ public class NotchManager : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     public void SetManualNotches(int powerNotch, int brakeNotch)
     {
-        manualPowerNotch = Mathf.Clamp(powerNotch, 0, maxPowerNotch);
-        manualBrakeNotch = Mathf.Clamp(brakeNotch, 0, maxBrakeNotch);
+        int previousPowerNotch = manualPowerNotch;
+        int previousBrakeNotch = manualBrakeNotch;
+        int nextPowerNotch = Mathf.Clamp(powerNotch, 0, maxPowerNotch);
+        int nextBrakeNotch = Mathf.Clamp(brakeNotch, 0, maxBrakeNotch);
+
+        bool movedFromP3ToP2 =
+            previousPowerNotch == 3 &&
+            nextPowerNotch == 2 &&
+            previousBrakeNotch == 0 &&
+            nextBrakeNotch == 0;
+
+        manualPowerNotch = nextPowerNotch;
+        manualBrakeNotch = nextBrakeNotch;
+
+        if (movedFromP3ToP2 && CanRequestSpeedHold())
+        {
+            speedHoldRequested = true;
+        }
+        else if (nextPowerNotch != 2 || nextBrakeNotch > 0)
+        {
+            ClearSpeedHoldRequest();
+        }
+
         Resolve();
     }
 
@@ -71,6 +104,10 @@ public class NotchManager : MonoBehaviour
     public void SetATCBrakeNotch(int brakeNotch)
     {
         atcBrakeNotch = Mathf.Clamp(brakeNotch, 0, maxBrakeNotch);
+        if (atcBrakeNotch > 0)
+        {
+            ClearSpeedHoldRequest();
+        }
         Resolve();
     }
 
@@ -87,6 +124,8 @@ public class NotchManager : MonoBehaviour
             return;
         }
 
+        ClearSpeedHoldRequest();
+
         int clampedNotch = Mathf.Clamp(brakeNotch, 1, maxTascServiceBrakeNotch);
         int brakeStep = ((clampedNotch - 1) * tascBrakeSubstepsPerNotch) + 1;
         SetTASCBrakeStep(brakeStep);
@@ -100,6 +139,11 @@ public class NotchManager : MonoBehaviour
     public void SetTASCBrakeStep(int brakeStep)
     {
         tascBrakeStep = Mathf.Clamp(brakeStep, 0, GetMaxTascBrakeStep());
+        if (tascBrakeStep > 0)
+        {
+            ClearSpeedHoldRequest();
+        }
+
         Resolve();
     }
 
@@ -169,5 +213,32 @@ public class NotchManager : MonoBehaviour
 
         int substeps = Mathf.Max(1, tascBrakeSubstepsPerNotch);
         return Mathf.Clamp(((brakeStep - 1) / substeps) + 1, 1, maxTascServiceBrakeNotch);
+    }
+
+    private bool CanRequestSpeedHold()
+    {
+        if (train == null || train.Spec == null)
+        {
+            return false;
+        }
+
+        float speedHoldActiveThresholdMS = train.Spec.speedHoldActiveThresholdKmh / 3.6f;
+        return train.SpeedMS >= speedHoldActiveThresholdMS;
+    }
+
+    public bool ConsumeSpeedHoldRequest()
+    {
+        if (!speedHoldRequested)
+        {
+            return false;
+        }
+
+        speedHoldRequested = false;
+        return true;
+    }
+
+    private void ClearSpeedHoldRequest()
+    {
+        speedHoldRequested = false;
     }
 }

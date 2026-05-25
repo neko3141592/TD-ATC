@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96df954d250354765bc659a796bad86e, type: 3}
+  m_Name: VVVFSpec
+  m_EditorClassIdentifier: Assembly-CSharp::VVVFSpec
+  launchFrequency: 0.5
+  launchVoltageBoostRatio: 0.12
+  slipFrequencyControlRateHzPerSec: 0.4
+  voltageControlRateRatioPerSec: 0.4
+  torqueDeadbandNm: 5
+  maxSlipFrequencyHz: 8

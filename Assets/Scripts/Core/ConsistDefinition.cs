@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ConsistDefinition", menuName = "Train/Consist Definition")]
+[CreateAssetMenu(fileName = "ConsistDefinition", menuName = "Train/Core/Consist Definition")]
 public class ConsistDefinition : ScriptableObject
 {
     [Tooltip("編成順（先頭 -> 最後尾）でCarSpecを並べる")]

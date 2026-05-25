@@ -3,6 +3,8 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class TrackMeshGenerator : MonoBehaviour
 {
+    private const string GeneratedMeshName = "Procedural Track Edge";
+
     [Header("断面の頂点 (2D)")]
     [Tooltip("Blenderなどで作成した断面の頂点を右回りまたは左回りで設定します。")]
     public Vector2[] profilePoints;
@@ -13,58 +15,91 @@ public class TrackMeshGenerator : MonoBehaviour
     [Header("断面を閉じるか")]
     public bool closedShape = true;
 
-    /// <summary>
-    /// TrackRuntimeResolverを使って、指定したエッジのメッシュを生成します。
-    /// </summary>
-    /// <param name="resolver">計算エンジン</param>
-    /// <param name="graph">路線のグラフデータ</param>
-    /// <param name="edgeId">生成するエッジのID</param>
-    /// <param name="totalLengthM">このエッジの合計の長さ（メートル）</param>
     public void GenerateTrackMesh(TrackRuntimeResolver resolver, TrackGraph graph, string edgeId, float totalLengthM)
     {
+        if (!CanGenerate(resolver, graph, edgeId))
+        {
+            return;
+        }
+
+        int segments = Mathf.CeilToInt(totalLengthM / segmentLengthM);
+        int vertsInShape = profilePoints.Length;
+        Vector3[] vertices = new Vector3[vertsInShape * (segments + 1)];
+        Vector2[] uvs = new Vector2[vertices.Length];
+
+        BuildVerticesAndUvs(resolver, graph, edgeId, totalLengthM, segments, vertsInShape, vertices, uvs);
+        int[] triangles = BuildTriangles(segments, vertsInShape);
+
+        GetComponent<MeshFilter>().mesh = CreateMesh(vertices, triangles, uvs);
+    }
+
+    private bool CanGenerate(TrackRuntimeResolver resolver, TrackGraph graph, string edgeId)
+    {
+        if (resolver == null || graph == null || string.IsNullOrEmpty(edgeId))
+        {
+            Debug.LogWarning("Track mesh generation requires a resolver, graph, and edge id.", this);
+            return false;
+        }
+
         if (profilePoints == null || profilePoints.Length < 2)
         {
-            Debug.LogWarning("断面データ(profilePoints)がセットされていません。");
-            return;
+            Debug.LogWarning("断面データ(profilePoints)がセットされていません。", this);
+            return false;
         }
 
         if (segmentLengthM <= 0f)
         {
             Debug.LogWarning("segmentLengthM must be greater than zero.", this);
-            return;
+            return false;
         }
 
-        // 分割数を計算
-        int segments = Mathf.CeilToInt(totalLengthM / segmentLengthM);
-        int vertsInShape = profilePoints.Length;
-        int vertCount = vertsInShape * (segments + 1);
+        return true;
+    }
 
-        Vector3[] vertices = new Vector3[vertCount];
-        Vector2[] uvs = new Vector2[vertCount];
-
+    private void BuildVerticesAndUvs(
+        TrackRuntimeResolver resolver,
+        TrackGraph graph,
+        string edgeId,
+        float totalLengthM,
+        int segments,
+        int vertsInShape,
+        Vector3[] vertices,
+        Vector2[] uvs)
+    {
         for (int i = 0; i <= segments; i++)
         {
             float currentDist = Mathf.Min(i * segmentLengthM, totalLengthM);
 
-            if (resolver.TryResolvePose(graph, edgeId, currentDist, out Vector3 pos, out Vector3 tangent, out Quaternion rotation))
+            if (resolver.TryResolvePose(graph, edgeId, currentDist, out Vector3 pos, out _, out Quaternion rotation))
             {
-                for (int j = 0; j < vertsInShape; j++)
-                {
-                    int index = i * vertsInShape + j;
-
-                    Vector3 localOffset = new Vector3(profilePoints[j].x, profilePoints[j].y, 0f);
-                    
-                    // 算出された座標(pos)はワールド座標ベースなので、このオブジェクトのローカル座標に変換してメッシュの頂点とします
-                    Vector3 worldPoint = pos + (rotation * localOffset);
-                    vertices[index] = transform.InverseTransformPoint(worldPoint);
-
-                    float u = (float)j / (vertsInShape - 1);
-                    float v = currentDist;
-                    uvs[index] = new Vector2(u, v);
-                }
+                BuildProfileAtDistance(i, vertsInShape, currentDist, pos, rotation, vertices, uvs);
             }
         }
+    }
 
+    private void BuildProfileAtDistance(
+        int segmentIndex,
+        int vertsInShape,
+        float distanceM,
+        Vector3 position,
+        Quaternion rotation,
+        Vector3[] vertices,
+        Vector2[] uvs)
+    {
+        for (int profileIndex = 0; profileIndex < vertsInShape; profileIndex++)
+        {
+            int index = segmentIndex * vertsInShape + profileIndex;
+            Vector2 profilePoint = profilePoints[profileIndex];
+            Vector3 localOffset = new Vector3(profilePoint.x, profilePoint.y, 0f);
+            Vector3 worldPoint = position + rotation * localOffset;
+
+            vertices[index] = transform.InverseTransformPoint(worldPoint);
+            uvs[index] = new Vector2((float)profileIndex / (vertsInShape - 1), distanceM);
+        }
+    }
+
+    private int[] BuildTriangles(int segments, int vertsInShape)
+    {
         int shapeLines = closedShape ? vertsInShape : vertsInShape - 1;
         int[] triangles = new int[shapeLines * segments * 6];
         int ti = 0;
@@ -94,13 +129,17 @@ public class TrackMeshGenerator : MonoBehaviour
             }
         }
 
+        return triangles;
+    }
+
+    private static Mesh CreateMesh(Vector3[] vertices, int[] triangles, Vector2[] uvs)
+    {
         Mesh mesh = new Mesh();
-        mesh.name = "Procedural Track Edge";
+        mesh.name = GeneratedMeshName;
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.uv = uvs;
         mesh.RecalculateNormals();
-
-        GetComponent<MeshFilter>().mesh = mesh;
+        return mesh;
     }
 }

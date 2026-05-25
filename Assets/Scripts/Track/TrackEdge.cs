@@ -2,6 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
+public class BlockSection
+{
+    public string blockId;
+    public float startDistanceM;
+    public float endDistanceM;
+}
+
 
 [Serializable]
 public class TrackEdge
@@ -10,6 +18,7 @@ public class TrackEdge
     public string fromNodeId; // 始点ノード ID です。
     public string toNodeId; // 終点ノード ID です。
     public string blockId; // このエッジが属する閉塞 ID です。
+    public List<BlockSection> blockSections = new();
 
     // このエッジ上を走行するための基本データです。
     [Min(0f)] public float lengthM;

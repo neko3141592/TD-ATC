@@ -19,7 +19,7 @@ public enum CabEnd
     Rear
 }
 
-[CreateAssetMenu(fileName = "CarSpec", menuName = "Train/Car Spec")]
+[CreateAssetMenu(fileName = "CarSpec", menuName = "Train/Core/Car Spec")]
 public class CarSpec : ScriptableObject
 {
     [Header("Prefab")]
@@ -37,9 +37,12 @@ public class CarSpec : ScriptableObject
 
     [Header("Mass")]
     [Min(1f)] public float massKg = 35000f;
+    [Min(0f)] public int capacity = 150;
 
     [Header("Traction")]
     [Min(0)] public int motorCount = 0;
+    public VVVFController vvvfPrefab;
+    [Min(0)] public int vvvfUnitCount = 0;
 
     [Header("Regen Brake")]
     [Min(0f)] public float maxRegenDecelMS2 = 1.1f;
@@ -72,7 +75,14 @@ public class CarSpec : ScriptableObject
         if (carType == CarType.Trailer)
         {
             motorCount = 0;
+            vvvfUnitCount = 0;
         }
+        else if (motorCount > 0 && vvvfPrefab != null && vvvfUnitCount <= 0)
+        {
+            vvvfUnitCount = 1;
+        }
+
+        vvvfUnitCount = Mathf.Max(0, vvvfUnitCount);
         if (carRole != CarRole.Cab)
         {
             cabEnd = CabEnd.None;

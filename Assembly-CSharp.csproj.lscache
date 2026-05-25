@@ -51,6 +51,7 @@ TemporaryDependencyNodeTargetIdentifier=netstandard2.1
 
 [sourceFiles]
 Assets/Scripts/Audio/
+ BrakeValveClickAudio.cs
  CarBuzzer.cs
  Compressor.cs
 Assets/Scripts/Core/
@@ -84,7 +85,6 @@ Assets/Scripts/
   BrakeControlUnit.cs
   BrakeSystemController.cs
   CarBrakeState.cs
-  RegenBrakeUnit.cs
  Train/Controller/
   CarTrackState.cs
   CarTractionState.cs
@@ -99,7 +99,9 @@ Assets/Scripts/
  Train/Motor/
   MotorModel.cs
   MotorSpec.cs
+  MotorTractionCalculator.cs
  Train/
+  NTIM/NTIMController.cs
   Operation/NotchManager.cs
   TASC/
    TASCController.cs
@@ -110,6 +112,7 @@ Assets/Scripts/
    VVVFDebugHUD.cs
    VVVFMath.cs
    VVVFRpmDebugProbe.cs
+   VVVFSpec.cs
  UI/
   ATCIndicatorDisplay.cs
   ATCSignal.cs

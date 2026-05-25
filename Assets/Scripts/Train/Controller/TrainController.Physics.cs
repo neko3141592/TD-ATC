@@ -23,21 +23,27 @@ public partial class TrainController
         int brakeNotch = notchManager.ManualBrakeNotch;
         int emergencyBrakeNotch = EmergencyBrakeNotch;
 
-        if (Input.GetKeyDown(KeyCode.Z))
+        if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-            if (brakeNotch > 0) brakeNotch--;
-            else if (powerNotch < trainSpec.maxPowerNotch) powerNotch++;
+            if (powerNotch > 0) powerNotch--;
+            else if (brakeNotch < emergencyBrakeNotch) brakeNotch++;
         }
 
-        if (Input.GetKeyDown(KeyCode.A))
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             while (powerNotch > 0) powerNotch--;
         }
 
-        if (Input.GetKeyDown(KeyCode.Q))
+        if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            if (powerNotch > 0) powerNotch--;
-            else if (brakeNotch < emergencyBrakeNotch) brakeNotch++;
+            powerNotch = 0;
+            brakeNotch = Mathf.Max(0, emergencyBrakeNotch - 1);
+        }
+
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            if (brakeNotch > 0) brakeNotch--;
+            else if (powerNotch < trainSpec.maxPowerNotch) powerNotch++;
         }
 
         notchManager.SetManualNotches(powerNotch, brakeNotch);
@@ -65,8 +71,9 @@ public partial class TrainController
         float massKg = GetCurrentConsistMassKg();
         GetBrakeOutputs(brakeNotch, useTascBrakeStep, tascBrakeStep, massKg, out float brakeDeceleration, out float brakeForceN);
 
-        float externalForceN = GetExternalResistanceForceN(powerNotch, brakeDeceleration, massKg);
-        float tractionForceN = GetTractionForceN(powerNotch, massKg, externalForceN);
+        float externalForceN = GetExternalResistanceForceN(massKg);
+        float tractionForceN = GetTractionForceN();
+        currentTractionForceN = tractionForceN;
         float vehicleForceN = tractionForceN - brakeForceN;
 
         // 運動方程式: F_net = (F_traction - F_brake) - F_external
@@ -131,21 +138,13 @@ public partial class TrainController
     /// <summary>
     /// 役割: GetExternalResistanceForceN の処理を取得します。
     /// </summary>
-    /// <param name="powerNotch">powerNotch を指定します。</param>
-    /// <param name="brakeDecelerationMS2">brakeDecelerationMS2 を指定します。</param>
     /// <returns>計算または参照した値を返します。</returns>
-    private float GetExternalResistanceForceN(int powerNotch, float brakeDecelerationMS2, float massKg)
+    private float GetExternalResistanceForceN(float massKg)
     {
         float runningResistanceForceN = ExternalForceCalculator.GetRunningResistanceForceN(trainSpec, speedMS);
         currentGradeResistanceForceN = ExternalForceCalculator.GetGradeResistanceForceN(massKg, GetCurrentGradientPermilleForPhysics());
-        float coastResistanceForceN = 0f;
-        if (powerNotch <= 0 && brakeDecelerationMS2 <= 0f)
-        {
-            // 惰行フィール維持: 力行も制動もない時だけ追加抵抗を加算する。
-            coastResistanceForceN = ExternalForceCalculator.GetCoastExtraResistanceForceN(trainSpec, speedMS);
-        }
 
-        return runningResistanceForceN + coastResistanceForceN + currentGradeResistanceForceN;
+        return runningResistanceForceN + currentGradeResistanceForceN;
     }
 
     private float GetCurrentGradientPermilleForPhysics()
@@ -165,24 +164,39 @@ public partial class TrainController
     /// <summary>
     /// 役割: GetTractionForceN の処理を取得します。
     /// </summary>
-    /// <param name="powerNotch">powerNotch を指定します。</param>
-    /// <param name="massKg">massKg を指定します。</param>
-    /// <param name="externalForceN">externalForceN を指定します。</param>
     /// <returns>計算または参照した値を返します。</returns>
-    private float GetTractionForceN(int powerNotch, float massKg, float externalForceN)
+    private float GetTractionForceN()
     {
-        if (tractionSystem != null)
+        if (vvvfControllers == null || vvvfControllers.Length == 0)
         {
-            tractionSystem.UpdateTraction(powerNotch, speedMS, externalForceN);
-            return tractionSystem.CurrentTotalTractionForceN;
+            if (tractionSystem != null)
+            {
+                tractionSystem.ClearTractionOutputs();
+            }
+
+            return 0f;
         }
 
-        return trainSpec.GetTractionDemandForceN(
-            powerNotch,
-            speedMS,
-            massKg,
-            externalForceN
-        );
+        float totalMotorTractionForceN = 0f;
+
+        for (int i = 0; i < vvvfControllers.Length; i++)
+        {
+            VVVFController vvvf = vvvfControllers[i];
+            if (vvvf == null)
+            {
+                continue;
+            }
+
+            totalMotorTractionForceN += vvvf.TotalMotorTractionForceN;
+        }
+
+        if (tractionSystem != null)
+        {
+            tractionSystem.ApplyExternalTractionForce(totalMotorTractionForceN);
+            tractionSystem.ApplyExternalMotorCurrents(vvvfControllers);
+        }
+
+        return Mathf.Max(0f, totalMotorTractionForceN);
     }
 
     /// <summary>

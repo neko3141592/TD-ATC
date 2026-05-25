@@ -54,20 +54,4 @@ internal static class ExternalForceCalculator
         return safeMassKg * gravityMS2 * gradientPermille / 1000f;
     }
 
-    /// <summary>
-    /// 役割: GetCoastExtraResistanceForceN の処理を実行します。
-    /// </summary>
-    /// <param name="spec">spec を指定します。</param>
-    /// <param name="speedMS">speedMS を指定します。</param>
-    /// <returns>処理結果を返します。</returns>
-    public static float GetCoastExtraResistanceForceN(TrainSpec spec, float speedMS)
-    {
-        if (spec == null)
-        {
-            return 0f;
-        }
-
-        float massKg = Mathf.Max(1f, spec.massKg);
-        return Mathf.Max(0f, spec.GetCoastDeceleration(speedMS)) * massKg;
-    }
 }

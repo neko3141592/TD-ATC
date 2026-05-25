@@ -49,22 +49,6 @@ public class MotorModel : MonoBehaviour
             return;
         }
 
-        // TODO: 等価回路モデルをここに少しずつ実装する。
-        // 入力:
-        // - LineVoltageRmsV
-        // - FrequencyHz
-        // - MotorRpm
-        // - activeSpec
-        //
-        // 出力:
-        // - SyncRpm
-        // - SlipRatio
-        // - MotorTorqueNm
-        // - MotorCurrentRmsA
-        // - MotorOutputPowerW
-        // - InputActivePowerW
-        // - ApparentPowerVA
-
         SyncRpm = VVVFMath.GetSynchronousRpm(FrequencyHz, activeSpec.poleCount);
         SlipRatio = VVVFMath.GetSlipRatio(SyncRpm, MotorRpm);
         float safeSlipRatio = SlipRatio;
@@ -107,12 +91,6 @@ public class MotorModel : MonoBehaviour
         MotorOutputPowerW = MotorTorqueNm * motorAngularSpeed;
         InputActivePowerW = MotorOutputPowerW / Mathf.Max(0.01f, activeSpec.efficiency);
 
-    }
-
-    public float GetTractionForceN(float gearRatio, float wheelRadiusM, float drivelineEfficiency)
-    {
-        float wheelTorqueNm = MotorTorqueNm * gearRatio * drivelineEfficiency;
-        return wheelTorqueNm / Mathf.Max(0.01f, wheelRadiusM);
     }
 
     public void ResetModel()

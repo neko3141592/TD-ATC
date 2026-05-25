@@ -39,57 +39,32 @@ public class TractionSystemController : MonoBehaviour
         CurrentConsistMassKg = GetTotalConsistMassKg();
     }
 
-    /// <summary>
-    /// 役割: UpdateTraction の処理を実行します。
-    /// </summary>
-    /// <param name="powerNotch">powerNotch を指定します。</param>
-    /// <param name="speedMS">speedMS を指定します。</param>
-    /// <param name="externalForceN">externalForceN を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    public void UpdateTraction(int powerNotch, float speedMS, float externalForceN)
+    public void ApplyExternalTractionForce(float totalTractionForceN)
     {
         EnsureCarTractionStateCount();
         CurrentConsistMassKg = GetTotalConsistMassKg();
 
         ResetCurrentTractionForces();
-        if (trainSpec == null || powerNotch <= 0)
+
+        float safeTotalTractionForceN = Mathf.Max(0f, totalTractionForceN);
+        if (safeTotalTractionForceN <= 0f)
         {
             return;
         }
 
-        float safeMassKg = CurrentConsistMassKg > 0f ? CurrentConsistMassKg : Mathf.Max(1f, trainSpec.massKg);
-        float safeExternalForceN = Mathf.Max(0f, externalForceN);
         bool hasConsist = consistDefinition != null && consistDefinition.HasCars;
-        int totalMotorCount = hasConsist ? consistDefinition.GetTotalMotorCount() : -1;
-
-        // 編成定義があり、M車が1両もないなら力行なし
-        if (hasConsist && totalMotorCount <= 0)
-        {
-            CurrentTotalTractionForceN = 0f;
-            return;
-        }
-
-        // 総力行力を作る（1基あたり出力/トルク * 総モータ基数を反映）
-        float targetTotalTractionForceN = trainSpec.GetTractionDemandForceN(
-            powerNotch,
-            speedMS,
-            safeMassKg,
-            safeExternalForceN,
-            totalMotorCount
-        );
-        if (targetTotalTractionForceN <= 0f)
-        {
-            return;
-        }
-
-        // 編成未設定時は従来互換（総力のみ利用）
         if (!hasConsist)
         {
-            CurrentTotalTractionForceN = targetTotalTractionForceN;
+            CurrentTotalTractionForceN = safeTotalTractionForceN;
             return;
         }
 
-        // 「単純分割」: M車のmotorCount比で総力行力を配る（T車は0）
+        int totalMotorCount = consistDefinition.GetTotalMotorCount();
+        if (totalMotorCount <= 0)
+        {
+            return;
+        }
+
         float distributedTractionForceN = 0f;
         int count = Mathf.Min(carTractionStates.Count, consistDefinition.CarCount);
         for (int i = 0; i < count; i++)
@@ -115,11 +90,61 @@ public class TractionSystemController : MonoBehaviour
             }
 
             float carShare = carSpec.motorCount / (float)totalMotorCount;
-            state.tractionForceN = targetTotalTractionForceN * carShare;
+            state.tractionForceN = safeTotalTractionForceN * carShare;
             distributedTractionForceN += state.tractionForceN;
         }
 
         CurrentTotalTractionForceN = distributedTractionForceN;
+    }
+
+    public void ClearTractionOutputs()
+    {
+        EnsureCarTractionStateCount();
+        ResetCurrentTractionForces();
+    }
+
+    public void ApplyExternalMotorCurrents(VVVFController[] vvvfControllers)
+    {
+        EnsureCarTractionStateCount();
+        ResetCurrentMotorCurrents();
+
+        if (vvvfControllers == null || consistDefinition == null || !consistDefinition.HasCars)
+        {
+            return;
+        }
+
+        int carIndex = 0;
+        int remainingMotorSlotsInCar = 0;
+        CarTractionState currentState = null;
+
+        foreach (VVVFController vvvf in vvvfControllers)
+        {
+            if (vvvf == null || vvvf.MotorCount <= 0)
+            {
+                continue;
+            }
+
+            float vvvfCurrentA = GetTotalMotorCurrentA(vvvf);
+            int remainingVvvfMotors = vvvf.MotorCount;
+
+            while (remainingVvvfMotors > 0)
+            {
+                if (currentState == null || remainingMotorSlotsInCar <= 0)
+                {
+                    if (!TryMoveToNextMotorCar(ref carIndex, out currentState, out remainingMotorSlotsInCar))
+                    {
+                        return;
+                    }
+                }
+
+                int assignedMotors = Mathf.Min(remainingVvvfMotors, remainingMotorSlotsInCar);
+                float assignedRatio = assignedMotors / (float)vvvf.MotorCount;
+                currentState.motorCurrentA += vvvfCurrentA * assignedRatio;
+
+                remainingVvvfMotors -= assignedMotors;
+                remainingMotorSlotsInCar -= assignedMotors;
+            }
+        }
     }
 
     /// <summary>
@@ -193,10 +218,78 @@ public class TractionSystemController : MonoBehaviour
             if (state != null)
             {
                 state.tractionForceN = 0f;
+                state.motorCurrentA = 0f;
             }
         }
 
         CurrentTotalTractionForceN = 0f;
+    }
+
+    private void ResetCurrentMotorCurrents()
+    {
+        for (int i = 0; i < carTractionStates.Count; i++)
+        {
+            CarTractionState state = carTractionStates[i];
+            if (state != null)
+            {
+                state.motorCurrentA = 0f;
+            }
+        }
+    }
+
+    private float GetTotalMotorCurrentA(VVVFController vvvf)
+    {
+        MotorModel[] motors = vvvf.Motors;
+        if (motors == null)
+        {
+            return 0f;
+        }
+
+        float totalCurrentA = 0f;
+        for (int i = 0; i < motors.Length; i++)
+        {
+            MotorModel motor = motors[i];
+            if (motor != null)
+            {
+                totalCurrentA += Mathf.Max(0f, motor.MotorCurrentRmsA);
+            }
+        }
+
+        return totalCurrentA;
+    }
+
+    private bool TryMoveToNextMotorCar(ref int carIndex, out CarTractionState state, out int motorSlots)
+    {
+        state = null;
+        motorSlots = 0;
+
+        if (consistDefinition == null || !consistDefinition.HasCars)
+        {
+            return false;
+        }
+
+        while (carIndex < consistDefinition.CarCount)
+        {
+            int index = carIndex;
+            carIndex++;
+
+            CarSpec carSpec = GetCarSpec(index);
+            if (carSpec == null || carSpec.carType != CarType.Motor || carSpec.motorCount <= 0)
+            {
+                continue;
+            }
+
+            if (index < 0 || index >= carTractionStates.Count)
+            {
+                continue;
+            }
+
+            state = carTractionStates[index];
+            motorSlots = carSpec.motorCount;
+            return state != null;
+        }
+
+        return false;
     }
 
     /// <summary>

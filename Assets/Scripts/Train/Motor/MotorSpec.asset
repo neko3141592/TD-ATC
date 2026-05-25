@@ -12,11 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e269a5538380e41619e7bf524b123f46, type: 3}
   m_Name: MotorSpec
   m_EditorClassIdentifier: Assembly-CSharp::MotorSpec
-  ratedPowerW: 140000
+  ratedPowerW: 145000
   ratedLineVoltageV: 1050
   ratedCurrentA: 108
   ratedFrequencyHz: 80
   ratedRpm: 2380
+  poleCount: 4
   efficiency: 0.945
   powerFactor: 0.755
   ratedSlipRatio: 0.007
+  statorResistanceOhm: 0.12
+  statorReactanceOhm: 0.6
+  magnetizingReactanceOhm: 10
+  rotorResistanceOhm: 0.045
+  rotorReactanceOhm: 0.8

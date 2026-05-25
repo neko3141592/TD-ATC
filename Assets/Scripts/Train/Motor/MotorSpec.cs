@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "MotorSpec", menuName = "Train/Motor Spec")]
+[CreateAssetMenu(fileName = "MotorSpec", menuName = "Train/Motor/Motor Spec")]
 public class MotorSpec : ScriptableObject
 {
     [Header("Rated Values")]

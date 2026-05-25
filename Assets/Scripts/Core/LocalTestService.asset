@@ -18,7 +18,7 @@ MonoBehaviour:
   - stationId: ST_Start
     stopHere: 0
     dwellSeconds: 20
-  - stationId: ST_Mid
+  - stationId: ST_G20_01
     stopHere: 1
     dwellSeconds: 20
   - stationId: ST_Pass
