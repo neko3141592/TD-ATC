@@ -54,20 +54,12 @@ public class CabNotchTextDisplay : MonoBehaviour
 
         if (train == null)
         {
-            train = GetComponentInParent<TrainController>();
+            train = CabReferenceResolver.ResolveTrain(this, train);
         }
 
         if (notchManager == null)
         {
-            if (train != null)
-            {
-                notchManager = train.GetComponent<NotchManager>();
-            }
-
-            if (notchManager == null)
-            {
-                notchManager = GetComponentInParent<NotchManager>();
-            }
+            notchManager = CabReferenceResolver.ResolveTrainComponent(this, train, notchManager);
         }
     }
 

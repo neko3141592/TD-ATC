@@ -35,19 +35,11 @@ public class TrainHUD : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     void Update()
     {
+        ResolveReferences();
+
         if (train == null || hudText == null)
         {
             return;
-        }
-
-        if (tasc == null)
-        {
-            tasc = train.GetComponent<TASCController>();
-        }
-
-        if (ntim == null)
-        {
-            ntim = train.GetComponentInChildren<NTIMController>();
         }
 
         if (vvvfControllers == null || vvvfControllers.Length == 0)
@@ -194,6 +186,11 @@ public class TrainHUD : MonoBehaviour
         float firstSlipPercent = 0f;
         float firstLineVoltageV = 0f;
         float firstFrequencyHz = 0f;
+        float firstRotorBaseFrequencyHz = 0f;
+        float firstSlipFrequencyHz = 0f;
+        float firstPowerMaxSlipFrequencyHz = 0f;
+        float firstRegenMaxSlipFrequencyHz = 0f;
+        string firstDriveModeLabel = "--";
         int vvvfCount = 0;
         if (vvvfControllers != null)
         {
@@ -217,6 +214,11 @@ public class TrainHUD : MonoBehaviour
                     firstSlipPercent = vvvf.SlipRatio * 100f;
                     firstLineVoltageV = vvvf.LineVoltageRmsV;
                     firstFrequencyHz = vvvf.FrequencyHz;
+                    firstRotorBaseFrequencyHz = vvvf.RotorBaseFrequencyHz;
+                    firstSlipFrequencyHz = vvvf.SlipFrequencyHz;
+                    firstPowerMaxSlipFrequencyHz = vvvf.PowerMaxSlipFrequencyHz;
+                    firstRegenMaxSlipFrequencyHz = vvvf.RegenMaxSlipFrequencyHz;
+                    firstDriveModeLabel = vvvf.DriveModeLabel;
                 }
             }
         }
@@ -269,8 +271,12 @@ public class TrainHUD : MonoBehaviour
         driveSection.Append($"Motor Sum: {totalVvvfMotorForceKN:0.0} kN\n");
         driveSection.Append($"First Target T: {firstTargetTorqueNm:0.0} Nm\n");
         driveSection.Append($"First Motor T: {firstMotorTorqueNm:0.0} Nm\n");
+        driveSection.Append($"First Mode: {firstDriveModeLabel}\n");
         driveSection.Append($"First Slip: {firstSlipPercent:0.00}%\n");
         driveSection.Append($"First Freq: {firstFrequencyHz:0.0} Hz\n");
+        driveSection.Append($"First Base F: {firstRotorBaseFrequencyHz:0.0} Hz\n");
+        driveSection.Append($"First Slip F: {firstSlipFrequencyHz:+0.00;-0.00;0.00} Hz\n");
+        driveSection.Append($"Slip Max P/R: {firstPowerMaxSlipFrequencyHz:0.00} / {firstRegenMaxSlipFrequencyHz:0.00} Hz\n");
         driveSection.Append($"First Line V: {firstLineVoltageV:0.0} V\n");
         if (vvvfControllers != null)
         {
@@ -311,6 +317,7 @@ public class TrainHUD : MonoBehaviour
             $"Grade Force: {train.CurrentGradeResistanceForceN / 1000f:+0.0;-0.0;0.0} kN\n" +
             "\n" +
             "[Control]\n" +
+            $"Reverser: {train.Reverser}\n" +
             $"Applied: P{train.PowerNotch} / {FormatBrakeNotchLabel(train.BrakeNotch)}\n" +
             $"Manual: P{train.ManualPowerNotch} / {FormatBrakeNotchLabel(train.ManualBrakeNotch)}\n" +
             $"ATC Cmd: {FormatBrakeNotchLabel(train.ATCBrakeNotch)}\n" +
@@ -343,5 +350,13 @@ public class TrainHUD : MonoBehaviour
             $"BC: {train.CurrentBCPressureKPa:0.0} kPa\n" +
             "\n" +
             carBrakeSection.ToString();
+    }
+
+    private void ResolveReferences()
+    {
+        train = CabReferenceResolver.ResolveTrain(this, train);
+        atc = CabReferenceResolver.ResolveTrainComponent(this, train, atc);
+        tasc = CabReferenceResolver.ResolveTrainComponent(this, train, tasc);
+        ntim = CabReferenceResolver.ResolveTrainComponent(this, train, ntim);
     }
 }

@@ -64,6 +64,8 @@ public class PressureGaugeUI : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void OnEnable()
     {
+        ResolveReferences();
+
         displayedPressureKPa = 0f;
         sampledPressureKPa = 0f;
         laggedPressureKPa = 0f;
@@ -79,6 +81,8 @@ public class PressureGaugeUI : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void Update()
     {
+        ResolveReferences();
+
         if (train == null)
         {
             return;
@@ -179,6 +183,11 @@ public class PressureGaugeUI : MonoBehaviour
 
         float minLag = Mathf.Max(0f, minUpdateLagSec);
         float maxLag = Mathf.Max(minLag, maxUpdateLagSec);
-        nextSampleTime = Time.time + Random.Range(minLag, maxLag);
+            nextSampleTime = Time.time + Random.Range(minLag, maxLag);
+    }
+
+    private void ResolveReferences()
+    {
+        train = CabReferenceResolver.ResolveTrain(this, train);
     }
 }

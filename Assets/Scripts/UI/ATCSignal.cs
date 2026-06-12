@@ -9,6 +9,7 @@ public class ATCSignal : MonoBehaviour
     [Header("Signal Sprites")]
     [SerializeField] private Sprite redSprite;
     [SerializeField] private Sprite greenSprite;
+    [SerializeField] private Sprite signalOffSprite;
 
     [Header("ATC")]
     [SerializeField] private ATCController atc;
@@ -28,9 +29,16 @@ public class ATCSignal : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void Update()
     {
+        atc = CabReferenceResolver.ResolveTrainComponent(this, null, atc);
+
         if (targetImage == null || atc == null) return;
 
-        // ATC側で判定したboolを使う
-        targetImage.sprite = greenSprite;
+        if (atc.IsAtcCutOutActive && signalOffSprite != null)
+        {
+            targetImage.sprite = signalOffSprite;
+            return;
+        }
+
+        targetImage.sprite = atc.IsNextBlockOccupied ? redSprite : greenSprite;
     }
 }

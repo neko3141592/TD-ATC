@@ -32,6 +32,8 @@ public class PatternApproachLampDisplay : MonoBehaviour
         {
             targetImage = GetComponent<Image>();
         }
+
+        ResolveReferences();
     }
 
     /// <summary>
@@ -40,6 +42,8 @@ public class PatternApproachLampDisplay : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void Update()
     {
+        ResolveReferences();
+
         if (targetImage == null || atcController == null)
         {
             return;
@@ -51,5 +55,10 @@ public class PatternApproachLampDisplay : MonoBehaviour
         {
             targetImage.sprite = nextSprite;
         }
+    }
+
+    private void ResolveReferences()
+    {
+        atcController = CabReferenceResolver.ResolveTrainComponent(this, null, atcController);
     }
 }

@@ -12,7 +12,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
 
     [Header("Runtime")]
     [SerializeField] private TrainController train;
-    [SerializeField, Min(0f)] private float displayUpdateLagSeconds = 0f;
     [SerializeField] private BrakeSystemController brakeSystem;
     [SerializeField] private TractionSystemController tractionSystem;
     [SerializeField] private ConsistDefinition consistDefinition;
@@ -35,7 +34,17 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     [SerializeField] private Vector2 carNumberOffset = new Vector2(0f, -14f);
     [SerializeField, Min(1f)] private float carNumberFontSize = 12f;
     [SerializeField] private Color carNumberColor = Color.white;
+    [SerializeField] private Color activeCarNumberColor = Color.black;
     [SerializeField] private TMP_FontAsset carNumberFontAsset;
+
+    [Header("Door Status")]
+    [SerializeField] private bool showDoorStatus = true;
+    [SerializeField] private Sprite doorOpenSprite;
+    [SerializeField] private Sprite doorClosedSprite;
+    [SerializeField] private Vector2 doorStatusOffset = new Vector2(0f, 8f);
+    [SerializeField] private Vector2 doorStatusSize = new Vector2(12f, 5f);
+    [SerializeField] private Color doorStatusColor = Color.white;
+    [SerializeField] private bool[] doorOpenStates = new bool[0];
 
     [Header("Current Bar")]
     [SerializeField] private bool showCurrentBars = true;
@@ -44,6 +53,8 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     [SerializeField] private Vector2 currentBarOffset = new Vector2(0f, -28f);
     [SerializeField] private Color currentBarBackgroundColor = new Color(1f, 1f, 1f, 0.18f);
     [SerializeField] private Color currentBarFillColor = new Color(0.2f, 0.95f, 1f, 0.95f);
+    [SerializeField] private Color currentBarRegenFillColor = new Color(0.55f, 0.8f, 1f, 0.95f);
+    [SerializeField, Min(0f)] private float currentDirectionThresholdA = 0.5f;
     [SerializeField] private bool showCurrentNumbers = true;
     [SerializeField] private Vector2 currentNumberOffset = new Vector2(0f, -41f);
     [SerializeField, Min(1f)] private float currentNumberFontSize = 5f;
@@ -55,9 +66,12 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     [SerializeField, Min(1f)] private float brakePressureNumberFontSize = 5f;
     [SerializeField] private Color brakePressureNumberColor = new Color(1f, 0.92f, 0.6f, 0.95f);
 
+    private const int DoorCountPerCar = 4;
     private int CarCount => consistDefinition != null ? consistDefinition.CarCount : 0;
 
     private readonly List<Image> generatedCarImages = new List<Image>();
+    private readonly List<TextMeshProUGUI> generatedCarNumberLabels = new List<TextMeshProUGUI>();
+    private readonly List<Image> generatedDoorStatusImages = new List<Image>();
     private readonly List<Image> generatedCurrentBarBackgrounds = new List<Image>();
     private readonly List<Image> generatedCurrentBarFills = new List<Image>();
     private readonly List<TextMeshProUGUI> generatedCurrentNumberLabels = new List<TextMeshProUGUI>();
@@ -71,17 +85,20 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     {
         public readonly float sampledTime;
         public readonly Sprite[] sprites;
+        public readonly bool[] activeCarNumbers;
 
         /// <summary>
         /// 役割: VisualSnapshot の処理を実行します。
         /// </summary>
         /// <param name="sampledTime">sampledTime を指定します。</param>
         /// <param name="sprites">sprites を指定します。</param>
+        /// <param name="activeCarNumbers">activeCarNumbers を指定します。</param>
         /// <returns>処理結果を返します。</returns>
-        public VisualSnapshot(float sampledTime, Sprite[] sprites)
+        public VisualSnapshot(float sampledTime, Sprite[] sprites, bool[] activeCarNumbers)
         {
             this.sampledTime = sampledTime;
             this.sprites = sprites;
+            this.activeCarNumbers = activeCarNumbers;
         }
     }
 
@@ -114,11 +131,14 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
-        displayUpdateLagSeconds = Mathf.Max(0f, displayUpdateLagSeconds);
         currentBarMaxA = Mathf.Max(1f, currentBarMaxA);
         currentNumberFontSize = Mathf.Max(1f, currentNumberFontSize);
         brakePressureNumberFontSize = Mathf.Max(1f, brakePressureNumberFontSize);
+        doorStatusSize.x = Mathf.Max(1f, doorStatusSize.x);
+        doorStatusSize.y = Mathf.Max(1f, doorStatusSize.y);
+        EnsureDoorStateCache(CarCount);
         RefreshTrainStateDisplayLayout();
+        ApplyDoorStatusSprites();
 
         if (!regenerateOnValidate)
         {
@@ -153,6 +173,63 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     }
 #endif
 
+    /// <summary>
+    /// 役割: 指定車両・指定ドアの開閉状態を設定します。carIndex と doorIndex は 0 始まりです。
+    /// </summary>
+    /// <param name="carIndex">車両インデックスを指定します。</param>
+    /// <param name="doorIndex">車両内のドアインデックスを指定します。</param>
+    /// <param name="isOpen">開いている場合は true を指定します。</param>
+    /// <returns>設定できた場合は true を返します。</returns>
+    public bool SetDoorOpen(int carIndex, int doorIndex, bool isOpen)
+    {
+        if (carIndex < 0 || carIndex >= CarCount || doorIndex < 0 || doorIndex >= DoorCountPerCar)
+        {
+            return false;
+        }
+
+        EnsureDoorStateCache(CarCount);
+        doorOpenStates[GetDoorStateIndex(carIndex, doorIndex)] = isOpen;
+        ApplyDoorStatusSprites();
+        return true;
+    }
+
+    /// <summary>
+    /// 役割: 指定車両の 4 つのドア状態をまとめて設定します。
+    /// </summary>
+    /// <param name="carIndex">車両インデックスを指定します。</param>
+    /// <param name="door1Open">1つ目のドアが開いている場合は true を指定します。</param>
+    /// <param name="door2Open">2つ目のドアが開いている場合は true を指定します。</param>
+    /// <param name="door3Open">3つ目のドアが開いている場合は true を指定します。</param>
+    /// <param name="door4Open">4つ目のドアが開いている場合は true を指定します。</param>
+    /// <returns>設定できた場合は true を返します。</returns>
+    public bool SetCarDoorStates(int carIndex, bool door1Open, bool door2Open, bool door3Open, bool door4Open)
+    {
+        if (carIndex < 0 || carIndex >= CarCount)
+        {
+            return false;
+        }
+
+        EnsureDoorStateCache(CarCount);
+        int baseIndex = GetDoorStateIndex(carIndex, 0);
+        doorOpenStates[baseIndex] = door1Open;
+        doorOpenStates[baseIndex + 1] = door2Open;
+        doorOpenStates[baseIndex + 2] = door3Open;
+        doorOpenStates[baseIndex + 3] = door4Open;
+        ApplyDoorStatusSprites();
+        return true;
+    }
+
+    /// <summary>
+    /// 役割: 指定車両の全ドアを同じ開閉状態に設定します。
+    /// </summary>
+    /// <param name="carIndex">車両インデックスを指定します。</param>
+    /// <param name="isOpen">開いている場合は true を指定します。</param>
+    /// <returns>設定できた場合は true を返します。</returns>
+    public bool SetAllDoorsOpenForCar(int carIndex, bool isOpen)
+    {
+        return SetCarDoorStates(carIndex, isOpen, isOpen, isOpen, isOpen);
+    }
+
     [ContextMenu("Generate Train Formation Display")]
     /// <summary>
     /// 役割: Generate の処理を実行します。
@@ -171,6 +248,7 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         }
 
         ClearGenerated();
+        EnsureDoorStateCache(CarCount);
         Vector2 currentPos = new Vector2(0, 0);
         for (int i = 0; i < CarCount; i++)
         {
@@ -179,6 +257,8 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             if (selectedSprite == null)
             {
                 generatedCarImages.Add(null);
+                generatedCarNumberLabels.Add(null);
+                generatedDoorStatusImages.Add(null);
                 generatedCurrentBarBackgrounds.Add(null);
                 generatedCurrentBarFills.Add(null);
                 generatedCurrentNumberLabels.Add(null);
@@ -191,6 +271,8 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             Image createdImage = CreateSpriteCar(selectedSprite, $"Car_{i + 1}", i + 1, anchoredPos, mirrorX);
             generatedCarImages.Add(createdImage);
         }
+
+        ApplyDoorStatusSprites();
     }
 
     /// <summary>
@@ -224,9 +306,40 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             rect.localScale = mirroredScale;
         }
 
-        CreateCarNumberLabel(rect, carNumber, mirrorX);
+        generatedCarNumberLabels.Add(CreateCarNumberLabel(rect, carNumber, mirrorX));
+        generatedDoorStatusImages.Add(CreateDoorStatusImage(rect, mirrorX));
         CreateCurrentBar(rect, mirrorX);
         generatedBrakePressureLabels.Add(CreateBrakePressureNumberLabel(rect, mirrorX));
+
+        return image;
+    }
+
+    /// <summary>
+    /// 役割: 車両ごとのドア開閉表示を作成します。
+    /// </summary>
+    /// <param name="parent">parent を指定します。</param>
+    /// <param name="parentMirroredX">parentMirroredX を指定します。</param>
+    /// <returns>作成した Image を返します。</returns>
+    private Image CreateDoorStatusImage(RectTransform parent, bool parentMirroredX)
+    {
+        if (!showDoorStatus || parent == null)
+        {
+            return null;
+        }
+
+        GameObject imageGo = new GameObject("DoorStatus", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        RectTransform imageRect = imageGo.GetComponent<RectTransform>();
+        imageRect.SetParent(parent, false);
+
+        if (parentMirroredX)
+        {
+            imageRect.localScale = new Vector3(-1f, 1f, 1f);
+        }
+
+        Image image = imageGo.GetComponent<Image>();
+        image.raycastTarget = false;
+        image.preserveAspect = true;
+        ApplyDoorStatusLayout(image);
 
         return image;
     }
@@ -372,11 +485,11 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     /// <param name="carNumber">carNumber を指定します。</param>
     /// <param name="parentMirroredX">parentMirroredX を指定します。</param>
     /// <remarks>返り値はありません。</remarks>
-    private void CreateCarNumberLabel(RectTransform parent, int carNumber, bool parentMirroredX)
+    private TextMeshProUGUI CreateCarNumberLabel(RectTransform parent, int carNumber, bool parentMirroredX)
     {
         if (!showCarNumbers || parent == null)
         {
-            return;
+            return null;
         }
 
         GameObject textGo = new GameObject("CarNumber", typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -403,6 +516,8 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         {
             tmp.font = carNumberFontAsset;
         }
+
+        return tmp;
     }
 
     /// <summary>
@@ -424,8 +539,9 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             return normalTrailer;
         }
 
-        bool isTraction = TryGetCarMotorCurrentA(carIndex, out float motorCurrentA) && motorCurrentA > 1f;
-        bool isRegen = TryGetCarRegenForceN(carIndex, out float regenForceN) && regenForceN > 0f;
+        float driveDirection = GetCarDriveDirection(carIndex);
+        bool isTraction = driveDirection > 0f;
+        bool isRegen = driveDirection < 0f;
 
         if (isRegen && normalMotorRegen != null)
         {
@@ -446,35 +562,41 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void UpdateRuntimeVisuals()
     {
+        ResolveRuntimeReferences();
+
         if (formationDisplayRoot == null || CarCount <= 0)
         {
             pendingVisualSnapshots.Clear();
             displayedMotorCurrentsA.Clear();
             displayedBrakePressuresKPa.Clear();
+            generatedDoorStatusImages.Clear();
             nextTrainStateSampleTime = 0f;
             return;
         }
 
-        if (generatedCarImages.Count != CarCount || generatedCurrentBarFills.Count != CarCount || generatedCurrentNumberLabels.Count != CarCount || generatedBrakePressureLabels.Count != CarCount || HasMissingCurrentDisplays())
+        if (generatedCarImages.Count != CarCount || generatedCarNumberLabels.Count != CarCount || generatedDoorStatusImages.Count != CarCount || generatedCurrentBarFills.Count != CarCount || generatedCurrentNumberLabels.Count != CarCount || generatedBrakePressureLabels.Count != CarCount || HasMissingCurrentDisplays() || HasMissingDoorStatusDisplays())
         {
             RebuildGeneratedImageCache();
         }
 
+        EnsureDoorStateCache(CarCount);
         RefreshTrainStateDisplayLayout();
+        ApplyDoorStatusSprites();
         UpdateTrainStateDisplaysWithSampleLag();
 
-        if (displayUpdateLagSeconds <= 0f)
-        {
-            pendingVisualSnapshots.Clear();
-            ApplyVisualSnapshot(CaptureCurrentSnapshot());
-            return;
-        }
+        pendingVisualSnapshots.Clear();
+        ApplyVisualSnapshot(CaptureCurrentSnapshot());
+    }
 
-        pendingVisualSnapshots.Enqueue(CaptureCurrentSnapshot());
-        float thresholdTime = Time.time - displayUpdateLagSeconds;
-        while (pendingVisualSnapshots.Count > 0 && pendingVisualSnapshots.Peek().sampledTime <= thresholdTime)
+    private void ResolveRuntimeReferences()
+    {
+        train = CabReferenceResolver.ResolveTrain(this, train);
+        brakeSystem = CabReferenceResolver.ResolveTrainComponent(this, train, brakeSystem);
+        tractionSystem = CabReferenceResolver.ResolveTrainComponent(this, train, tractionSystem);
+
+        if (consistDefinition == null && train != null)
         {
-            ApplyVisualSnapshot(pendingVisualSnapshots.Dequeue());
+            consistDefinition = train.ConsistDefinition;
         }
     }
 
@@ -486,12 +608,14 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     {
         int count = CarCount;
         Sprite[] sprites = new Sprite[count];
+        bool[] activeCarNumbers = new bool[count];
         for (int i = 0; i < count; i++)
         {
             sprites[i] = GetDisplaySpriteForCar(i);
+            activeCarNumbers[i] = IsCarInTractionOrRegen(i);
         }
 
-        return new VisualSnapshot(Time.time, sprites);
+        return new VisualSnapshot(Time.time, sprites, activeCarNumbers);
     }
 
     /// <summary>
@@ -520,6 +644,15 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             {
                 image.sprite = desiredSprite;
             }
+
+            TextMeshProUGUI carNumberLabel = i < generatedCarNumberLabels.Count ? generatedCarNumberLabels[i] : null;
+            if (carNumberLabel != null)
+            {
+                bool activeCarNumber = snapshot.activeCarNumbers != null &&
+                    i < snapshot.activeCarNumbers.Length &&
+                    snapshot.activeCarNumbers[i];
+                carNumberLabel.color = activeCarNumber ? activeCarNumberColor : carNumberColor;
+            }
         }
     }
 
@@ -532,13 +665,13 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         int count = CarCount;
         EnsureDisplayedTrainStateCache(count);
 
-        float lagSeconds = Mathf.Max(0f, displayUpdateLagSeconds);
+        float lagSeconds = 0f;
         if (lagSeconds <= 0f || Time.time >= nextTrainStateSampleTime)
         {
             for (int i = 0; i < count; i++)
             {
                 displayedMotorCurrentsA[i] = TryGetCarMotorCurrentA(i, out float motorCurrentA)
-                    ? Mathf.Max(0f, motorCurrentA)
+                    ? motorCurrentA
                     : 0f;
 
                 displayedBrakePressuresKPa[i] = TryGetCarBrakePressureKPa(i, out float pressureKPa)
@@ -601,7 +734,8 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             TextMeshProUGUI numberLabel = i < generatedCurrentNumberLabels.Count ? generatedCurrentNumberLabels[i] : null;
             ApplyCurrentDisplayLayout(background, fill, numberLabel);
 
-            float currentA = Mathf.Max(0f, motorCurrentsA[i]);
+            float signedCurrentA = motorCurrentsA[i];
+            float currentA = Mathf.Abs(signedCurrentA);
             float ratio = Mathf.Clamp01(currentA / Mathf.Max(1f, currentBarMaxA));
             bool barVisible = showCurrentBars;
             bool fillVisible = barVisible && currentA > 0.5f;
@@ -614,6 +748,9 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             if (fill != null)
             {
                 fill.enabled = fillVisible;
+                fill.color = signedCurrentA < -Mathf.Max(0f, currentDirectionThresholdA)
+                    ? currentBarRegenFillColor
+                    : currentBarFillColor;
                 RectTransform fillRect = fill.rectTransform;
                 fillRect.sizeDelta = new Vector2(currentBarSize.x, currentBarSize.y * ratio);
                 fillRect.anchoredPosition = new Vector2(0f, -currentBarSize.y * 0.5f);
@@ -660,15 +797,65 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void RefreshTrainStateDisplayLayout()
     {
-        int count = Mathf.Max(Mathf.Max(generatedCurrentBarBackgrounds.Count, generatedCurrentNumberLabels.Count), generatedBrakePressureLabels.Count);
+        int count = Mathf.Max(
+            Mathf.Max(generatedCurrentBarBackgrounds.Count, generatedCurrentNumberLabels.Count),
+            Mathf.Max(generatedBrakePressureLabels.Count, generatedDoorStatusImages.Count));
         for (int i = 0; i < count; i++)
         {
+            Image doorStatus = i < generatedDoorStatusImages.Count ? generatedDoorStatusImages[i] : null;
             Image background = i < generatedCurrentBarBackgrounds.Count ? generatedCurrentBarBackgrounds[i] : null;
             Image fill = i < generatedCurrentBarFills.Count ? generatedCurrentBarFills[i] : null;
             TextMeshProUGUI numberLabel = i < generatedCurrentNumberLabels.Count ? generatedCurrentNumberLabels[i] : null;
             TextMeshProUGUI pressureLabel = i < generatedBrakePressureLabels.Count ? generatedBrakePressureLabels[i] : null;
+            ApplyDoorStatusLayout(doorStatus);
             ApplyCurrentDisplayLayout(background, fill, numberLabel);
             ApplyBrakePressureDisplayLayout(pressureLabel);
+        }
+    }
+
+    /// <summary>
+    /// 役割: ドア開閉表示のレイアウトを更新します。
+    /// </summary>
+    /// <param name="doorStatus">doorStatus を指定します。</param>
+    /// <remarks>返り値はありません。</remarks>
+    private void ApplyDoorStatusLayout(Image doorStatus)
+    {
+        if (doorStatus == null)
+        {
+            return;
+        }
+
+        RectTransform doorRect = doorStatus.rectTransform;
+        doorRect.anchorMin = doorRect.anchorMax = new Vector2(0.5f, 0.5f);
+        doorRect.pivot = new Vector2(0.5f, 0.5f);
+        doorRect.anchoredPosition = doorStatusOffset;
+        doorRect.sizeDelta = doorStatusSize;
+        doorStatus.color = doorStatusColor;
+        doorStatus.preserveAspect = true;
+        doorStatus.raycastTarget = false;
+    }
+
+    /// <summary>
+    /// 役割: 4 つのドア状態から車両ごとの開閉スプライトを反映します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
+    private void ApplyDoorStatusSprites()
+    {
+        EnsureDoorStateCache(CarCount);
+
+        int count = Mathf.Min(CarCount, generatedDoorStatusImages.Count);
+        for (int i = 0; i < count; i++)
+        {
+            Image doorStatus = generatedDoorStatusImages[i];
+            if (doorStatus == null)
+            {
+                continue;
+            }
+
+            bool anyDoorOpen = IsAnyDoorOpenInCar(i);
+            Sprite sprite = anyDoorOpen ? doorOpenSprite : doorClosedSprite;
+            doorStatus.sprite = sprite;
+            doorStatus.enabled = showDoorStatus && sprite != null;
         }
     }
 
@@ -751,16 +938,53 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     {
         if (!showCurrentBars)
         {
+            return HasMissingCarNumberLabels();
+        }
+
+        for (int i = 0; i < CarCount; i++)
+        {
+            bool hasCarNumber = !showCarNumbers || (i < generatedCarNumberLabels.Count && generatedCarNumberLabels[i] != null);
+            bool hasBackground = i < generatedCurrentBarBackgrounds.Count && generatedCurrentBarBackgrounds[i] != null;
+            bool hasFill = i < generatedCurrentBarFills.Count && generatedCurrentBarFills[i] != null;
+            bool hasNumber = !showCurrentNumbers || (i < generatedCurrentNumberLabels.Count && generatedCurrentNumberLabels[i] != null);
+            bool hasPressureNumber = !showBrakePressureNumbers || (i < generatedBrakePressureLabels.Count && generatedBrakePressureLabels[i] != null);
+            if (!hasCarNumber || !hasBackground || !hasFill || !hasNumber || !hasPressureNumber)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasMissingDoorStatusDisplays()
+    {
+        if (!showDoorStatus)
+        {
             return false;
         }
 
         for (int i = 0; i < CarCount; i++)
         {
-            bool hasBackground = i < generatedCurrentBarBackgrounds.Count && generatedCurrentBarBackgrounds[i] != null;
-            bool hasFill = i < generatedCurrentBarFills.Count && generatedCurrentBarFills[i] != null;
-            bool hasNumber = !showCurrentNumbers || (i < generatedCurrentNumberLabels.Count && generatedCurrentNumberLabels[i] != null);
-            bool hasPressureNumber = !showBrakePressureNumbers || (i < generatedBrakePressureLabels.Count && generatedBrakePressureLabels[i] != null);
-            if (!hasBackground || !hasFill || !hasNumber || !hasPressureNumber)
+            if (i >= generatedDoorStatusImages.Count || generatedDoorStatusImages[i] == null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasMissingCarNumberLabels()
+    {
+        if (!showCarNumbers)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < CarCount; i++)
+        {
+            if (i >= generatedCarNumberLabels.Count || generatedCarNumberLabels[i] == null)
             {
                 return true;
             }
@@ -784,6 +1008,48 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         return carSpec != null && carSpec.carType == CarType.Motor && carSpec.motorCount > 0;
     }
 
+    private void EnsureDoorStateCache(int carCount)
+    {
+        int requiredLength = Mathf.Max(0, carCount) * DoorCountPerCar;
+        if (doorOpenStates == null)
+        {
+            doorOpenStates = new bool[requiredLength];
+            return;
+        }
+
+        if (doorOpenStates.Length == requiredLength)
+        {
+            return;
+        }
+
+        System.Array.Resize(ref doorOpenStates, requiredLength);
+    }
+
+    private static int GetDoorStateIndex(int carIndex, int doorIndex)
+    {
+        return (carIndex * DoorCountPerCar) + doorIndex;
+    }
+
+    private bool IsAnyDoorOpenInCar(int carIndex)
+    {
+        if (carIndex < 0 || carIndex >= CarCount)
+        {
+            return false;
+        }
+
+        EnsureDoorStateCache(CarCount);
+        int baseIndex = GetDoorStateIndex(carIndex, 0);
+        for (int i = 0; i < DoorCountPerCar; i++)
+        {
+            if (doorOpenStates[baseIndex + i])
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// 役割: RebuildGeneratedImageCache の処理を実行します。
     /// </summary>
@@ -791,6 +1057,8 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     private void RebuildGeneratedImageCache()
     {
         generatedCarImages.Clear();
+        generatedCarNumberLabels.Clear();
+        generatedDoorStatusImages.Clear();
         generatedCurrentBarBackgrounds.Clear();
         generatedCurrentBarFills.Clear();
         generatedCurrentNumberLabels.Clear();
@@ -806,6 +1074,21 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             {
                 Image image = formationDisplayRoot.GetChild(i).GetComponent<Image>();
                 generatedCarImages.Add(image);
+                TextMeshProUGUI carNumberLabel = formationDisplayRoot.GetChild(i).Find("CarNumber")?.GetComponent<TextMeshProUGUI>();
+                if (carNumberLabel == null && image != null)
+                {
+                    carNumberLabel = CreateCarNumberLabel(image.rectTransform, i + 1, i == 0);
+                }
+
+                generatedCarNumberLabels.Add(carNumberLabel);
+
+                Image doorStatusImage = formationDisplayRoot.GetChild(i).Find("DoorStatus")?.GetComponent<Image>();
+                if (doorStatusImage == null && image != null)
+                {
+                    doorStatusImage = CreateDoorStatusImage(image.rectTransform, i == 0);
+                }
+
+                generatedDoorStatusImages.Add(doorStatusImage);
 
                 Transform currentBar = formationDisplayRoot.GetChild(i).Find("CurrentBar");
                 if (currentBar == null && image != null)
@@ -838,6 +1121,8 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             else
             {
                 generatedCarImages.Add(null);
+                generatedCarNumberLabels.Add(null);
+                generatedDoorStatusImages.Add(null);
                 generatedCurrentBarBackgrounds.Add(null);
                 generatedCurrentBarFills.Add(null);
                 generatedCurrentNumberLabels.Add(null);
@@ -854,6 +1139,8 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     public void ClearGenerated()
     {
         generatedCarImages.Clear();
+        generatedCarNumberLabels.Clear();
+        generatedDoorStatusImages.Clear();
         generatedCurrentBarBackgrounds.Clear();
         generatedCurrentBarFills.Clear();
         generatedCurrentNumberLabels.Clear();
@@ -924,6 +1211,11 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             return false;
         }
 
+        if (TryGetCarVvvfSignedMotorCurrentA(carIndex, out motorCurrentA))
+        {
+            return true;
+        }
+
         var states = train.CurrentCarTractionStates;
         if (states == null || carIndex < 0 || carIndex >= states.Count)
         {
@@ -936,8 +1228,148 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             return false;
         }
 
-        motorCurrentA = state.motorCurrentA;
+        motorCurrentA = GetSignedCarCurrentA(state);
         return true;
+    }
+
+    private bool IsCarInTractionOrRegen(int carIndex)
+    {
+        return GetCarDriveDirection(carIndex) != 0f;
+    }
+
+    private float GetCarDriveDirection(int carIndex)
+    {
+        float currentThresholdA = Mathf.Max(0f, currentDirectionThresholdA);
+        if (TryGetCarMotorCurrentA(carIndex, out float signedCurrentA) &&
+            Mathf.Abs(signedCurrentA) > currentThresholdA)
+        {
+            return Mathf.Sign(signedCurrentA);
+        }
+
+        if (TryGetCarVvvfTractionForceN(carIndex, out float vvvfTractionForceN) &&
+            Mathf.Abs(vvvfTractionForceN) > 1f)
+        {
+            return Mathf.Sign(vvvfTractionForceN);
+        }
+
+        return 0f;
+    }
+
+    private bool TryGetCarVvvfSignedMotorCurrentA(int carIndex, out float signedCurrentA)
+    {
+        signedCurrentA = 0f;
+
+        if (train == null || carIndex < 0)
+        {
+            return false;
+        }
+
+        VVVFController[] vvvfControllers = train.VVVFControllers;
+        if (vvvfControllers == null || vvvfControllers.Length == 0)
+        {
+            return false;
+        }
+
+        bool found = false;
+        for (int i = 0; i < vvvfControllers.Length; i++)
+        {
+            VVVFController vvvf = vvvfControllers[i];
+            if (vvvf == null || vvvf.AssignedCarIndex != carIndex)
+            {
+                continue;
+            }
+
+            MotorModel[] motors = vvvf.Motors;
+            if (motors == null)
+            {
+                found = true;
+                continue;
+            }
+
+            for (int j = 0; j < motors.Length; j++)
+            {
+                signedCurrentA += GetSignedMotorCurrentA(motors[j]);
+            }
+            found = true;
+        }
+
+        return found;
+    }
+
+    private static float GetSignedMotorCurrentA(MotorModel motor)
+    {
+        if (motor == null)
+        {
+            return 0f;
+        }
+
+        float currentA = Mathf.Max(0f, motor.MotorCurrentRmsA);
+        if (currentA <= 0f)
+        {
+            return 0f;
+        }
+
+        float signSource = Mathf.Abs(motor.InputActivePowerW) > 0.01f
+            ? motor.InputActivePowerW
+            : motor.MotorTorqueNm;
+        if (Mathf.Abs(signSource) <= 0.0001f)
+        {
+            return 0f;
+        }
+
+        return Mathf.Sign(signSource) * currentA;
+    }
+
+    private static float GetSignedCarCurrentA(CarTractionState state)
+    {
+        if (state == null)
+        {
+            return 0f;
+        }
+
+        float currentA = Mathf.Max(0f, state.motorCurrentA);
+        if (currentA <= 0f)
+        {
+            return 0f;
+        }
+
+        if (Mathf.Abs(state.tractionForceN) <= 0.0001f)
+        {
+            return currentA;
+        }
+
+        return Mathf.Sign(state.tractionForceN) * currentA;
+    }
+
+    private bool TryGetCarVvvfTractionForceN(int carIndex, out float tractionForceN)
+    {
+        tractionForceN = 0f;
+
+        if (train == null || carIndex < 0)
+        {
+            return false;
+        }
+
+        VVVFController[] vvvfControllers = train.VVVFControllers;
+        if (vvvfControllers == null || vvvfControllers.Length == 0)
+        {
+            return false;
+        }
+
+        bool found = false;
+        for (int i = 0; i < vvvfControllers.Length; i++)
+        {
+            VVVFController vvvf = vvvfControllers[i];
+            if (vvvf == null || vvvf.AssignedCarIndex != carIndex)
+            {
+                continue;
+            }
+
+            tractionForceN += vvvf.TotalMotorTractionForceN;
+            found = true;
+        }
+
+        return found;
     }
 
     /// <summary>

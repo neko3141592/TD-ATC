@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb5314aa25ce04f40ae93459be00f14c, type: 3}
   m_Name: CarSpec_M
   m_EditorClassIdentifier: Assembly-CSharp::CarSpec
-  carPrefab: {fileID: 919132149155446097, guid: ec0d0d20962d70b429950ebb7a2815e3, type: 3}
+  carPrefab: {fileID: 8826434430423012596, guid: 616d4b91a815d4b4a819082a740dd446, type: 3}
   carRole: 0
   cabEnd: 0
   carType: 0

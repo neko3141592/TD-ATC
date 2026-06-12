@@ -13,26 +13,6 @@ MonoBehaviour:
   m_Name: LocalTestService
   m_EditorClassIdentifier: Assembly-CSharp::TrainServiceDefinition
   serviceName: Local Test Service
-  serviceType: 1
-  stops:
-  - stationId: ST_Start
-    stopHere: 0
-    dwellSeconds: 20
-  - stationId: ST_G20_01
-    stopHere: 1
-    dwellSeconds: 20
-  - stationId: ST_Pass
-    stopHere: 0
-    dwellSeconds: 20
-  - stationId: ST_Center
-    stopHere: 1
-    dwellSeconds: 20
-  - stationId: ST_Park
-    stopHere: 1
-    dwellSeconds: 20
-  - stationId: ST_Yard
-    stopHere: 0
-    dwellSeconds: 20
-  - stationId: ST_End
-    stopHere: 1
-    dwellSeconds: 20
+  serviceType: 0
+  speedLimit: 33.333332
+  stops: []

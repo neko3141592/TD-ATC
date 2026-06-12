@@ -34,11 +34,12 @@ Material:
     - _DstBlend: 10
     - _DstBlendAlpha: 10
     - _Mode: 3
+    - _Smoothness: 0.492
     - _Surface: 1
     - _ZWrite: 0
     m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 0}
-    - _Color: {r: 1, g: 1, b: 1, a: 0}
+    - _BaseColor: {r: 0.093271606, g: 0.12264467, b: 0.15094337, a: 0.92156863}
+    - _Color: {r: 0.09327156, g: 0.12264464, b: 0.15094334, a: 0.92156863}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &4459006744176882483

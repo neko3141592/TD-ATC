@@ -52,10 +52,18 @@ public class MotorModel : MonoBehaviour
         SyncRpm = VVVFMath.GetSynchronousRpm(FrequencyHz, activeSpec.poleCount);
         SlipRatio = VVVFMath.GetSlipRatio(SyncRpm, MotorRpm);
         float safeSlipRatio = SlipRatio;
-        if (Mathf.Abs(safeSlipRatio) < 0.001f)
+
+        if (Mathf.Abs(safeSlipRatio) < 0.0001f)
         {
-            safeSlipRatio = safeSlipRatio >= 0f ? 0.001f : -0.001f;
+            MotorCurrentRmsA = 0f;
+            RotorCurrentRmsA = 0f;
+            MotorTorqueNm = 0f;
+            MotorOutputPowerW = 0f;
+            InputActivePowerW = 0f;
+            ApparentPowerVA = 0f;
+            return;
         }
+        
 
         float freqRatio = FrequencyHz / Mathf.Max(0.01f, activeSpec.ratedFrequencyHz);
         float statorReactanceOhm = activeSpec.statorReactanceOhm * freqRatio; // X1'

@@ -30,6 +30,12 @@ public class PowerDisplayBuilder : MonoBehaviour
     [SerializeField] private Color notchFillColor = new Color(0.25f, 0.85f, 1f, 1f);
     [SerializeField] private Color notchTextColor = new Color(0.08f, 0.08f, 0.08f, 1f);
 
+    [Header("Shadow")]
+    [SerializeField] private bool enableShadow = true;
+    [SerializeField] private Color shadowColor = new Color(0f, 0f, 0f, 0.55f);
+    [SerializeField] private Vector2 shadowDistance = new Vector2(2f, -2f);
+    [SerializeField] private bool shadowUseGraphicAlpha = true;
+
     [Header("Font")]
     [SerializeField, Min(8f)] private float notchFontSize = 20f;
     [SerializeField] private TMP_FontAsset fontAsset;
@@ -136,6 +142,13 @@ public class PowerDisplayBuilder : MonoBehaviour
             return;
         }
 
+#if UNITY_EDITOR
+        if (IsPrefabAssetContext(root))
+        {
+            return;
+        }
+#endif
+
         EnsureVerticalLayout(root);
         ClearGeneratedChildren(root);
 
@@ -162,6 +175,13 @@ public class PowerDisplayBuilder : MonoBehaviour
         {
             return;
         }
+
+#if UNITY_EDITOR
+        if (IsPrefabAssetContext(root))
+        {
+            return;
+        }
+#endif
 
         ClearGeneratedChildren(root);
         runtimeRefDirty = true;
@@ -282,6 +302,7 @@ public class PowerDisplayBuilder : MonoBehaviour
         Image fill = fillGo.GetComponent<Image>();
         fill.color = notchFillColor;
         fill.raycastTarget = false;
+        ApplyShadowSettings(fill);
         fillGo.SetActive(false); // 消灯状態で生成
 
         GameObject labelRoot = new GameObject(LabelName, typeof(RectTransform));
@@ -300,6 +321,7 @@ public class PowerDisplayBuilder : MonoBehaviour
         valueText.color = notchTextColor;
         valueText.raycastTarget = false;
         valueText.fontStyle = FontStyles.Bold;
+        ApplyShadowSettings(valueText);
         if (fontAsset != null)
         {
             valueText.font = fontAsset;
@@ -312,6 +334,7 @@ public class PowerDisplayBuilder : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void UpdateRuntimeDisplay()
     {
+        train = CabReferenceResolver.ResolveTrain(this, train);
         if (train == null)
         {
             return;
@@ -419,6 +442,7 @@ public class PowerDisplayBuilder : MonoBehaviour
             if (fill != null)
             {
                 notchFillObjects[notch] = fill.gameObject;
+                ApplyShadowSettings(fill.GetComponent<Image>());
             }
 
             Transform label = notchRoot.Find(LabelName);
@@ -431,9 +455,15 @@ public class PowerDisplayBuilder : MonoBehaviour
                 if (valueText != null)
                 {
                     valueText.text = FormatNotchLabel(notch);
+                    ApplyShadowSettings(valueText);
                 }
             }
         }
+    }
+
+    private void ApplyShadowSettings(Graphic graphic)
+    {
+        UIShadowUtility.ApplyShadow(graphic, enableShadow, shadowColor, shadowDistance, shadowUseGraphicAlpha);
     }
 
     /// <summary>
@@ -464,4 +494,17 @@ public class PowerDisplayBuilder : MonoBehaviour
     {
         return $"P{Mathf.Max(0, notch)}";
     }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// 役割: Prefab アセット本体を直接編集しているか判定します。
+    /// </summary>
+    /// <param name="root">root を指定します。</param>
+    /// <returns>処理結果を返します。</returns>
+    private bool IsPrefabAssetContext(RectTransform root)
+    {
+        return UnityEditor.EditorUtility.IsPersistent(this) ||
+            (root != null && UnityEditor.EditorUtility.IsPersistent(root));
+    }
+#endif
 }

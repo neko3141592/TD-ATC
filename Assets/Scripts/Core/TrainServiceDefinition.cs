@@ -30,6 +30,8 @@ public class TrainServiceDefinition : ScriptableObject
     // serviceName はエディタ設定や将来の HUD / セッション画面で使う人間向けの表示名です。
     public string serviceName;
     public ServiceType serviceType;
+    public float speedLimit;
     // stops は進行方向順に並び、この列車の停車・通過順序の正本として扱います。
     public List<ServiceStop> stops = new List<ServiceStop>();
+
 }

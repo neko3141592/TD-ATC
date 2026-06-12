@@ -8,6 +8,7 @@ public class ATCIndicatorDisplay : MonoBehaviour
     [Header("Indicators")]
     [SerializeField] private IndicatorObjectPair emergencyOperation;
     [SerializeField] private IndicatorObjectPair atc;
+    [SerializeField] private IndicatorObjectPair atcCutOut;
     [SerializeField] private IndicatorObjectPair digitalAtc;
     [SerializeField] private IndicatorObjectPair atcServiceBrake;
     [SerializeField] private IndicatorObjectPair atcEmergencyBrake;
@@ -16,6 +17,8 @@ public class ATCIndicatorDisplay : MonoBehaviour
     [SerializeField, Min(0f)] private float updateLagSeconds = 0f;
 
     private float nextReadTime = 0f;
+    private bool displayedEmergencyOperationOn = false;
+    private bool displayedAtcCutOutOn = false;
     private bool displayedEmergencyBrakeOn = false;
     private bool displayedServiceBrakeOn = false;
 
@@ -71,10 +74,7 @@ public class ATCIndicatorDisplay : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void ResolveReferences()
     {
-        if (atcController == null)
-        {
-            atcController = GetComponentInParent<ATCController>();
-        }
+        atcController = CabReferenceResolver.ResolveTrainComponent(this, null, atcController);
     }
 
     /// <summary>
@@ -98,6 +98,8 @@ public class ATCIndicatorDisplay : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void ReadCurrentBrakeState()
     {
+        displayedEmergencyOperationOn = atcController != null && atcController.IsEmergencyOperationActive;
+        displayedAtcCutOutOn = atcController != null && atcController.IsAtcCutOutActive;
         displayedEmergencyBrakeOn = atcController != null && atcController.IsAtcEmergencyBrakeActive;
         displayedServiceBrakeOn = atcController != null && atcController.IsAtcServiceBrakeActive;
     }
@@ -108,12 +110,24 @@ public class ATCIndicatorDisplay : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void ApplyIndicators()
     {
-        emergencyOperation.SetLit(false);
-        atc.SetLit(false);
-        digitalAtc.SetLit(true);
+        if (displayedAtcCutOutOn)
+        {
+            emergencyOperation.SetLit(false);
+            atc.SetLit(false);
+            atcCutOut.SetLit(true);
+            digitalAtc.SetLit(false);
+            atcServiceBrake.SetLit(false);
+            atcEmergencyBrake.SetLit(false);
+            return;
+        }
 
-        atcServiceBrake.SetLit(displayedServiceBrakeOn || displayedEmergencyBrakeOn);
-        atcEmergencyBrake.SetLit(displayedEmergencyBrakeOn);
+        emergencyOperation.SetLit(displayedEmergencyOperationOn);
+        atc.SetLit(false);
+        atcCutOut.SetLit(false);
+        digitalAtc.SetLit(!displayedEmergencyOperationOn);
+
+        atcServiceBrake.SetLit(!displayedEmergencyOperationOn && (displayedServiceBrakeOn || displayedEmergencyBrakeOn));
+        atcEmergencyBrake.SetLit(!displayedEmergencyOperationOn && displayedEmergencyBrakeOn);
     }
 
     /// <summary>

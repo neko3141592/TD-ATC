@@ -13,135 +13,218 @@ MonoBehaviour:
   m_Name: TrackGraph_DoubleStraight1km
   m_EditorClassIdentifier: Assembly-CSharp::TrackGraph
   nodes:
-  - nodeId: DS1_Main_Start
+  - nodeId: CurveTest_N000
     trackNodeType: 0
     junctionId: 
     worldPosition: {x: 0, y: 0, z: 0}
     worldRotation: {x: 0, y: 0, z: 0, w: 1}
-    outgoingEdgeIds:
+    connectedEdgeIds:
     - E001
-  - nodeId: DS1_Main_Mid
+  - nodeId: CurveTest_N001
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 0, y: 0, z: 1000}
+    worldPosition: {x: 0, y: 0, z: 1200}
     worldRotation: {x: 0, y: 0, z: 0, w: 1}
-    outgoingEdgeIds:
-    - E003
-  - nodeId: DS1_Main_End
-    trackNodeType: 0
-    junctionId: 
-    worldPosition: {x: 0, y: 0, z: 2000}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
-    outgoingEdgeIds: []
-  - nodeId: DS1_Parallel_Start
-    trackNodeType: 0
-    junctionId: 
-    worldPosition: {x: 3.8, y: 0, z: 0}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
-    outgoingEdgeIds:
+    connectedEdgeIds:
+    - E001
     - E002
-  - nodeId: DS1_Parallel_Mid
+  - nodeId: CurveTest_N002
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 3.8, y: 0, z: 1000}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
-    outgoingEdgeIds:
+    worldPosition: {x: 297.76755, y: 0, z: 1646.8657}
+    worldRotation: {x: 0, y: 0.5542819, z: 0, w: 0.832329}
+    connectedEdgeIds:
+    - E002
+    - E003
+  - nodeId: CurveTest_N003
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 1958.6091, y: 0, z: 2340.8435}
+    worldRotation: {x: 0, y: 0.5542819, z: 0, w: 0.832329}
+    connectedEdgeIds:
+    - E003
     - E004
-  - nodeId: DS1_Parallel_End
+  - nodeId: CurveTest_N004
     trackNodeType: 0
     junctionId: 
-    worldPosition: {x: 3.8, y: 0, z: 2000}
-    worldRotation: {x: 0, y: 0, z: 0, w: 1}
-    outgoingEdgeIds: []
+    worldPosition: {x: 2185.7373, y: 0, z: 2679.1003}
+    worldRotation: {x: 0, y: 0.004166625, z: 0, w: 0.99999124}
+    connectedEdgeIds:
+    - E004
+    - E005
+  - nodeId: CurveTest_N005
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 2198.237, y: 0, z: 4179.0483}
+    worldRotation: {x: 0, y: 0.004166625, z: 0, w: 0.99999124}
+    connectedEdgeIds:
+    - E005
+    - E006
+  - nodeId: CurveTest_N006
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 2410.2783, y: 0, z: 4733.074}
+    worldRotation: {x: 0, y: 0.35349944, z: 0, w: 0.9354347}
+    connectedEdgeIds:
+    - E006
+    - E007
+  - nodeId: CurveTest_N007
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 3865.251, y: 0, z: 6383.242}
+    worldRotation: {x: 0, y: 0.35349944, z: 0, w: 0.9354347}
+    connectedEdgeIds:
+    - E007
+  - nodeId: CurveTest_N008
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 4392.884, y: 0, z: 6705.404}
+    worldRotation: {x: 0, y: 0.61415076, z: 0, w: 0.7891886}
+    connectedEdgeIds:
+    - E008
+  - nodeId: CurveTest_N009
+    trackNodeType: 0
+    junctionId: 
+    worldPosition: {x: 5410.7134, y: 0, z: 6963.323}
+    worldRotation: {x: 0, y: 0.61415076, z: 0, w: 0.7891886}
+    connectedEdgeIds:
+    - E009
   edges:
   - edgeId: E001
-    fromNodeId: DS1_Main_Start
-    toNodeId: DS1_Main_Mid
-    blockId: B001
-    lengthM: 1000
-    speedLimitMS: 27.77778
+    physicalId: 
+    nodeAId: CurveTest_N000
+    nodeBId: CurveTest_N001
+    geometryId: E001_Geo
+    blockSections:
+    - blockId: E001_B000
+      startDistanceM: 0
+      endDistanceM: 1200
+    lengthM: 1200
+    speedLimitMS: 30.555557
     gaugeM: 1.067
-    horizontalSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      trackCurveType: 0
-      radiusM: 0
-    verticalSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      startGradientPermille: 0
-      endGradientPermille: 0
-    cantSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      startCantMm: 0
-      endCantMm: 0
-  - edgeId: E003
-    fromNodeId: DS1_Main_Mid
-    toNodeId: DS1_Main_End
-    blockId: B003
-    lengthM: 1000
-    speedLimitMS: 27.77778
-    gaugeM: 1.067
-    horizontalSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      trackCurveType: 0
-      radiusM: 0
-    verticalSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      startGradientPermille: 0
-      endGradientPermille: 0
-    cantSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      startCantMm: 0
-      endCantMm: 0
+    horizontalSegments: []
+    verticalSegments: []
+    cantSegments: []
   - edgeId: E002
-    fromNodeId: DS1_Parallel_Start
-    toNodeId: DS1_Parallel_Mid
-    blockId: B002
-    lengthM: 1000
-    speedLimitMS: 27.77778
+    physicalId: 
+    nodeAId: CurveTest_N001
+    nodeBId: CurveTest_N002
+    geometryId: E002_Geo
+    blockSections:
+    - blockId: E002_B000
+      startDistanceM: 0
+      endDistanceM: 580
+    lengthM: 580
+    speedLimitMS: 20.833334
     gaugeM: 1.067
-    horizontalSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      trackCurveType: 0
-      radiusM: 0
-    verticalSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      startGradientPermille: 0
-      endGradientPermille: 0
-    cantSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      startCantMm: 0
-      endCantMm: 0
+    horizontalSegments: []
+    verticalSegments: []
+    cantSegments: []
+  - edgeId: E003
+    physicalId: 
+    nodeAId: CurveTest_N002
+    nodeBId: CurveTest_N003
+    geometryId: E003_Geo
+    blockSections:
+    - blockId: E003_B000
+      startDistanceM: 0
+      endDistanceM: 1800
+    lengthM: 1800
+    speedLimitMS: 30.555557
+    gaugeM: 1.067
+    horizontalSegments: []
+    verticalSegments: []
+    cantSegments: []
   - edgeId: E004
-    fromNodeId: DS1_Parallel_Mid
-    toNodeId: DS1_Parallel_End
-    blockId: B004
-    lengthM: 1000
-    speedLimitMS: 27.77778
+    physicalId: 
+    nodeAId: CurveTest_N003
+    nodeBId: CurveTest_N004
+    geometryId: E004_Geo
+    blockSections:
+    - blockId: E004_B000
+      startDistanceM: 0
+      endDistanceM: 440
+    lengthM: 440
+    speedLimitMS: 13.888889
     gaugeM: 1.067
-    horizontalSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      trackCurveType: 0
-      radiusM: 0
-    verticalSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      startGradientPermille: 0
-      endGradientPermille: 0
-    cantSegments:
-    - startDistanceM: 0
-      lengthM: 1000
-      startCantMm: 0
-      endCantMm: 0
+    horizontalSegments: []
+    verticalSegments: []
+    cantSegments: []
+  - edgeId: E005
+    physicalId: 
+    nodeAId: CurveTest_N004
+    nodeBId: CurveTest_N005
+    geometryId: E005_Geo
+    blockSections:
+    - blockId: E005_B000
+      startDistanceM: 0
+      endDistanceM: 1500
+    lengthM: 1500
+    speedLimitMS: 27.777779
+    gaugeM: 1.067
+    horizontalSegments: []
+    verticalSegments: []
+    cantSegments: []
+  - edgeId: E006
+    physicalId: 
+    nodeAId: CurveTest_N005
+    nodeBId: CurveTest_N006
+    geometryId: E006_Geo
+    blockSections:
+    - blockId: E006_B000
+      startDistanceM: 0
+      endDistanceM: 610
+    lengthM: 610
+    speedLimitMS: 30.555557
+    gaugeM: 1.067
+    horizontalSegments: []
+    verticalSegments: []
+    cantSegments: []
+  - edgeId: E007
+    physicalId: 
+    nodeAId: CurveTest_N006
+    nodeBId: CurveTest_N007
+    geometryId: E007_Geo
+    blockSections:
+    - blockId: E007_B000
+      startDistanceM: 0
+      endDistanceM: 2200
+    lengthM: 2200
+    speedLimitMS: 30.555557
+    gaugeM: 1.067
+    horizontalSegments: []
+    verticalSegments: []
+    cantSegments: []
+  - edgeId: E008
+    physicalId: 
+    nodeAId: CurveTest_N007
+    nodeBId: CurveTest_N008
+    geometryId: E008_Geo
+    blockSections:
+    - blockId: E008_B000
+      startDistanceM: 0
+      endDistanceM: 630
+    lengthM: 630
+    speedLimitMS: 26.38889
+    gaugeM: 1.067
+    horizontalSegments: []
+    verticalSegments: []
+    cantSegments: []
+  - edgeId: E009
+    physicalId: 
+    nodeAId: CurveTest_N008
+    nodeBId: CurveTest_N009
+    geometryId: E009_Geo
+    blockSections:
+    - blockId: E009_B000
+      startDistanceM: 0
+      endDistanceM: 1050
+    lengthM: 1050
+    speedLimitMS: 30.555557
+    gaugeM: 1.067
+    horizontalSegments: []
+    verticalSegments: []
+    cantSegments: []
   turnoutStates: []
   stations:
   - stationId: ST_Start
@@ -151,8 +234,203 @@ MonoBehaviour:
     stopMarginM: 5
   - stationId: ST_End
     stationName: End
-    edgeId: E003
-    distanceFromEdgeStart: 950
+    edgeId: E007
+    distanceFromEdgeStart: 2150
     stopMarginM: 5
+  turnoutConnections: []
+  geometries:
+  - geometryId: E001_Geo
+    lengthM: 1200
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1200
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 1200
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1200
+      startCantMm: 0
+      endCantMm: 0
+  - geometryId: E002_Geo
+    lengthM: 580
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 110
+      trackCurveType: 2
+      radiusM: 400
+    - startDistanceM: 110
+      lengthM: 360
+      trackCurveType: 1
+      radiusM: 400
+    - startDistanceM: 470
+      lengthM: 110
+      trackCurveType: 3
+      radiusM: 400
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 580
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 580
+      startCantMm: 0
+      endCantMm: 0
+  - geometryId: E003_Geo
+    lengthM: 1800
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1800
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 1800
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1800
+      startCantMm: 0
+      endCantMm: 0
+  - geometryId: E004_Geo
+    lengthM: 440
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 90
+      trackCurveType: 2
+      radiusM: -300
+    - startDistanceM: 90
+      lengthM: 260
+      trackCurveType: 1
+      radiusM: -300
+    - startDistanceM: 350
+      lengthM: 90
+      trackCurveType: 3
+      radiusM: -300
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 440
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 440
+      startCantMm: 0
+      endCantMm: 0
+  - geometryId: E005_Geo
+    lengthM: 1500
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1500
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 1500
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1500
+      startCantMm: 0
+      endCantMm: 0
+  - geometryId: E006_Geo
+    lengthM: 610
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 110
+      trackCurveType: 2
+      radiusM: 700
+    - startDistanceM: 110
+      lengthM: 390
+      trackCurveType: 1
+      radiusM: 700
+    - startDistanceM: 500
+      lengthM: 110
+      trackCurveType: 3
+      radiusM: 700
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 610
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 610
+      startCantMm: 0
+      endCantMm: 0
+  - geometryId: E007_Geo
+    lengthM: 2200
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 2200
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 2200
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 2200
+      startCantMm: 0
+      endCantMm: 0
+  - geometryId: E008_Geo
+    lengthM: 630
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 90
+      trackCurveType: 2
+      radiusM: 900
+    - startDistanceM: 90
+      lengthM: 450
+      trackCurveType: 1
+      radiusM: 900
+    - startDistanceM: 540
+      lengthM: 90
+      trackCurveType: 3
+      radiusM: 900
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 630
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 630
+      startCantMm: 0
+      endCantMm: 0
+  - geometryId: E009_Geo
+    lengthM: 1050
+    gaugeM: 1.067
+    horizontalSegments:
+    - startDistanceM: 0
+      lengthM: 1050
+      trackCurveType: 0
+      radiusM: 0
+    verticalSegments:
+    - startDistanceM: 0
+      lengthM: 1050
+      startGradientPermille: 0
+      endGradientPermille: 0
+    cantSegments:
+    - startDistanceM: 0
+      lengthM: 1050
+      startCantMm: 0
+      endCantMm: 0
   nodeMergeDistanceM: 0.05
-  generateReverseEdge: 0

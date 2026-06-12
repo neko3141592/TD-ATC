@@ -2,6 +2,18 @@ using UnityEngine;
 
 public partial class TrainController
 {
+    private enum AutomaticNotchTarget
+    {
+        None,
+        Neutral,
+        MaxServiceBrake
+    }
+
+    [SerializeField, Min(0.01f)] private float automaticNotchStepIntervalS = 0.08f;
+
+    private AutomaticNotchTarget automaticNotchTarget = AutomaticNotchTarget.None;
+    private float nextAutomaticNotchStepTime;
+
     /// <summary>
     /// 役割: HandleInput の処理を入力や状態を処理します。
     /// </summary>
@@ -23,30 +35,133 @@ public partial class TrainController
         int brakeNotch = notchManager.ManualBrakeNotch;
         int emergencyBrakeNotch = EmergencyBrakeNotch;
 
+        HandleReverserInput(powerNotch);
+
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
+            StopAutomaticNotchMove();
             if (powerNotch > 0) powerNotch--;
             else if (brakeNotch < emergencyBrakeNotch) brakeNotch++;
         }
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            while (powerNotch > 0) powerNotch--;
+            StartAutomaticNotchMove(AutomaticNotchTarget.Neutral);
         }
 
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            powerNotch = 0;
-            brakeNotch = Mathf.Max(0, emergencyBrakeNotch - 1);
+            StartAutomaticNotchMove(AutomaticNotchTarget.MaxServiceBrake);
         }
 
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
+            StopAutomaticNotchMove();
             if (brakeNotch > 0) brakeNotch--;
             else if (powerNotch < trainSpec.maxPowerNotch) powerNotch++;
         }
 
+        ApplyAutomaticNotchMove(ref powerNotch, ref brakeNotch, emergencyBrakeNotch);
         notchManager.SetManualNotches(powerNotch, brakeNotch);
+    }
+
+    private void StartAutomaticNotchMove(AutomaticNotchTarget target)
+    {
+        automaticNotchTarget = target;
+        nextAutomaticNotchStepTime = 0f;
+    }
+
+    private void StopAutomaticNotchMove()
+    {
+        automaticNotchTarget = AutomaticNotchTarget.None;
+    }
+
+    private void ApplyAutomaticNotchMove(ref int powerNotch, ref int brakeNotch, int emergencyBrakeNotch)
+    {
+        if (automaticNotchTarget == AutomaticNotchTarget.None || Time.time < nextAutomaticNotchStepTime)
+        {
+            return;
+        }
+
+        bool moved = false;
+        switch (automaticNotchTarget)
+        {
+            case AutomaticNotchTarget.Neutral:
+                moved = StepTowardNeutral(ref powerNotch, ref brakeNotch);
+                break;
+            case AutomaticNotchTarget.MaxServiceBrake:
+                moved = StepTowardMaxServiceBrake(ref powerNotch, ref brakeNotch, emergencyBrakeNotch);
+                break;
+        }
+
+        if (!moved)
+        {
+            StopAutomaticNotchMove();
+            return;
+        }
+
+        nextAutomaticNotchStepTime = Time.time + Mathf.Max(0.01f, automaticNotchStepIntervalS);
+    }
+
+    private static bool StepTowardNeutral(ref int powerNotch, ref int brakeNotch)
+    {
+        if (brakeNotch > 0)
+        {
+            brakeNotch--;
+            return true;
+        }
+
+        if (powerNotch > 0)
+        {
+            powerNotch--;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool StepTowardMaxServiceBrake(ref int powerNotch, ref int brakeNotch, int emergencyBrakeNotch)
+    {
+        if (powerNotch > 0)
+        {
+            powerNotch--;
+            return true;
+        }
+
+        int maxServiceBrakeNotch = Mathf.Max(0, emergencyBrakeNotch - 1);
+        if (brakeNotch < maxServiceBrakeNotch)
+        {
+            brakeNotch++;
+            return true;
+        }
+
+        return false;
+    }
+
+    private void HandleReverserInput(int powerNotch)
+    {
+        if (!CanChangeReverser(powerNotch))
+        {
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            reverserPosition = ReverserPosition.Forward;
+        }
+        else if (Input.GetKeyDown(KeyCode.N))
+        {
+            reverserPosition = ReverserPosition.Neutral;
+        }
+        else if (Input.GetKeyDown(KeyCode.R))
+        {
+            reverserPosition = ReverserPosition.Reverse;
+        }
+    }
+
+    private bool CanChangeReverser(int powerNotch)
+    {
+        return powerNotch <= 0 && speedMS <= 0.05f;
     }
 
     /// <summary>
@@ -142,7 +257,13 @@ public partial class TrainController
     private float GetExternalResistanceForceN(float massKg)
     {
         float runningResistanceForceN = ExternalForceCalculator.GetRunningResistanceForceN(trainSpec, speedMS);
-        currentGradeResistanceForceN = ExternalForceCalculator.GetGradeResistanceForceN(massKg, GetCurrentGradientPermilleForPhysics());
+        float directionalGradientPermille = GetCurrentGradientPermilleForPhysics();
+        if (GetMovementDirection() == EdgeTravelDirection.BtoA)
+        {
+            directionalGradientPermille = -directionalGradientPermille;
+        }
+
+        currentGradeResistanceForceN = ExternalForceCalculator.GetGradeResistanceForceN(massKg, directionalGradientPermille);
 
         return runningResistanceForceN + currentGradeResistanceForceN;
     }
@@ -167,6 +288,16 @@ public partial class TrainController
     /// <returns>計算または参照した値を返します。</returns>
     private float GetTractionForceN()
     {
+        if (reverserPosition == ReverserPosition.Neutral)
+        {
+            if (tractionSystem != null)
+            {
+                tractionSystem.ClearTractionOutputs();
+            }
+
+            return 0f;
+        }
+
         if (vvvfControllers == null || vvvfControllers.Length == 0)
         {
             if (tractionSystem != null)
@@ -208,12 +339,21 @@ public partial class TrainController
     {
         currentAccelerationMS2 = acceleration;
         speedMS += acceleration * Time.deltaTime;
-        speedMS = Mathf.Clamp(speedMS, 0f, trainSpec.maxSpeedMS);
+        speedMS = Mathf.Max(0f, speedMS);
 
         // 速度更新後の値で距離を進めることで、停止直前の負速度混入を避ける。
         float deltaDistanceM = speedMS * Time.deltaTime;
         distance += deltaDistanceM;
-        distanceOnEdgeM += deltaDistanceM;
+
+        if (GetMovementDirection() == EdgeTravelDirection.AtoB)
+        {
+            distanceOnEdgeM += deltaDistanceM;
+        }
+        else
+        {
+            distanceOnEdgeM -= deltaDistanceM;
+        }
+        
         AdvanceEdgeTransitionIfNeeded();
     }
 }

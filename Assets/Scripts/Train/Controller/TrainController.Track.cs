@@ -3,9 +3,8 @@ using UnityEngine;
 public partial class TrainController
 {
     /// <summary>
-    /// 役割: MoveTrain の処理を移動処理を行います。
+    /// 現在の線路上座標から先頭車の姿勢を解決し、編成各車の線路上位置も更新します。
     /// </summary>
-    /// <remarks>返り値はありません。</remarks>
     void MoveTrain()
     {
         SyncCarTrackStatesWithConsist();
@@ -19,16 +18,12 @@ public partial class TrainController
         UpdateCurrentTrackProfileStatus();
         ApplyHeadPose(pos, tan, rot);
 
-        float requiredHistoryLengthM = GetRequiredHistoryLengthM();
-        EnsureActiveEdgeHistory(requiredHistoryLengthM);
-        TrimActiveEdgeHistory(requiredHistoryLengthM);
         UpdateCarTrackStates();
     }
 
     /// <summary>
-    /// 役割: AdvanceEdgeTransitionIfNeeded の処理を進めます。
+    /// edge 端を越えたぶんの距離を、接続先 edge へ繰り越します。
     /// </summary>
-    /// <remarks>返り値はありません。</remarks>
     private void AdvanceEdgeTransitionIfNeeded()
     {
         if (trackGraph == null || string.IsNullOrEmpty(currentEdgeId))
@@ -50,29 +45,31 @@ public partial class TrainController
             }
 
             float edgeLengthM = Mathf.Max(0f, currentEdge.lengthM);
-            if (distanceOnEdgeM <= edgeLengthM)
+            EdgeTravelDirection movementDirection = GetMovementDirection();
+            if (!TrackGraphUndirectedHelpers.HasReachedExit(currentEdge, distanceOnEdgeM, movementDirection))
             {
                 break;
             }
 
-            // 現エッジを超過した分を次エッジへ繰り越す。
-            float remainDistanceM = distanceOnEdgeM - edgeLengthM;
-            string nextEdgeId = trackGraph.ResolveNextEdgeId(currentEdge.toNodeId, currentEdgeId);
+            string exitNodeId = TrackGraphUndirectedHelpers.GetExitNodeId(currentEdge, movementDirection);
+            float remainDistanceM = TrackGraphUndirectedHelpers.GetOvershootDistance(
+                currentEdge,
+                distanceOnEdgeM,
+                movementDirection
+            );
+
+            string nextEdgeId = TrackGraphUndirectedHelpers.ResolveConnectedEdge(trackGraph, exitNodeId, currentEdgeId);
 
             if (string.IsNullOrEmpty(nextEdgeId))
             {
-                distanceOnEdgeM = edgeLengthM;
-                speedMS = 0f;
-                currentAccelerationMS2 = 0f;
+                StopAtCurrentEdgeExit(currentEdge, movementDirection);
                 break;
             }
 
             TrackEdge newEdge = trackGraph.FindEdge(nextEdgeId);
             if (newEdge == null)
             {
-                distanceOnEdgeM = edgeLengthM;
-                speedMS = 0f;
-                currentAccelerationMS2 = 0f;
+                StopAtCurrentEdgeExit(currentEdge, movementDirection);
                 Debug.LogWarning(
                     $"{nameof(TrainController)} on {name}: resolved next edge '{nextEdgeId}' was not found. Stopping at end of edge '{currentEdgeId}'.",
                     this
@@ -81,7 +78,16 @@ public partial class TrainController
             }
 
             currentEdgeId = nextEdgeId;
-            distanceOnEdgeM = remainDistanceM;
+            EdgeTravelDirection nextMovementDirection = TrackGraphUndirectedHelpers.GetTravelDirectionFromNode(newEdge, exitNodeId);
+            CurrentDirection = reverserPosition == ReverserPosition.Reverse
+                ? TrackGraphUndirectedHelpers.GetOppositeDirection(nextMovementDirection)
+                : nextMovementDirection;
+
+            float entryDistanceM = TrackGraphUndirectedHelpers.GetEntryDistanceOnEdge(newEdge, exitNodeId);
+            distanceOnEdgeM = nextMovementDirection == EdgeTravelDirection.AtoB
+                ? entryDistanceM + remainDistanceM
+                : entryDistanceM - remainDistanceM;
+
             SetCurrentActiveEdge(newEdge);
         }
 
@@ -91,8 +97,22 @@ public partial class TrainController
         }
     }
 
+    private void StopAtCurrentEdgeExit(TrackEdge edge, EdgeTravelDirection movementDirection)
+    {
+        distanceOnEdgeM = TrackGraphUndirectedHelpers.ClampDistanceAtExit(edge, movementDirection);
+        speedMS = 0f;
+        currentAccelerationMS2 = 0f;
+    }
+
+    private EdgeTravelDirection GetMovementDirection()
+    {
+        return reverserPosition == ReverserPosition.Reverse
+            ? TrackGraphUndirectedHelpers.GetOppositeDirection(CurrentDirection)
+            : CurrentDirection;
+    }
+
     /// <summary>
-    /// 役割: TryGetPositionBehind の処理を取得を試みます。
+    /// 先頭位置から指定距離だけ後方の線路上位置を求めます。
     /// </summary>
     /// <param name="offsetM">offsetM を指定します。</param>
     /// <param name="edgeId">出力結果を受け取る edgeId です。</param>
@@ -103,36 +123,40 @@ public partial class TrainController
         edgeId = currentEdgeId;
         distOnEdge = distanceOnEdgeM;
 
-        if (activeEdges.Count == 0)
+        if (trackGraph == null || string.IsNullOrEmpty(currentEdgeId))
         {
             return false;
         }
 
-        float currentOffset = offsetM;
-
-        for (int i = 0; i < activeEdges.Count; i++)
+        float safeOffsetM = Mathf.Max(0f, offsetM);
+        if (safeOffsetM <= Mathf.Epsilon)
         {
-            TrackEdge edge = activeEdges[i];
-            if (edge == null)
-            {
-                continue;
-            }
-
-            // i=0 は「先頭の現在位置まで」しか巻き戻れないので distanceOnEdgeM を使う。
-            float currentEdgeLength = (i == 0) ? distanceOnEdgeM : edge.lengthM;
-
-            if (currentOffset <= currentEdgeLength)
-            {
-                edgeId = edge.edgeId;
-                distOnEdge = currentEdgeLength - currentOffset;
-                return true;
-            }
-
-            currentOffset -= currentEdgeLength;
+            return true;
         }
 
-        edgeId = activeEdges[activeEdges.Count - 1].edgeId;
-        distOnEdge = 0f;
+        if (!TrackRouteTracer.TryTraceBehind(
+                trackGraph,
+                currentEdgeId,
+                distanceOnEdgeM,
+                safeOffsetM,
+                positionBehindSegments,
+                CurrentDirection
+            ))
+        {
+            return false;
+        }
+
+        if (positionBehindSegments.Count == 0)
+        {
+            return true;
+        }
+
+        TrackTraceSegment lastSegment = positionBehindSegments[positionBehindSegments.Count - 1];
+        edgeId = lastSegment.edgeId;
+        distOnEdge = lastSegment.direction == EdgeTravelDirection.AtoB
+            ? lastSegment.endDistanceOnEdgeM
+            : lastSegment.startDistanceOnEdgeM;
+
         return true;
     }
 
@@ -181,9 +205,8 @@ public partial class TrainController
     }
 
     /// <summary>
-    /// 役割: EnsureRuntimeResolver の処理を必要な状態を保証します。
+    /// 線路形状を解決する runtime resolver を遅延生成します。
     /// </summary>
-    /// <remarks>返り値はありません。</remarks>
     private void EnsureRuntimeResolver()
     {
         if (resolver == null)
@@ -193,15 +216,17 @@ public partial class TrainController
     }
 
     /// <summary>
-    /// 役割: InitializeTrackState の処理を初期化します。
+    /// 起動時の edge・距離・方向を整合させます。
+    /// startNodeId が指定されている場合は、その node から currentEdgeId へ入ったものとして初期化します。
     /// </summary>
-    /// <remarks>返り値はありません。</remarks>
     private void InitializeTrackState()
     {
+        bool shouldInitializeFromNode = !string.IsNullOrEmpty(startNodeId);
         if (trackGraph != null && string.IsNullOrEmpty(currentEdgeId) && trackGraph.edges != null && trackGraph.edges.Count > 0)
         {
             currentEdgeId = trackGraph.edges[0].edgeId;
             distanceOnEdgeM = 0f;
+            shouldInitializeFromNode = true;
         }
 
         activeEdges.Clear();
@@ -214,12 +239,38 @@ public partial class TrainController
         TrackEdge initialEdge = trackGraph.FindEdge(currentEdgeId);
         if (initialEdge != null)
         {
+            if (shouldInitializeFromNode)
+            {
+                InitializeDirectionFromStartNode(initialEdge);
+            }
+
             activeEdges.Add(initialEdge);
         }
     }
 
+    private void InitializeDirectionFromStartNode(TrackEdge initialEdge)
+    {
+        string entryNodeId = startNodeId;
+        if (string.IsNullOrEmpty(entryNodeId))
+        {
+            entryNodeId = TrackGraphUndirectedHelpers.GetNodeAId(initialEdge);
+        }
+
+        if (!TrackGraphUndirectedHelpers.IsEdgeConnectedToNode(initialEdge, entryNodeId))
+        {
+            Debug.LogWarning(
+                $"{nameof(TrainController)} on {name}: startNodeId '{entryNodeId}' is not connected to start edge '{initialEdge.edgeId}'. Falling back to nodeA.",
+                this
+            );
+            entryNodeId = TrackGraphUndirectedHelpers.GetNodeAId(initialEdge);
+        }
+
+        CurrentDirection = TrackGraphUndirectedHelpers.GetTravelDirectionFromNode(initialEdge, entryNodeId);
+        distanceOnEdgeM = TrackGraphUndirectedHelpers.GetEntryDistanceOnEdge(initialEdge, entryNodeId);
+    }
+
     /// <summary>
-    /// 役割: TryResolveHeadPose の処理を行います。
+    /// 現在 edge と edge 内距離から、先頭車のワールド姿勢を解決します。
     /// </summary>
     /// <param name="pos">出力結果を受け取る pos です。</param>
     /// <param name="tan">出力結果を受け取る tan です。</param>
@@ -255,7 +306,7 @@ public partial class TrainController
     }
 
     /// <summary>
-    /// 役割: ApplyHeadPose の処理を適用します。
+    /// 解決済みのワールド姿勢を列車 GameObject に反映します。
     /// </summary>
     /// <param name="pos">pos を指定します。</param>
     /// <param name="tan">tan を指定します。</param>
@@ -304,10 +355,8 @@ public partial class TrainController
     }
 
     /// <summary>
-    /// 役割: EnsureActiveEdgeHistory の処理を必要な状態を保証します。
+    /// 編成後端までの描画・在線判定に必要な過去 edge を保持します。
     /// </summary>
-    /// <param name="requiredOffsetM">requiredOffsetM を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
     private void EnsureActiveEdgeHistory(float requiredOffsetM)
     {
         if (trackGraph == null || activeEdges.Count == 0 || requiredOffsetM <= 0f)
@@ -323,12 +372,13 @@ public partial class TrainController
             guard++;
 
             TrackEdge oldestTrackedEdge = activeEdges[activeEdges.Count - 1];
-            if (oldestTrackedEdge == null || string.IsNullOrEmpty(oldestTrackedEdge.fromNodeId))
+            string backNodeId = GetBackNodeId(oldestTrackedEdge);
+            if (oldestTrackedEdge == null || string.IsNullOrEmpty(backNodeId))
             {
                 break;
             }
 
-            string previousEdgeId = trackGraph.ResolvePreviousEdgeId(oldestTrackedEdge.fromNodeId, oldestTrackedEdge.edgeId);
+            string previousEdgeId = trackGraph.ResolvePreviousEdgeId(backNodeId, oldestTrackedEdge.edgeId);
             if (string.IsNullOrEmpty(previousEdgeId))
             {
                 break;
@@ -356,8 +406,20 @@ public partial class TrainController
         }
     }
 
+    private string GetBackNodeId(TrackEdge edge)
+    {
+        if (edge == null)
+        {
+            return null;
+        }
+
+        return CurrentDirection == EdgeTravelDirection.AtoB
+            ? TrackGraphUndirectedHelpers.GetNodeAId(edge)
+            : TrackGraphUndirectedHelpers.GetNodeBId(edge);
+    }
+
     /// <summary>
-    /// 役割: SetCurrentActiveEdge の処理を設定します。
+    /// 先頭が入った edge を履歴の先頭に置きます。
     /// </summary>
     /// <param name="currentEdge">currentEdge を指定します。</param>
     /// <remarks>返り値はありません。</remarks>

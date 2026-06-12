@@ -61,6 +61,8 @@ public class SpeedometerUI : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void OnEnable()
     {
+        ResolveReferences();
+
         displayedSpeedKmH = 0f;
         sampledSpeedKmH = 0f;
         hasSampledSpeed = false;
@@ -78,22 +80,25 @@ public class SpeedometerUI : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     void Update()
     {
+        ResolveReferences();
+
         if (train != null)
         {
             SampleSpeedIfNeeded();
-            float targetSpeedKmH = Mathf.Clamp(sampledSpeedKmH, minSpeedKmH, maxSpeedKmH);
+            float targetSpeedKmH = sampledSpeedKmH;
             float lerpFactor = 1f - Mathf.Exp(-Mathf.Max(0f, smoothing) * Time.deltaTime);
             displayedSpeedKmH = Mathf.Lerp(displayedSpeedKmH, targetSpeedKmH, lerpFactor);
 
             float needleStep = Mathf.Max(0.1f, needleStepKmH);
             float quantizedNeedleSpeedKmH = Mathf.Round(displayedSpeedKmH / needleStep) * needleStep;
-            float t = Mathf.InverseLerp(minSpeedKmH, maxSpeedKmH, quantizedNeedleSpeedKmH);
+            float speedRangeKmH = Mathf.Max(0.001f, maxSpeedKmH - minSpeedKmH);
+            float t = (quantizedNeedleSpeedKmH - minSpeedKmH) / speedRangeKmH;
             if (invertDirection)
             {
                 t = 1f - t;
             }
 
-            float needleAngle = Mathf.Lerp(minNeedleAngle, maxNeedleAngle, t) + needleAngleOffset;
+            float needleAngle = Mathf.LerpUnclamped(minNeedleAngle, maxNeedleAngle, t) + needleAngleOffset;
 
             if (needle != null)
             {
@@ -108,6 +113,12 @@ public class SpeedometerUI : MonoBehaviour
         }
 
         UpdateAtcTriangle();
+    }
+
+    private void ResolveReferences()
+    {
+        train = CabReferenceResolver.ResolveTrain(this, train);
+        atcController = CabReferenceResolver.ResolveTrainComponent(this, train, atcController);
     }
 
     /// <summary>
@@ -239,14 +250,16 @@ public class SpeedometerUI : MonoBehaviour
         bool hasLimit = atcController != null &&
             !string.IsNullOrEmpty(atcController.CurrentPatternSourceLabel) &&
             atcController.CurrentPatternSourceLabel != "--";
+        bool isAtcCutOut = atcController != null && atcController.IsAtcCutOutActive;
 
         if (hideAtcTriangleWhenNoLimit)
         {
-            SetAtcMarkersActive(hasLimit);
+            SetAtcMarkersActive(hasLimit || isAtcCutOut);
         }
 
         if (!hasLimit)
         {
+            SetAtcMarkersInactive();
             return;
         }
 
@@ -290,10 +303,11 @@ public class SpeedometerUI : MonoBehaviour
         bool hasLimit = atcController != null &&
             !string.IsNullOrEmpty(atcController.CurrentPatternSourceLabel) &&
             atcController.CurrentPatternSourceLabel != "--";
+        bool isAtcCutOut = atcController != null && atcController.IsAtcCutOutActive;
 
         if (hideAtcTriangleWhenNoLimit)
         {
-            atcTriangle.gameObject.SetActive(hasLimit);
+            atcTriangle.gameObject.SetActive(hasLimit || isAtcCutOut);
         }
 
         if (!hasLimit)
@@ -303,6 +317,18 @@ public class SpeedometerUI : MonoBehaviour
 
         float clampedLimitKmH = RoundToAtcMarkerStep(patternAllowSpeedKmH);
         atcTriangle.localEulerAngles = GetSpeedMarkerEuler(clampedLimitKmH);
+    }
+
+    private void SetAtcMarkersInactive()
+    {
+        for (int i = 0; i < atcMarkers.Length; i++)
+        {
+            AtcMarker marker = atcMarkers[i];
+            if (marker.image != null)
+            {
+                marker.image.sprite = GetInactiveAtcMarkerSprite(marker.image);
+            }
+        }
     }
 
     private void SetAtcMarkersActive(bool isActive)

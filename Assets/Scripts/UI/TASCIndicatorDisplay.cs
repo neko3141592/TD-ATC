@@ -61,10 +61,7 @@ public class TASCIndicatorDisplay : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void ResolveReferences()
     {
-        if (tascController == null)
-        {
-            tascController = GetComponentInParent<TASCController>();
-        }
+        tascController = CabReferenceResolver.ResolveTrainComponent(this, null, tascController);
     }
 
     /// <summary>

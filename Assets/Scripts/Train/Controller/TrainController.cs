@@ -3,15 +3,22 @@ using UnityEngine;
 
 public partial class TrainController : MonoBehaviour
 {
+    // ref
     [SerializeField] private TrainSpec trainSpec;
     [SerializeField] private NotchManager notchManager;
     [SerializeField] private BrakeSystemController brakeSystem;
     [SerializeField] private TractionSystemController tractionSystem;
     [SerializeField] private VVVFController[] vvvfControllers;
     [SerializeField] private TrackGraph trackGraph;
+
+    // train info
     [SerializeField] private bool acceptPlayerInput = true;
     [SerializeField] private string trainId = "PlayerTrain";
     [SerializeField] private string currentEdgeId;
+    [SerializeField] private string startNodeId;
+    [SerializeField] private ReverserPosition reverserPosition = ReverserPosition.Forward;
+
+    // physics
     [SerializeField] private float speedMS = 0f;
     [SerializeField, Min(0f)] private float distanceOnEdgeM = 0f;
     private float distance = 0f;
@@ -22,9 +29,11 @@ public partial class TrainController : MonoBehaviour
     private float currentGradeResistanceForceN = 0f;
     private float currentTractionForceN = 0f;
 
+    // graph
     private TrackRuntimeResolver resolver;
 
     private readonly List<TrackEdge> activeEdges = new List<TrackEdge>();
+    private readonly List<TrackTraceSegment> positionBehindSegments = new List<TrackTraceSegment>();
 
     [Header("Consist Configuration")]
     [SerializeField] private ConsistDefinition consistDefinition;
@@ -33,8 +42,28 @@ public partial class TrainController : MonoBehaviour
     [SerializeField]
     private List<CarTrackState> carTrackStates = new List<CarTrackState>();
 
+    // direction
+    public enum CabEnd
+    {
+        Front, Rear
+    }
+
+    public enum ReverserPosition
+    {
+        Reverse = -1,
+        Neutral = 0,
+        Forward = 1
+    }
+
+    
+
     public float SpeedKmH => speedMS * 3.6f;
     public float SpeedMS => speedMS;
+    // CurrentDirection は車両前頭が向いている線路上の基準方向です。
+    // 実際に動く向きは逆転器位置を反映した CurrentMovementDirection を使います。
+    public EdgeTravelDirection CurrentDirection { get; private set; }
+    public EdgeTravelDirection CurrentMovementDirection => GetMovementDirection();
+    public ReverserPosition Reverser => reverserPosition;
     public float DistanceM => distance;
     public string TrainId => string.IsNullOrWhiteSpace(trainId) ? name : trainId;
     public TrackGraph Graph => trackGraph;
@@ -91,22 +120,18 @@ public partial class TrainController : MonoBehaviour
         notchManager.ConfigureLimits(trainSpec.maxPowerNotch, EmergencyBrakeNotch, trainSpec.GetTascBrakeSubstepsPerNotch());
     }
 
-    /// <summary>
-    /// 役割: 毎フレームの更新処理を行います。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
     void Update()
     {
-        // 入力→物理→配置の順序を固定し、1フレーム内の依存関係を明確化する。
+        // 入力、物理、線路上姿勢更新の順に固定する。
+        // ここを崩すと、ノッチ入力や逆転器変更が1フレーム遅れて姿勢計算へ反映される。
         HandleInput();
         ApplyPhysics();
         MoveTrain();
     }
 
     /// <summary>
-    /// 役割: ResolveControllerReferences の処理を解決します。
+    /// 同じ GameObject / 親階層から運転制御に必要な参照を補完します。
     /// </summary>
-    /// <remarks>返り値はありません。</remarks>
     private void ResolveControllerReferences()
     {
         if (notchManager == null)

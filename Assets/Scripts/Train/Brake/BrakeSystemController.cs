@@ -1,14 +1,18 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class BrakeSystemController : MonoBehaviour
 {
     [Header("References")]
+    [SerializeField] private TrainController train;
     [SerializeField] private TrainSpec trainSpec;
     [SerializeField] private ConsistDefinition consistDefinition;
 
     private readonly BrakeControlUnit brakeControlUnit = new BrakeControlUnit();
     private readonly AirBrakeUnit airBrakeUnit = new AirBrakeUnit();
+
+    private readonly List<VVVFController> vvvfControllers = new();
 
     private readonly List<CarBrakeState> carBrakeStates = new List<CarBrakeState>();
     public IReadOnlyList<CarBrakeState> CarBrakeStates => carBrakeStates;
@@ -19,6 +23,10 @@ public class BrakeSystemController : MonoBehaviour
     [SerializeField, Min(0f)] private float rollingPreventionEnterSpeedMS = 0.05f;
     [SerializeField, Min(0f)] private float rollingPreventionMinBCPressureKPa = 100f;
     public bool IsRollingPreventionActive => isRollingPreventionActive;
+
+    [Header("Regen Release")]
+    [SerializeField] private bool regenRelease = false;
+    public bool IsRegenReleased => regenRelease;
 
     /// <summary>
     /// 役割: BC圧を決める候補を表します。
@@ -41,6 +49,7 @@ public class BrakeSystemController : MonoBehaviour
             Debug.LogError("TrainSpec is not assigned.", this);
         }
 
+        ResolveVVVFControllers();
         InitializeCarBrakeStates();
     }
 
@@ -52,6 +61,11 @@ public class BrakeSystemController : MonoBehaviour
     {
         rollingPreventionEnterSpeedMS = Mathf.Max(0f, rollingPreventionEnterSpeedMS);
         rollingPreventionMinBCPressureKPa = Mathf.Max(0f, rollingPreventionMinBCPressureKPa);
+        if (train == null)
+        {
+            train = GetComponent<TrainController>();
+        }
+
         InitializeCarBrakeStates();
     }
 
@@ -79,6 +93,7 @@ public class BrakeSystemController : MonoBehaviour
     {
         // エディタ上の編成変更や初期化漏れに備え、件数を毎フレーム同期する
         EnsureCarBrakeStateCount();
+        ResolveVVVFControllers();
 
         if (trainSpec == null)
         {
@@ -113,6 +128,39 @@ public class BrakeSystemController : MonoBehaviour
         ApplyNormalBrake(speedMS, deltaTime, hasBrakeCommand, targetTotalBrakeForceN);
         RefreshOutputsFromStates(CurrentConsistMassKg);
 
+    }
+
+    private void ResolveVVVFControllers()
+    {
+        if (train == null)
+        {
+            train = GetComponent<TrainController>();
+        }
+
+        if (train == null)
+        {
+            train = GetComponentInParent<TrainController>();
+        }
+
+        vvvfControllers.Clear();
+        VVVFController[] controllers = train != null ? train.VVVFControllers : null;
+        if (controllers == null || controllers.Length == 0)
+        {
+            controllers = GetComponentsInChildren<VVVFController>(true);
+        }
+
+        if (controllers == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < controllers.Length; i++)
+        {
+            if (controllers[i] != null)
+            {
+                vvvfControllers.Add(controllers[i]);
+            }
+        }
     }
 
     /// <summary>
@@ -201,6 +249,8 @@ public class BrakeSystemController : MonoBehaviour
     private void ApplyNormalBrake(float speedMS, float deltaTime, bool hasBrakeCommand, float targetTotalBrakeForceN)
     {
         int carCount = carBrakeStates.Count;
+
+        // 最大空制力を求める
         float[] airCapsN = new float[carCount];
         for (int i = 0; i < carCount; i++)
         {
@@ -221,6 +271,76 @@ public class BrakeSystemController : MonoBehaviour
             airCapsN[i] = airBrakeUnit.GetAirBrakeCapForceN(trainSpec, carSpec, speedMS);
         }
 
+        // 最大回生力を求める
+        float[] regenCapsN = new float[carCount];
+
+        foreach (VVVFController vvvf in vvvfControllers)
+        {
+            if (vvvf == null)
+            {
+                continue;
+            }
+
+            if(vvvf.AssignedCarIndex < 0 || vvvf.AssignedCarIndex >= carCount)
+            {
+                continue;
+            }
+
+
+            CarBrakeState state = carBrakeStates[vvvf.AssignedCarIndex];
+            if (state == null)
+            {
+                continue;
+            }
+            
+
+            regenCapsN[vvvf.AssignedCarIndex] = 
+            regenRelease ? 0 : vvvf.GetRegenCapForceN(speedMS);
+        }
+
+        float actualTotalRegenForceN = 0f;
+
+        // 回生目標力
+        float[] targetRegenForceN = brakeControlUnit.AllocateEvenlyWithSaturation(regenCapsN, targetTotalBrakeForceN);
+
+        foreach (VVVFController vvvf in vvvfControllers)
+        {
+            if (vvvf == null)
+            {
+                continue;
+            }
+
+            if(vvvf.AssignedCarIndex < 0 || vvvf.AssignedCarIndex >= carCount)
+            {
+                continue;
+            }
+
+            int carIndex = vvvf.AssignedCarIndex;
+
+
+            if (targetRegenForceN[carIndex] < 0.01f)
+            {
+                continue;
+            }
+
+            CarBrakeState state = carBrakeStates[carIndex];
+            if (state == null)
+            {
+                continue;
+            }
+
+            vvvf.SetTargetTractionForce(-targetRegenForceN[carIndex]);
+
+            float actualRegenForceN = Mathf.Max(0f, -vvvf.TotalMotorTractionForceN);
+            state.regenForceN = actualRegenForceN;
+
+            actualTotalRegenForceN += actualRegenForceN;
+        }
+
+        targetTotalBrakeForceN = Mathf.Max(0f, targetTotalBrakeForceN - actualTotalRegenForceN);
+
+
+        // 空制目標力
         float[] targetAirForcesN = brakeControlUnit.AllocateEvenlyWithSaturation(airCapsN, targetTotalBrakeForceN);
         for (int i = 0; i < carCount; i++)
         {

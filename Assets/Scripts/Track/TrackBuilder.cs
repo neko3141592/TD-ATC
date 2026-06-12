@@ -139,25 +139,43 @@ public class TrackBuilder
     /// <remarks>返り値はありません。</remarks>
     public void ConnectToNode(TrackNode targetNode, float speedLimitKmH = -1f)
     {
+        string edgeId = $"E{targetGraph.edges.Count + 1:000}";
+        string geometryId = $"{edgeId}_Geo";
         TrackEdge newEdge = new TrackEdge
         {
-            edgeId = $"E{targetGraph.edges.Count + 1:000}",
-            fromNodeId = lastNode.nodeId,
-            toNodeId = targetNode.nodeId,
-            lengthM = currentEdgeLength
+            edgeId = edgeId,
+            geometryId = geometryId,
+            nodeAId = lastNode.nodeId,
+            nodeBId = targetNode.nodeId,
+            lengthM = currentEdgeLength,
+            blockSections = new List<BlockSection>
+            {
+                new BlockSection
+                {
+                    blockId = $"{edgeId}_B000",
+                    startDistanceM = 0f,
+                    endDistanceM = currentEdgeLength
+                }
+            }
         };
         if (speedLimitKmH > 0)
         {
             newEdge.speedLimitMS = speedLimitKmH / 3.6f;
         }
 
-        newEdge.horizontalSegments.AddRange(currentHorizontalSegments);
-        newEdge.verticalSegments.AddRange(currentVerticalSegments);
-        newEdge.cantSegments.AddRange(currentCantSegments);
+        targetGraph.geometries.Add(new TrackGeometry
+        {
+            geometryId = geometryId,
+            lengthM = currentEdgeLength,
+            gaugeM = newEdge.gaugeM,
+            horizontalSegments = new List<TrackHorizontalSegment>(currentHorizontalSegments),
+            verticalSegments = new List<TrackVerticalSegment>(currentVerticalSegments),
+            cantSegments = new List<TrackCantSegment>(currentCantSegments)
+        });
 
         targetGraph.edges.Add(newEdge);
-        if (lastNode.outgoingEdgeIds == null) lastNode.outgoingEdgeIds = new List<string>();
-        lastNode.outgoingEdgeIds.Add(newEdge.edgeId);
+        AddConnectedEdge(lastNode, newEdge.edgeId);
+        AddConnectedEdge(targetNode, newEdge.edgeId);
 
         currentHorizontalSegments.Clear();
         currentVerticalSegments.Clear();
@@ -205,6 +223,24 @@ public class TrackBuilder
         };
         targetGraph.nodes.Add(node);
         return node;
+    }
+
+    private static void AddConnectedEdge(TrackNode node, string edgeId)
+    {
+        if (node == null || string.IsNullOrEmpty(edgeId))
+        {
+            return;
+        }
+
+        if (node.connectedEdgeIds == null)
+        {
+            node.connectedEdgeIds = new List<string>();
+        }
+
+        if (!node.connectedEdgeIds.Contains(edgeId))
+        {
+            node.connectedEdgeIds.Add(edgeId);
+        }
     }
 
     /// <summary>

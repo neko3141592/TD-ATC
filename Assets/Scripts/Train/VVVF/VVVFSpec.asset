@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: VVVFSpec
   m_EditorClassIdentifier: Assembly-CSharp::VVVFSpec
   launchFrequency: 0.5
-  launchVoltageBoostRatio: 0.12
+  launchVoltageBoostRatio: 0.08
   slipFrequencyControlRateHzPerSec: 0.4
   voltageControlRateRatioPerSec: 0.4
   torqueDeadbandNm: 5

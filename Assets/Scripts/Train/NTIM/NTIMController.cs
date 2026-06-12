@@ -168,10 +168,6 @@ public class NTIMController : MonoBehaviour
     {
         speedHoldTargetMS = train.SpeedMS;
         speedHoldState = SpeedHoldState.Active;
-        foreach(VVVFController vvvf in vvvfControllers)
-        {
-            vvvf.SetSpeedHold(speedHoldTargetMS);
-        }   
     }
 
     private void ClearSpeedHold()
@@ -179,11 +175,6 @@ public class NTIMController : MonoBehaviour
         speedHoldState = SpeedHoldState.Off;
         speedHoldArmingTimer = 0f;
         speedHoldTargetMS = 0f;
-
-        foreach(VVVFController vvvf in vvvfControllers)
-        {
-            vvvf.ClearSpeedHold();
-        }
     }
 
     private void DistributeTargetForce(float totalTargetForceN)

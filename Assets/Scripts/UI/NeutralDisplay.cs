@@ -9,6 +9,12 @@ public class NeutralDisplay : MonoBehaviour
     [SerializeField] private Sprite neutralOff;
     [SerializeField] private TrainController train;
 
+    [Header("Shadow")]
+    [SerializeField] private bool enableShadow = true;
+    [SerializeField] private Color shadowColor = new Color(0f, 0f, 0f, 0.55f);
+    [SerializeField] private Vector2 shadowDistance = new Vector2(2f, -2f);
+    [SerializeField] private bool shadowUseGraphicAlpha = true;
+
     [Header("Read Delay")]
     [SerializeField] private bool enableReadDelay = true;
     [SerializeField, Min(0f)] private float readDelaySeconds = 0.08f;
@@ -56,7 +62,10 @@ public class NeutralDisplay : MonoBehaviour
             targetImage = GetComponent<Image>();
         }
 
-        ResetDelayState(GetRawNeutralState());
+        ResolveReferences();
+        bool neutralState = GetRawNeutralState();
+        ApplyShadowSettings(neutralState);
+        ResetDelayState(neutralState);
     }
 
     /// <summary>
@@ -65,6 +74,8 @@ public class NeutralDisplay : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void Update()
     {
+        ResolveReferences();
+
         if (targetImage == null)
         {
             return;
@@ -78,6 +89,8 @@ public class NeutralDisplay : MonoBehaviour
         {
             targetImage.sprite = nextSprite;
         }
+
+        ApplyShadowSettings(displayNeutralState);
     }
 
     /// <summary>
@@ -92,6 +105,16 @@ public class NeutralDisplay : MonoBehaviour
         }
 
         return train.PowerNotch <= 0 && train.BrakeNotch <= 0;
+    }
+
+    private void ResolveReferences()
+    {
+        train = CabReferenceResolver.ResolveTrain(this, train);
+    }
+
+    private void ApplyShadowSettings(bool isLit)
+    {
+        UIShadowUtility.ApplyShadow(targetImage, enableShadow && isLit, shadowColor, shadowDistance, shadowUseGraphicAlpha);
     }
 
     /// <summary>
@@ -135,5 +158,15 @@ public class NeutralDisplay : MonoBehaviour
         lastBufferedNeutralState = rawState;
         hasBufferedState = true;
         stateReadBuffer.Clear();
+    }
+
+    private void OnValidate()
+    {
+        if (targetImage == null)
+        {
+            targetImage = GetComponent<Image>();
+        }
+
+        ApplyShadowSettings(enableShadow);
     }
 }

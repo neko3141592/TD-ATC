@@ -5,6 +5,7 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
     [Header("References")]
     [SerializeField] private TrainController train;
     [SerializeField] private NTIMController ntim;
+    [SerializeField] private BrakeSystemController brakeSystem;
 
     [Header("Indicators")]
     [SerializeField] private IndicatorObjectPair rollingPrevent;
@@ -17,6 +18,7 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
     private float nextReadTime = 0f;
     private bool displayedRollingPreventOn = false;
     private bool displayedKeepOn = false;
+    private bool displayedRegenReleasedOn = false;
 
     [System.Serializable]
     private struct IndicatorObjectPair
@@ -70,17 +72,9 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void ResolveReferences()
     {
-        if (train == null)
-        {
-            train = GetComponentInParent<TrainController>();
-        }
-
-        if (ntim == null)
-        {
-            ntim = train != null
-                ? train.GetComponentInChildren<NTIMController>()
-                : GetComponentInParent<NTIMController>();
-        }
+        train = CabReferenceResolver.ResolveTrain(this, train);
+        ntim = CabReferenceResolver.ResolveTrainComponent(this, train, ntim);
+        brakeSystem = CabReferenceResolver.ResolveTrainComponent(this, train, brakeSystem);
     }
 
     /// <summary>
@@ -106,6 +100,7 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
     {
         displayedRollingPreventOn = train != null && train.IsRollingPreventionActive;
         displayedKeepOn = ntim != null && ntim.SpeedHoldActive;
+        displayedRegenReleasedOn = brakeSystem != null && brakeSystem.IsRegenReleased;
     }
 
     /// <summary>
@@ -116,7 +111,7 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
     {
         rollingPrevent.SetLit(displayedRollingPreventOn);
         keep.SetLit(displayedKeepOn);
-        regenReleased.SetLit(true);
+        regenReleased.SetLit(displayedRegenReleasedOn);
     }
 
     /// <summary>

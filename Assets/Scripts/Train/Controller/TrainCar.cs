@@ -17,10 +17,10 @@ public class TrainCar : MonoBehaviour
     [SerializeField] private float generatedYawOffsetDegrees = 0f;
 
     [Tooltip("3Dモデルの向きを補正するための角度")]
-    public Vector3 modelRotationOffset = new Vector3(-90f, 180f, 0f);
+    public Vector3 modelRotationOffset = new Vector3(0f, 0f, 0f);
 
     [Tooltip("3Dモデルの位置を補正するためのオフセット（例: 少し上に浮かすなら Y=2.07 など）")]
-    public Vector3 modelPositionOffset = new Vector3(0f, 2.07f, 0f);
+    public Vector3 modelPositionOffset = new Vector3(0f, 0f, 0f);
 
     public CarSpec Spec => carSpec;
     public bool HasCab => carSpec != null && carSpec.carRole == CarRole.Cab;

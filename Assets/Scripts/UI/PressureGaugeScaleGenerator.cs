@@ -99,6 +99,13 @@ public class PressureGaugeScaleGenerator : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     public void GenerateScale()
     {
+#if UNITY_EDITOR
+        if (IsPrefabAssetContext())
+        {
+            return;
+        }
+#endif
+
         if (scaleRoot == null)
         {
             Debug.LogWarning("Scale root is not assigned.", this);
@@ -148,6 +155,13 @@ public class PressureGaugeScaleGenerator : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     public void ClearGeneratedObjects()
     {
+#if UNITY_EDITOR
+        if (IsPrefabAssetContext())
+        {
+            return;
+        }
+#endif
+
         if (scaleRoot == null)
         {
             return;
@@ -258,4 +272,12 @@ public class PressureGaugeScaleGenerator : MonoBehaviour
         float ratio = value / step;
         return Mathf.Abs(ratio - Mathf.Round(ratio)) <= 0.001f;
     }
+
+#if UNITY_EDITOR
+    private bool IsPrefabAssetContext()
+    {
+        return UnityEditor.EditorUtility.IsPersistent(this) ||
+            (scaleRoot != null && UnityEditor.EditorUtility.IsPersistent(scaleRoot));
+    }
+#endif
 }

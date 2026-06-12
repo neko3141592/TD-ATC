@@ -1,9 +1,5 @@
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using UnityEditor.PackageManager.Requests;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.Categorization;
 
 public class ATCController : MonoBehaviour
 {
@@ -12,6 +8,14 @@ public class ATCController : MonoBehaviour
         Normal,
         ServicePattern,
         EmergencyPattern,
+        ORP,
+    }
+
+    private enum AtcMode
+    {
+        Normal,
+        Emergency,
+        CutOut,
     }
 
     private const float MinimumEmergencyPatternGapKmH = 10f;
@@ -21,6 +25,7 @@ public class ATCController : MonoBehaviour
     [SerializeField] private TrainSpec trainSpec;
     [SerializeField] private NotchManager notchManager;
     [SerializeField] private BlockOccupancyManager blockOccupancyManager;
+    [SerializeField] private TrainServiceDefinition trainService;
 
     [Header("Runtime Status (Debug)")]
     [SerializeField] private float currentLimitSpeedMS = 0f;
@@ -29,10 +34,21 @@ public class ATCController : MonoBehaviour
     [SerializeField] private float patternTargetDistanceM = 0f;
     [SerializeField] private float patternTargetSpeedMS = 0f;
     [SerializeField] private string currentPatternSourceLabel = "--";
+    [SerializeField] private bool isNextBlockOccupied = false;
+    [SerializeField] private string nextBlockSignalBlockId = "--";
+    [SerializeField] private float nextBlockSignalDistanceM = 0f;
 
     [Header("Audio")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip dingClip;
+
+    [Header("ATC Mode")]
+    [SerializeField] private AtcMode atcMode = AtcMode.Normal;
+
+    [Header("Emergency Operation")]
+    [SerializeField] private float emergencyOperationMaxSpeedMS = 4.167f;
+    private bool emergencyOperationBrakeHolding = false;
+    
 
     [Header("Pattern / ATC Tuning")]
     [SerializeField] private float limitChangeEpsilonMS = 0.01f;
@@ -51,12 +67,20 @@ public class ATCController : MonoBehaviour
     [Header("Brake Command")]    
     [SerializeField] private int atcBrakeNotch = 7;
 
+    [Header("ATC Emergency Release")]
+    [SerializeField] private float atcEmergencyReleaseMaxSpeedMS = 0.01f;
+
     private bool hasPreviousLimit = false;
     private float previousLimitSpeedMS = 0f;
     private bool isATCBrakeLatched = false;
+    private int previousManualBrakeNotch = 0;
     [SerializeField] private AtcControlState currentAtcState = AtcControlState.Normal;
     [SerializeField] private bool isPatternApproachLampActive = false;
+    private bool hasPreviousNextBlockSignalState = false;
+    private bool hasPreviousPatternAllowSpeed = false;
+    private float previousPatternAllowSpeedMS = 0f;
     private readonly List<AtcTargetCandidate> candidateBuffer = new();
+    private readonly List<TrackTraceSegment> speedLimitTraceBuffer = new();
 
     public float CurrentLimitSpeedKmH => currentLimitSpeedMS * 3.6f;
     public float CurrentPatternAllowSpeedKmH => patternAllowSpeedMS * 3.6f;
@@ -66,9 +90,14 @@ public class ATCController : MonoBehaviour
     public string CurrentPatternSourceLabel => currentPatternSourceLabel;
     public bool IsPatternApproaching => isPatternApproachLampActive;
     public string CurrentAtcStateLabel => currentAtcState.ToString();
+    public bool IsEmergencyOperationActive => atcMode == AtcMode.Emergency;
+    public bool IsAtcCutOutActive => atcMode == AtcMode.CutOut;
     public bool IsAtcBrakeLatched => isATCBrakeLatched;
     public bool IsAtcServiceBrakeActive => currentAtcState == AtcControlState.ServicePattern;
     public bool IsAtcEmergencyBrakeActive => currentAtcState == AtcControlState.EmergencyPattern;
+    public bool IsNextBlockOccupied => isNextBlockOccupied;
+    public string NextBlockSignalBlockId => nextBlockSignalBlockId;
+    public float NextBlockSignalDistanceM => nextBlockSignalDistanceM;
 
     /// <summary>
     /// 役割: ATC 制限候補の情報をひとまとめに保持します。
@@ -113,11 +142,12 @@ public class ATCController : MonoBehaviour
     {
         ResolveRuntimeReferences();
 
-        if (train == null || train.Graph == null || string.IsNullOrEmpty(train.CurrentEdgeId))
+        if (train == null || train.Graph == null || string.IsNullOrEmpty(train.CurrentEdgeId) || trainService == null)
         {
             ResetPatternState();
             hasPreviousLimit = false;
             isATCBrakeLatched = false;
+            previousManualBrakeNotch = train != null ? train.ManualBrakeNotch : 0;
             SendATCBrake(0);
             return;
         }
@@ -134,22 +164,38 @@ public class ATCController : MonoBehaviour
             PlayDing();
         }
 
+        if (atcMode == AtcMode.CutOut)
+        {
+            ResetPatternState();
+            hasPreviousLimit = false;
+            isATCBrakeLatched = false;
+            emergencyOperationBrakeHolding = false;
+            previousManualBrakeNotch = train.ManualBrakeNotch;
+            SendATCBrake(0);
+            return;
+        }
+
         currentLimitSpeedMS = nextLimitSpeedMS;
         previousLimitSpeedMS = nextLimitSpeedMS;
         hasPreviousLimit = true;
 
         AtcTargetCandidate speedLimitCandidate = BuildSpeedLimitCandidate(currentEdge);
         AtcTargetCandidate occupiedBlockCandidate = BuildOccupiedBlockCandidate();
+        AtcTargetCandidate serviceSpeedLimitCandidate = BuildServiceSpeedLimitCandidate();
+        UpdateNextBlockSignalState();
 
         candidateBuffer.Clear();
         candidateBuffer.Add(speedLimitCandidate);
         candidateBuffer.Add(occupiedBlockCandidate);
+        candidateBuffer.Add(serviceSpeedLimitCandidate);
 
         AtcTargetCandidate selectedCandidate = ChooseMoreRestrictive(candidateBuffer);
         ApplyPatternCandidate(selectedCandidate);
+        UpdatePatternRaiseDingState();
         UpdatePatternApproachLampState();
         UpdateAtcControlState();
         UpdateATCBrakeLatch();
+        UpdateAtcEmergencyReleaseSequence();
 
         // ATCブレーキ司令を送信する。非常パターン時だけ非常ノッチに切り替える。
         SendATCBrake(ResolveATCBrakeCommandNotch());
@@ -188,18 +234,36 @@ public class ATCController : MonoBehaviour
     /// 役割: 現在のATC状態から、NotchManagerへ送信するATCブレーキノッチを決定します。
     /// </summary>
     /// <returns>送信するATCブレーキノッチを返します。</returns>
+    
     private int ResolveATCBrakeCommandNotch()
     {
-        bool shouldApplyATCBrake = isATCBrakeLatched || isLocking();
-        if (!shouldApplyATCBrake)
+        if (train == null)
         {
             return 0;
         }
 
-        if (currentAtcState == AtcControlState.EmergencyPattern && train != null)
+        if (atcMode == AtcMode.Emergency)
+        {
+            if (emergencyOperationBrakeHolding)
+            {
+                return train.EmergencyBrakeNotch;
+            } else
+            {
+                return 0;
+            }
+        }
+
+        if (currentAtcState == AtcControlState.EmergencyPattern)
         {
             return train.EmergencyBrakeNotch;
         }
+
+        
+        bool shouldApplyATCBrake = isATCBrakeLatched || isLocking();
+        if (!shouldApplyATCBrake)
+        {
+            return 0;
+        } 
 
         return atcBrakeNotch;
     }
@@ -231,6 +295,41 @@ public class ATCController : MonoBehaviour
     }
 
     /// <summary>
+    /// 役割: ATC非常中に、手動ブレーキが非常位置から常用位置へ戻った瞬間を検出して緩解します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
+    private void UpdateAtcEmergencyReleaseSequence()
+    {
+        if (train == null)
+        {
+            previousManualBrakeNotch = 0;
+            return;
+        }
+
+        int manualBrakeNotch = train.ManualBrakeNotch;
+        int emergencyBrakeNotch = Mathf.Max(1, train.EmergencyBrakeNotch);
+
+        bool movedFromEmergencyToService =
+            previousManualBrakeNotch >= emergencyBrakeNotch &&
+            manualBrakeNotch > 0 &&
+            manualBrakeNotch < emergencyBrakeNotch;
+
+        bool canReleaseBySpeed =
+            train.SpeedMS < Mathf.Max(0f, atcEmergencyReleaseMaxSpeedMS);
+
+        if (movedFromEmergencyToService && canReleaseBySpeed)
+        {
+            currentAtcState = AtcControlState.Normal;
+            emergencyOperationBrakeHolding = false;
+            isATCBrakeLatched = false;
+        }
+
+
+
+        previousManualBrakeNotch = manualBrakeNotch;
+    }
+
+    /// <summary>
     /// 役割: 現在位置から見た速度制限候補を組み立てます。
     /// </summary>
     /// <param name="currentEdge">現在走行中のエッジを指定します。</param>
@@ -259,39 +358,41 @@ public class ATCController : MonoBehaviour
         float emergencyPatternDecelerationMS2 = trainSpec != null
             ? Mathf.Max(0f, trainSpec.GetEstimatedEmergencyBrakeDeceleration() - safetyDecelMS)
             : servicePatternDecelerationMS2;
-        float accumulatedDistM = currentEdge.lengthM - train.DistanceOnEdgeM;
-        string edgeId = currentEdge.edgeId;
-        string nextEdgeId = train.Graph.ResolveNextEdgeId(currentEdge.toNodeId, edgeId);
-
         float lookaheadLimitM = 1000f;
-
-        while (accumulatedDistM < lookaheadLimitM)
+        if (!TrackRouteTracer.TryTraceAhead(
+                train.Graph,
+                currentEdge.edgeId,
+                train.DistanceOnEdgeM,
+                lookaheadLimitM,
+                speedLimitTraceBuffer,
+                train.CurrentMovementDirection
+            ))
         {
-            if (string.IsNullOrEmpty(nextEdgeId))
+            return candidate;
+        }
+
+        for (int i = 0; i < speedLimitTraceBuffer.Count; i++)
+        {
+            TrackTraceSegment segment = speedLimitTraceBuffer[i];
+            TrackEdge aheadEdge = train.Graph.FindEdge(segment.edgeId);
+            if (aheadEdge == null)
             {
-                break;
+                continue;
             }
 
-            TrackEdge nextEdge = train.Graph.FindEdge(nextEdgeId);
-            if (nextEdge == null)
+            float aheadLimitSpeedMS = aheadEdge.speedLimitMS;
+            if (aheadLimitSpeedMS < currentLimitSpeedMS)
             {
-                break;
-            }
-
-            float nextLimitSpeedMS = nextEdge.speedLimitMS;
-
-
-            if (nextLimitSpeedMS < currentLimitSpeedMS)
-            {
+                float targetDistanceM = Mathf.Max(0f, segment.startDistanceFromOriginM);
                 float allowSpeedMS = ATCPatternCalculator.CalculateAllowSpeedMS(
-                    nextLimitSpeedMS,
+                    aheadLimitSpeedMS,
                     servicePatternDecelerationMS2,
-                    accumulatedDistM - safetyDistance
+                    targetDistanceM - safetyDistance
                 );
                 float rawEmergencyAllowSpeedMS = ATCPatternCalculator.CalculateAllowSpeedMS(
-                    nextLimitSpeedMS,
+                    aheadLimitSpeedMS,
                     emergencyPatternDecelerationMS2,
-                    accumulatedDistM - safetyDistance
+                    targetDistanceM - safetyDistance
                 );
 
                 float emergencyAllowSpeedMS = EnsureEmergencyPatternAboveServicePattern(
@@ -301,19 +402,89 @@ public class ATCController : MonoBehaviour
 
                 if (allowSpeedMS < candidate.allowedSpeedMS)
                 {
-                    candidate.distanceM = accumulatedDistM;
-                    candidate.targetSpeedMS = nextLimitSpeedMS;
+                    candidate.distanceM = targetDistanceM;
+                    candidate.targetSpeedMS = aheadLimitSpeedMS;
                     candidate.allowedSpeedMS = allowSpeedMS;
                     candidate.allowedEmergencySpeedMS = emergencyAllowSpeedMS;
                 }
             }
-
-            accumulatedDistM += nextEdge.lengthM;
-            edgeId = nextEdgeId;
-            nextEdgeId = train.Graph.ResolveNextEdgeId(nextEdge.toNodeId, edgeId);
         }
 
         return candidate;
+    }
+
+
+    private AtcTargetCandidate BuildServiceSpeedLimitCandidate ()
+    {
+        AtcTargetCandidate candidate = new AtcTargetCandidate
+        {
+            isValid = true,
+            sourceLabel = "Service Speed Limit",
+            distanceM = 0f,
+            targetSpeedMS = trainService.speedLimit,
+            allowedSpeedMS = trainService.speedLimit,
+            allowedEmergencySpeedMS = 120f,
+        };
+
+        return candidate;
+    }
+
+    /// <summary>
+    /// 役割: 信号現示用に、直近の次閉塞が他列車で埋まっているか更新します。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
+    private void UpdateNextBlockSignalState()
+    {
+        bool wasNextBlockOccupied = isNextBlockOccupied;
+        isNextBlockOccupied = false;
+        nextBlockSignalBlockId = "--";
+        nextBlockSignalDistanceM = 0f;
+
+        if (train == null || blockOccupancyManager == null)
+        {
+            hasPreviousNextBlockSignalState = false;
+            return;
+        }
+
+        if (blockOccupancyManager.TryFindFirstOccupiedBlockAhead(
+            train,
+            out string occupiedBlockId,
+            out float distanceToBlockM,
+            nextBlockOnly: true
+        ))
+        {
+            isNextBlockOccupied = true;
+            nextBlockSignalBlockId = occupiedBlockId;
+            nextBlockSignalDistanceM = distanceToBlockM;
+        }
+
+        if (hasPreviousNextBlockSignalState && !wasNextBlockOccupied && isNextBlockOccupied)
+        {
+            PlayDing();
+        }
+
+        hasPreviousNextBlockSignalState = true;
+    }
+
+    /// <summary>
+    /// 役割: ATC パターン許容速度が上がった瞬間に通知音を鳴らします。
+    /// </summary>
+    /// <remarks>返り値はありません。</remarks>
+    private void UpdatePatternRaiseDingState()
+    {
+        if (!hasPreviousPatternAllowSpeed)
+        {
+            previousPatternAllowSpeedMS = patternAllowSpeedMS;
+            hasPreviousPatternAllowSpeed = true;
+            return;
+        }
+
+        if (patternAllowSpeedMS > previousPatternAllowSpeedMS + Mathf.Max(0f, limitChangeEpsilonMS))
+        {
+            PlayDing();
+        }
+
+        previousPatternAllowSpeedMS = patternAllowSpeedMS;
     }
 
     /// <summary>
@@ -461,7 +632,17 @@ public class ATCController : MonoBehaviour
     {
         if (train == null)
         {
-            currentAtcState = AtcControlState.Normal;
+            currentAtcState = AtcControlState.EmergencyPattern;
+            return;
+        }
+
+        if (atcMode == AtcMode.Emergency && train.SpeedMS > emergencyOperationMaxSpeedMS)
+        {
+            emergencyOperationBrakeHolding = true;
+        }
+
+        if (currentAtcState == AtcControlState.EmergencyPattern)
+        {
             return;
         }
 
@@ -600,5 +781,11 @@ public class ATCController : MonoBehaviour
         currentPatternSourceLabel = "--";
         currentAtcState = AtcControlState.Normal;
         isPatternApproachLampActive = false;
+        isNextBlockOccupied = false;
+        nextBlockSignalBlockId = "--";
+        nextBlockSignalDistanceM = 0f;
+        hasPreviousNextBlockSignalState = false;
+        hasPreviousPatternAllowSpeed = false;
+        previousPatternAllowSpeedMS = 0f;
     }
 }

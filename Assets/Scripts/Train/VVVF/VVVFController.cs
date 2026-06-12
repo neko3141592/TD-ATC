@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 
 public class VVVFController : MonoBehaviour
 {
@@ -9,6 +10,17 @@ public class VVVFController : MonoBehaviour
     [SerializeField] private MotorModel[] motors;
     [SerializeField] private int assignedCarIndex = -1;
 
+    private enum DriveMode
+    {
+        Regen,
+        Power,
+        Neutral
+    }
+
+    private DriveMode currentDriveMode;
+
+    private float randomFactor;
+
     public MotorSpec MotorSpec => motorSpec;
     public MotorModel[] Motors => motors;
     public int AssignedCarIndex => assignedCarIndex;
@@ -17,22 +29,7 @@ public class VVVFController : MonoBehaviour
         motorSpec != null ? motorSpec.ratedPowerW * MotorCount : 0f;
 
 
-    
-
-    // [Header("Control")]
-    // [SerializeField, Min(0f)] private float launchFrequencyHz = 3f;
-    // [SerializeField, Range(0f, 0.5f)] private float launchVoltageBoostRatio = 0.12f;
-    // [SerializeField, Min(0f)] private float slipFrequencyControlRateHzPerSec = 2f;
-    // [SerializeField, Min(0f)] private float voltageControlRateRatioPerSec = 5f;
-    // [SerializeField, Min(0f)] private float torqueDeadbandNm = 5f;
-    // [SerializeField, Min(0f)] private float maxSlipFrequencyHz = 8f;
-
     [SerializeField, Min(0f)] private float slipFrequencyHz;
-
-    // Speed Hold
-    private bool speedHoldActive = false;
-    private float speedHoldTargetMS = 0f;
-
 
     public float FrequencyHz { get; private set; }
     public int PoleCount => motorSpec != null ? motorSpec.poleCount : 0;
@@ -54,6 +51,9 @@ public class VVVFController : MonoBehaviour
     public float TotalMotorTractionForceN { get; private set; }
     public float TargetTractionForceN { get; private set; }
     public float TargetMotorTorqueNm { get; private set; }
+    public string DriveModeLabel => currentDriveMode.ToString();
+    public float PowerMaxSlipFrequencyHz => GetSpeedLimitedMaxSlipFrequencyHz(true);
+    public float RegenMaxSlipFrequencyHz => GetSpeedLimitedMaxSlipFrequencyHz(false);
 
     public MotorModel PrimaryMotor => motors != null && motors.Length > 0 ? motors[0] : null;
 
@@ -68,6 +68,10 @@ public class VVVFController : MonoBehaviour
         {
             motors = GetComponentsInChildren<MotorModel>();
         }
+
+        randomFactor = Random.Range(0.9f, 1.1f);
+
+
     }
 
     private void OnValidate()
@@ -123,7 +127,7 @@ public class VVVFController : MonoBehaviour
             : 0f;
 
         // 力行司令がないときは、目標牽引力・目標トルクを0
-        if (train.PowerNotch <= 0)
+        if (currentDriveMode == DriveMode.Neutral)
         {
             TargetTractionForceN = 0f;
             TargetMotorTorqueNm = 0f;
@@ -132,22 +136,20 @@ public class VVVFController : MonoBehaviour
         // 回転子に同期するための回転数
         RotorBaseFrequencyHz = VVVFMath.GetFrequencyFromSynchronousRpm(MotorRpm, PoleCount);
 
-        // 目標トルクに近づくまですべり周波数を増加させる
+        // 目標トルクに近づくまですべり周波数を増加させる(回生対応)
         UpdateSlipFrequencyFromTorque(deltaTime);
 
-        bool hasDriveCommand = TargetMotorTorqueNm > 0f && train.PowerNotch > 0;
-        bool keepOutputFrequencyWhileVoltageFalls = VoltageRatio > 0.001f;
+        bool hasDriveCommand = currentDriveMode != DriveMode.Neutral;
+        bool keepOutputFrequencyWhileVoltageFalls = VoltageRatio > 0.001f || Mathf.Abs(slipFrequencyHz) > 0.01f;
         float targetFrequencyHz = RotorBaseFrequencyHz + slipFrequencyHz;
 
         FrequencyHz = hasDriveCommand || keepOutputFrequencyWhileVoltageFalls
-            ? Mathf.Max(targetFrequencyHz, vvvfSpec.launchVoltageBoostRatio * 0)
+            ? Mathf.Max(0f, targetFrequencyHz)
             : 0f;
 
         SyncRpm = VVVFMath.GetSynchronousRpm(FrequencyHz, motorSpec.poleCount);
         SlipRatio = VVVFMath.GetSlipRatio(SyncRpm, MotorRpm);
-        SlipFrequencyHz = FrequencyHz > 0.001f
-            ? Mathf.Max(0f, FrequencyHz - RotorBaseFrequencyHz)
-            : 0f;
+        SlipFrequencyHz = slipFrequencyHz;
 
         float targetVoltageRatio = 0f;
         if (hasDriveCommand)
@@ -215,12 +217,16 @@ public class VVVFController : MonoBehaviour
 
     private void UpdateSlipFrequencyFromTorque(float deltaTime)
     {
-        if (TargetMotorTorqueNm <= 0f)
+        if (LineVoltageRmsV <= 0.1f)
+        {
+            slipFrequencyHz = 0;
+        }
+        if (currentDriveMode == DriveMode.Neutral)
         {
             slipFrequencyHz = Mathf.MoveTowards(
                 slipFrequencyHz,
                 0f,
-                vvvfSpec.slipFrequencyControlRateHzPerSec * deltaTime
+                vvvfSpec.slipFrequencyControlRateHzPerSec * deltaTime * randomFactor
             );
             return;
         }
@@ -232,14 +238,51 @@ public class VVVFController : MonoBehaviour
             return;
         }
 
-        float targetSlipFrequencyHz = torqueErrorNm > 0f ? vvvfSpec.maxSlipFrequencyHz : 0f;
-        slipFrequencyHz = Mathf.MoveTowards(
-            slipFrequencyHz,
-            targetSlipFrequencyHz,
-            vvvfSpec.slipFrequencyControlRateHzPerSec * deltaTime
-        );
+        if (currentDriveMode == DriveMode.Power)
+        {
+            float maxSlipFrequencyHz = GetSpeedLimitedMaxSlipFrequencyHz(true);
+            float targetSlipFrequencyHz = torqueErrorNm > 0f ? maxSlipFrequencyHz : 0f;
+            slipFrequencyHz = Mathf.MoveTowards(
+                slipFrequencyHz,
+                targetSlipFrequencyHz,
+                vvvfSpec.slipFrequencyControlRateHzPerSec * deltaTime * randomFactor
+            );
+            slipFrequencyHz = Mathf.Clamp(slipFrequencyHz, -maxSlipFrequencyHz, maxSlipFrequencyHz);
+        }
 
-        slipFrequencyHz = Mathf.Clamp(slipFrequencyHz, 0f, vvvfSpec.maxSlipFrequencyHz);
+        if (currentDriveMode == DriveMode.Regen)
+        {
+            float maxSlipFrequencyHz = GetSpeedLimitedMaxSlipFrequencyHz(false);
+            float targetSlipFrequencyHz = torqueErrorNm < 0f ? -maxSlipFrequencyHz : 0f;
+            slipFrequencyHz = Mathf.MoveTowards(
+                slipFrequencyHz,
+                targetSlipFrequencyHz,
+                vvvfSpec.slipFrequencyControlRateHzPerSec * deltaTime * randomFactor
+            );
+            slipFrequencyHz = Mathf.Clamp(slipFrequencyHz, -maxSlipFrequencyHz, maxSlipFrequencyHz);
+        }
+        
+    }
+
+    private float GetSpeedLimitedMaxSlipFrequencyHz(bool allowLaunchSlip)
+    {
+        if (vvvfSpec == null)
+        {
+            return 0f;
+        }
+
+        float maxSlipFrequencyHz = Mathf.Max(0f, vvvfSpec.maxSlipFrequencyHz);
+        float baseFrequencyHz = Mathf.Max(0f, RotorBaseFrequencyHz);
+        const float maxSlipRatio = 0.16f;
+        const float launchSlipFrequencyHz = 0.2f;
+        // 速度比例の基底周波数から、その速度で許容する最大すべり周波数へ変換する。
+        float speedLimitedSlipFrequencyHz = baseFrequencyHz * maxSlipRatio;
+        if (allowLaunchSlip)
+        {
+            speedLimitedSlipFrequencyHz = Mathf.Max(launchSlipFrequencyHz, speedLimitedSlipFrequencyHz);
+        }
+
+        return Mathf.Min(maxSlipFrequencyHz, speedLimitedSlipFrequencyHz);
     }
 
     private float GetAverageMotorTorqueNm()
@@ -266,6 +309,48 @@ public class VVVFController : MonoBehaviour
         return activeMotorCount > 0 ? totalTorqueNm / activeMotorCount : 0f;
     }
 
+    public float GetRegenCapForceN(float speedMS)
+    {
+        if (train == null || train.Spec == null || motorSpec == null || MotorCount <= 0)
+        {
+            return 0f;
+        }
+
+        const float regenTorqueMultiplier = 1.2f;
+        const float regenPowerMultiplier = 1.0f;
+        const float minRegenPowerSpeedMS = 1.0f;
+        const float regenCutOutSpeedMS = 0.2f;
+        const float fullRegenSpeedMS = 1.0f;
+
+        TrainSpec trainSpec = train.Spec;
+        float absSpeedMS = Mathf.Abs(speedMS);
+
+        float ratedAngularSpeedRadS = motorSpec.ratedRpm * 2f * Mathf.PI / 60f;
+        float ratedTorqueNm = motorSpec.ratedPowerW / Mathf.Max(0.1f, ratedAngularSpeedRadS);
+
+        float torqueCapN =
+            ratedTorqueNm
+            * regenTorqueMultiplier
+            * MotorCount
+            * trainSpec.gearRatio
+            * trainSpec.drivelineEfficiency
+            / Mathf.Max(0.01f, trainSpec.wheelRadiusM);
+
+        float powerCapN =
+            motorSpec.ratedPowerW
+            * regenPowerMultiplier
+            * MotorCount
+            / Mathf.Max(absSpeedMS, minRegenPowerSpeedMS);
+
+        float lowSpeedFactor = Mathf.InverseLerp(
+            regenCutOutSpeedMS,
+            fullRegenSpeedMS,
+            absSpeedMS
+        );
+
+        return Mathf.Max(0f, Mathf.Min(torqueCapN, powerCapN) * lowSpeedFactor);
+    }
+
     private void UpdateTargetMotorTorque()
     {
         if (train == null || train.Spec == null || MotorCount <= 0)
@@ -283,21 +368,23 @@ public class VVVFController : MonoBehaviour
 
     public void SetTargetTractionForce(float targetTractionForceN)
     {
-        TargetTractionForceN = Mathf.Max(0f, targetTractionForceN);
+        TargetTractionForceN = targetTractionForceN;
+
+        if (targetTractionForceN < -0.01f)
+        {
+            currentDriveMode = DriveMode.Regen;
+        } 
+        else if (targetTractionForceN > 0.01f)
+        {
+            currentDriveMode = DriveMode.Power;
+        }
+        else
+        {
+            currentDriveMode = DriveMode.Neutral;
+        }
+
+        
         UpdateTargetMotorTorque();
-    }
-
-    public void SetSpeedHold(float targetMS)
-    {
-        speedHoldActive = true;
-        speedHoldTargetMS = targetMS;
-
-    }
-
-    public void ClearSpeedHold()
-    {
-        speedHoldActive = false;
-
     }
 
     private void ResetValues()
