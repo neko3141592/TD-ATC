@@ -347,7 +347,7 @@ public class TrainHUD : MonoBehaviour
             $"Total: {totalBrakeForceKN:0.0} kN | {train.CurrentBrakeDecelMS2:0.00} m/s^2\n" +
             $"Regen: {regenBrakeForceKN:0.0} kN | {train.CurrentRegenBrakeDecelMS2:0.00} m/s^2\n" +
             $"Air: {airBrakeForceKN:0.0} kN | {train.CurrentAirBrakeDecelMS2:0.00} m/s^2\n" +
-            $"BC: {train.CurrentBCPressureKPa:0.0} kPa\n" +
+            $"BC: {train.CurrentBCPressureKPa:0.0} kPa | Target: {train.CurrentTargetBCPressureKPa:0.0} kPa\n" +
             "\n" +
             carBrakeSection.ToString();
     }

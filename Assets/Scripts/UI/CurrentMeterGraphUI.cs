@@ -44,24 +44,11 @@ public class CurrentMeterGraphUI : MonoBehaviour
     private const string UnitObjectName = "CurrentGraph_Unit";
     private const string WarningLampObjectName = "CurrentGraph_WarningLamp";
 
-    private readonly Queue<TimedCurrentSample> currentSamples = new Queue<TimedCurrentSample>();
-    private float laggedCurrentA = 0f;
+    private float latestCurrentA = 0f;
     private float sampledCurrentA = 0f;
     private float displayedCurrentA = 0f;
     private float nextSampleTime = 0f;
     private bool isRegenerating = false;
-
-    private struct TimedCurrentSample
-    {
-        public readonly float time;
-        public readonly float currentA;
-
-        public TimedCurrentSample(float time, float currentA)
-        {
-            this.time = time;
-            this.currentA = currentA;
-        }
-    }
 
     private void Reset()
     {
@@ -71,12 +58,12 @@ public class CurrentMeterGraphUI : MonoBehaviour
     private void OnEnable()
     {
         ResolveReferences();
-        currentSamples.Clear();
-        laggedCurrentA = 0f;
+        latestCurrentA = 0f;
         sampledCurrentA = 0f;
         displayedCurrentA = 0f;
-        nextSampleTime = 0f;
+        nextSampleTime = Time.time;
         isRegenerating = false;
+        ScheduleNextSampleTime();
         UpdateVisuals(0f, false);
     }
 
@@ -85,8 +72,7 @@ public class CurrentMeterGraphUI : MonoBehaviour
         ResolveReferences();
 
         float targetCurrentA = ReadCurrentA();
-        UpdateDisplayLag(targetCurrentA);
-        SampleCurrentIfNeeded();
+        UpdateSampledCurrent(targetCurrentA);
 
         float minCurrent = Mathf.Min(minCurrentA, maxCurrentA);
         float maxCurrent = Mathf.Max(minCurrentA, maxCurrentA);
@@ -287,15 +273,24 @@ public class CurrentMeterGraphUI : MonoBehaviour
         return train != null && train.CurrentRegenBrakeForceN > regenForceThresholdN;
     }
 
-    private void UpdateDisplayLag(float currentA)
+    private void UpdateSampledCurrent(float currentA)
     {
-        laggedCurrentA = currentA;
-        currentSamples.Clear();
-    }
+        latestCurrentA = currentA;
 
-    private void SampleCurrentIfNeeded()
-    {
-        sampledCurrentA = laggedCurrentA;
+        if (!enableRandomLag)
+        {
+            sampledCurrentA = latestCurrentA;
+            nextSampleTime = Time.time;
+            return;
+        }
+
+        if (Time.time < nextSampleTime)
+        {
+            return;
+        }
+
+        sampledCurrentA = latestCurrentA;
+        ScheduleNextSampleTime();
     }
 
     private void ScheduleNextSampleTime()

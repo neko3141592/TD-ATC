@@ -1,0 +1,39 @@
+{
+    "$schema": "./track.schema.json",
+    "version":"1.0",
+    "trackName": "test_course",
+    "geometries": [
+        {
+            "name": "main_center",
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "yawDeg": 0,
+            "segments": [
+                { "type": "straight", "lengthM": 1000 }
+            ],
+            "vertical": [
+                { "startM": 0, "lengthM": 1000, "startPermille": 0, "endPermille": 0 }
+            ],
+            "cant": [
+                { "startM": 0, "lengthM": 1000, "startMm": 0, "endMm": 0 }
+            ]
+        }
+    ],
+    "tracks": [
+        {
+            "name": "up",
+            "baseCenterLineId": "main_center",
+            "offset": [
+                { "startBaseM": 0, "lengthM": 1000, "type": "constant", "offsetM": -1.9 }
+            ]
+        },
+        {
+            "name": "down",
+            "baseCenterLineId": "main_center",
+            "offset": [
+                { "startBaseM": 0, "lengthM": 1000, "type": "constant", "offsetM": 1.9 }
+            ]
+        }
+    ],
+    "connections": [
+    ]
+}

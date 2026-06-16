@@ -3,7 +3,7 @@ using UnityEngine;
 [System.Serializable]
 public class CatenaryPolePlacementRule
 {
-    public string edgeId;
+    public string geometryId;
     public float startDistanceM;
     public float endDistanceM;
 

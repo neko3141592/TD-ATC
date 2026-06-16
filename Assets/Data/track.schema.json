@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Train Track JSON",
+  "type": "object",
+  "required": ["version", "trackName", "geometries", "tracks"],
+  "properties": {
+    "version": { "type": "string" },
+    "trackName": { "type": "string" },
+    "geometries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/geometry" }
+    },
+    "tracks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/track" }
+    },
+    "connections": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/connection" }
+    }
+  },
+  "$defs": {
+    "geometry": {
+      "type": "object",
+      "required": ["name", "origin", "yawDeg", "segments"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "origin": { "$ref": "#/$defs/vector3" },
+        "yawDeg": { "type": "number" },
+        "segments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/segment" }
+        }
+      }
+    },
+    "track": {
+      "type": "object",
+      "required": ["name", "baseCenterLineId", "offset"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "baseCenterLineId": { "type": "string", "minLength": 1 },
+        "offset": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/offsetSegment" }
+        }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "required": ["type", "lengthM"],
+      "properties": {
+        "type": { "enum": ["straight", "curve", "transitionIn", "transitionOut"] },
+        "lengthM": { "type": "number", "exclusiveMinimum": 0 },
+        "radiusM": { "type": "number" }
+      }
+    },
+    "offsetSegment": {
+      "type": "object",
+      "required": ["startBaseM", "lengthM", "type"],
+      "properties": {
+        "type": { "enum": ["constant", "linear", "cubic"] },
+        "startBaseM": { "type": "number", "minimum": 0 },
+        "lengthM": { "type": "number", "exclusiveMinimum": 0 },
+        "offsetM": { "type": "number" },
+        "startOffsetM": { "type": "number" },
+        "endOffsetM": { "type": "number" }
+      }
+    },
+    "connection": {
+      "type": "object",
+      "required": ["name", "points"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["trackName", "end"],
+            "properties": {
+              "trackName": { "type": "string", "minLength": 1 },
+              "end": { "enum": ["start", "end"] }
+            }
+          }
+        }
+      }
+    },
+    "vector3": {
+      "type": "object",
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      }
+    }
+  }
+}

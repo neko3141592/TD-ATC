@@ -3,6 +3,8 @@ using UnityEngine.UI;
 
 public class ATCSignal : MonoBehaviour
 {
+    private const float StopIndicationThresholdKmH = 0.5f;
+
     [Header("References")]
     [SerializeField] private Image targetImage;
 
@@ -39,6 +41,16 @@ public class ATCSignal : MonoBehaviour
             return;
         }
 
-        targetImage.sprite = atc.IsNextBlockOccupied ? redSprite : greenSprite;
+        targetImage.sprite = ShouldShowRedSignal() ? redSprite : greenSprite;
+    }
+
+    private bool ShouldShowRedSignal()
+    {
+        return atc.IsNextBlockOccupied || (HasAtcIndication() && atc.CurrentPatternAllowSpeedKmH <= StopIndicationThresholdKmH);
+    }
+
+    private bool HasAtcIndication()
+    {
+        return !string.IsNullOrEmpty(atc.CurrentPatternSourceLabel) && atc.CurrentPatternSourceLabel != "--";
     }
 }

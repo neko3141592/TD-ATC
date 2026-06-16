@@ -274,94 +274,6 @@ public class TrackGraph : ScriptableObject
         turnoutStates = newStates;
     }
 
-    public int RecalculateNodeHeightsFromVerticalProfiles()
-    {
-        if (edges == null || nodes == null)
-        {
-            return 0;
-        }
-
-        int updatedCount = 0;
-        for (int i = 0; i < edges.Count; i++)
-        {
-            TrackEdge edge = edges[i];
-            if (edge == null ||
-                string.IsNullOrEmpty(edge.nodeAId) ||
-                string.IsNullOrEmpty(edge.nodeBId) ||
-                edge.verticalSegments == null ||
-                edge.verticalSegments.Count == 0)
-            {
-                continue;
-            }
-
-            TrackNode nodeA = FindNode(edge.nodeAId);
-            TrackNode nodeB = FindNode(edge.nodeBId);
-            if (nodeA == null || nodeB == null)
-            {
-                continue;
-            }
-
-            float heightDeltaM = TrackGradientUtility.GetVerticalHeightAt(edge.verticalSegments, edge.lengthM);
-            Vector3 toPosition = nodeB.worldPosition;
-            float nextY = nodeA.worldPosition.y + heightDeltaM;
-            if (Mathf.Abs(toPosition.y - nextY) <= EdgeLengthToleranceM)
-            {
-                continue;
-            }
-
-            toPosition.y = nextY;
-            nodeB.worldPosition = toPosition;
-            updatedCount++;
-        }
-
-        return updatedCount;
-    }
-
-    public bool ApplyDemoVerticalProfileToFirstEdge()
-    {
-        if (edges == null || edges.Count == 0 || edges[0] == null)
-        {
-            return false;
-        }
-
-        TrackEdge edge = edges[0];
-        float totalLengthM = Mathf.Max(0f, edge.lengthM);
-        if (totalLengthM <= 0.001f)
-        {
-            return false;
-        }
-
-        float transitionLengthM = Mathf.Min(100f, totalLengthM * 0.25f);
-        float constantLengthM = Mathf.Max(0f, totalLengthM - (transitionLengthM * 2f));
-        edge.verticalSegments = new List<TrackVerticalSegment>
-        {
-            new TrackVerticalSegment
-            {
-                startDistanceM = 0f,
-                lengthM = transitionLengthM,
-                startGradientPermille = 0f,
-                endGradientPermille = 25f
-            },
-            new TrackVerticalSegment
-            {
-                startDistanceM = transitionLengthM,
-                lengthM = constantLengthM,
-                startGradientPermille = 25f,
-                endGradientPermille = 25f
-            },
-            new TrackVerticalSegment
-            {
-                startDistanceM = transitionLengthM + constantLengthM,
-                lengthM = transitionLengthM,
-                startGradientPermille = 25f,
-                endGradientPermille = 0f
-            }
-        };
-
-        RecalculateNodeHeightsFromVerticalProfiles();
-        return true;
-    }
-
     /// <summary>
     /// 役割: ValidateEdges の処理を検証します。
     /// </summary>
@@ -438,139 +350,56 @@ public class TrackGraph : ScriptableObject
     /// <remarks>返り値はありません。</remarks>
     private void ValidateEdgeProfiles(List<string> errors, TrackEdge edge, Dictionary<string, TrackNode> nodeById)
     {
-        ValidateHorizontalSegments(errors, edge);
-        ValidateVerticalSegments(errors, edge, nodeById);
-        ValidateCantSegments(errors, edge);
+        ValidateOffsetEdge(errors, edge);
     }
 
-    private void ValidateHorizontalSegments(List<string> errors, TrackEdge edge)
+    private void ValidateOffsetEdge(List<string> errors, TrackEdge edge)
     {
-        if (edge.horizontalSegments == null)
+        if (!IsOffsetEdge(edge))
         {
-            errors.Add($"Edge '{edge.edgeId}' has null horizontalSegments.");
+            errors.Add($"Edge '{edge.edgeId}' must reference a baseGeometryId.");
             return;
         }
 
-        if (edge.horizontalSegments.Count == 0)
+        TrackGeometry baseGeometry = FindGeometry(edge.baseGeometryId);
+        if (baseGeometry == null)
         {
-            errors.Add($"Edge '{edge.edgeId}' has no horizontalSegments.");
+            errors.Add($"Offset edge '{edge.edgeId}' references missing baseGeometryId '{edge.baseGeometryId}'.");
+        }
+
+        if (edge.offsetSegments == null)
+        {
+            errors.Add($"Offset edge '{edge.edgeId}' has null offsetSegments.");
+        }
+        else if (edge.offsetSegments.Count == 0)
+        {
+            errors.Add($"Offset edge '{edge.edgeId}' has no offsetSegments.");
+        }
+
+        if (edge.offsetDistanceMap == null)
+        {
+            errors.Add($"Offset edge '{edge.edgeId}' has null offsetDistanceMap.");
             return;
         }
 
-        float farthestEndM = 0f;
-        float expectedStartM = 0f;
-        for (int i = 0; i < edge.horizontalSegments.Count; i++)
+        float offsetLengthM = edge.offsetDistanceMap.OffsetLengthM;
+        if (offsetLengthM <= 0f)
         {
-            TrackHorizontalSegment segment = edge.horizontalSegments[i];
-            if (segment == null)
-            {
-                errors.Add($"Edge '{edge.edgeId}' horizontalSegments[{i}] is null.");
-                continue;
-            }
-
-            ValidateProfileSegmentRange(errors, edge, "horizontalSegments", i, segment.startDistanceM, segment.lengthM);
-            if (Mathf.Abs(segment.startDistanceM - expectedStartM) > EdgeLengthToleranceM)
-            {
-                errors.Add(
-                    $"Edge '{edge.edgeId}' horizontalSegments[{i}] starts at {segment.startDistanceM:0.###}m, expected {expectedStartM:0.###}m. Horizontal segments must be contiguous and ordered."
-                );
-            }
-
-            farthestEndM = Mathf.Max(farthestEndM, Mathf.Max(0f, segment.startDistanceM) + Mathf.Max(0f, segment.lengthM));
-            expectedStartM = Mathf.Max(0f, segment.startDistanceM) + Mathf.Max(0f, segment.lengthM);
+            errors.Add($"Offset edge '{edge.edgeId}' has an empty offsetDistanceMap.");
+            return;
         }
 
-        if (Mathf.Abs(edge.lengthM - farthestEndM) > EdgeLengthToleranceM)
+        if (Mathf.Abs(edge.lengthM - offsetLengthM) > EdgeLengthToleranceM)
         {
             errors.Add(
-                $"Edge '{edge.edgeId}' lengthM ({edge.lengthM:0.###}) differs from horizontalSegments end ({farthestEndM:0.###}) by more than {EdgeLengthToleranceM:0.###}m."
+                $"Offset edge '{edge.edgeId}' lengthM ({edge.lengthM:0.###}) differs from offsetDistanceMap length ({offsetLengthM:0.###}) by more than {EdgeLengthToleranceM:0.###}m."
             );
         }
     }
 
-    private void ValidateVerticalSegments(List<string> errors, TrackEdge edge, Dictionary<string, TrackNode> nodeById)
+    private static bool IsOffsetEdge(TrackEdge edge)
     {
-        if (edge.verticalSegments == null)
-        {
-            errors.Add($"Edge '{edge.edgeId}' has null verticalSegments.");
-            return;
-        }
-
-        for (int i = 0; i < edge.verticalSegments.Count; i++)
-        {
-            TrackVerticalSegment segment = edge.verticalSegments[i];
-            if (segment == null)
-            {
-                errors.Add($"Edge '{edge.edgeId}' verticalSegments[{i}] is null.");
-                continue;
-            }
-
-            ValidateProfileSegmentRange(errors, edge, "verticalSegments", i, segment.startDistanceM, segment.lengthM);
-        }
-
-        if (edge.verticalSegments.Count == 0 ||
-            !nodeById.TryGetValue(edge.nodeAId, out TrackNode nodeA) ||
-            !nodeById.TryGetValue(edge.nodeBId, out TrackNode nodeB))
-        {
-            return;
-        }
-
-        float expectedToY = nodeA.worldPosition.y + TrackGradientUtility.GetVerticalHeightAt(edge.verticalSegments, edge.lengthM);
-        float actualToY = nodeB.worldPosition.y;
-        if (Mathf.Abs(expectedToY - actualToY) > EdgeLengthToleranceM)
-        {
-            errors.Add(
-                $"Edge '{edge.edgeId}' nodeB height ({actualToY:0.###}) differs from vertical profile expected height ({expectedToY:0.###}) by more than {EdgeLengthToleranceM:0.###}m."
-            );
-        }
-    }
-
-    private void ValidateCantSegments(List<string> errors, TrackEdge edge)
-    {
-        if (edge.cantSegments == null)
-        {
-            errors.Add($"Edge '{edge.edgeId}' has null cantSegments.");
-            return;
-        }
-
-        for (int i = 0; i < edge.cantSegments.Count; i++)
-        {
-            TrackCantSegment segment = edge.cantSegments[i];
-            if (segment == null)
-            {
-                errors.Add($"Edge '{edge.edgeId}' cantSegments[{i}] is null.");
-                continue;
-            }
-
-            ValidateProfileSegmentRange(errors, edge, "cantSegments", i, segment.startDistanceM, segment.lengthM);
-        }
-    }
-
-    private void ValidateProfileSegmentRange(
-        List<string> errors,
-        TrackEdge edge,
-        string listName,
-        int index,
-        float startDistanceM,
-        float lengthM)
-    {
-        if (startDistanceM < 0f)
-        {
-            errors.Add($"Edge '{edge.edgeId}' {listName}[{index}] has a negative startDistanceM ({startDistanceM:0.###}).");
-        }
-
-        if (lengthM < 0f)
-        {
-            errors.Add($"Edge '{edge.edgeId}' {listName}[{index}] has a negative lengthM ({lengthM:0.###}).");
-        }
-
-        float endDistanceM = startDistanceM + lengthM;
-        if (endDistanceM > edge.lengthM + EdgeLengthToleranceM)
-        {
-            errors.Add(
-                $"Edge '{edge.edgeId}' {listName}[{index}] ends at {endDistanceM:0.###}m, beyond edge lengthM {edge.lengthM:0.###}m."
-            );
-        }
+        return edge != null && !string.IsNullOrEmpty(edge.baseGeometryId);
     }
 
     /// <summary>

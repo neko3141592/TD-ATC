@@ -6,7 +6,7 @@ public static class TrackOffsetDistanceMapBuilder
     public static TrackOffsetDistanceMap Build(
         TrackGraph graph,
         TrackRuntimeResolver resolver,
-        string baseEdgeId,
+        string baseGeometryId,
         List<TrackOffsetSegment> offsetSegments,
         float sampleIntervalM,
         float integrationStepM = 0.05f)
@@ -17,18 +17,12 @@ public static class TrackOffsetDistanceMapBuilder
             baseDistanceByOffsetIndex = new()
         };
 
-        if (graph == null || resolver == null || string.IsNullOrEmpty(baseEdgeId))
+        if (graph == null || resolver == null || string.IsNullOrEmpty(baseGeometryId))
         {
             return map;
         }
 
-        TrackEdge baseEdge = graph.FindEdge(baseEdgeId);
-        if (baseEdge == null || string.IsNullOrEmpty(baseEdge.geometryId))
-        {
-            return map;
-        }
-
-        TrackGeometry baseGeometry = graph.FindGeometry(baseEdge.geometryId);
+        TrackGeometry baseGeometry = graph.FindGeometry(baseGeometryId);
         if (baseGeometry == null || baseGeometry.lengthM <= 0f)
         {
             return map;
@@ -40,7 +34,7 @@ public static class TrackOffsetDistanceMapBuilder
         if (!TryResolveOffsetPosition(
             graph,
             resolver,
-            baseEdgeId,
+            baseGeometryId,
             offsetSegments,
             previousBaseDistanceM,
             out Vector3 previousOffsetPosition))
@@ -63,7 +57,7 @@ public static class TrackOffsetDistanceMapBuilder
             if (!TryResolveOffsetPosition(
                 graph,
                 resolver,
-                baseEdgeId,
+                baseGeometryId,
                 offsetSegments,
                 nextBaseDistanceM,
                 out Vector3 nextOffsetPosition))
@@ -101,7 +95,7 @@ public static class TrackOffsetDistanceMapBuilder
     private static bool TryResolveOffsetPosition(
         TrackGraph graph,
         TrackRuntimeResolver resolver,
-        string baseEdgeId,
+        string baseGeometryId,
         List<TrackOffsetSegment> offsetSegments,
         float baseDistanceM,
         out Vector3 offsetPosition)
@@ -113,19 +107,18 @@ public static class TrackOffsetDistanceMapBuilder
             baseDistanceM
         );
 
-        if (!resolver.TryResolveOffsetPose(
+        if (!resolver.TryResolveGeometryPose(
             graph,
-            baseEdgeId,
+            baseGeometryId,
             baseDistanceM,
-            offsetM,
-            out offsetPosition,
+            out Vector3 basePosition,
             out _,
-            out _))
+            out Quaternion baseRotation))
         {
-            offsetPosition = Vector3.zero;
             return false;
         }
 
+        offsetPosition = basePosition + baseRotation * Vector3.right * offsetM;
         return true;
     }
 }

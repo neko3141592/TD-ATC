@@ -19,7 +19,6 @@ public class TrackEdge
     public string physicalId;
     public string nodeAId; // 片側ノード ID です。
     public string nodeBId; // もう片側のノード ID です。
-    public string geometryId; //　エッジのジオメトリID
 
     public List<BlockSection> blockSections = new();
 
@@ -28,10 +27,7 @@ public class TrackEdge
     [Min(0f)] public float speedLimitMS = 33.33f;
     [Min(0.001f)] public float gaugeM = 1.067f;
 
-
-    // 旧方式の走行セグメント
-    [Header("Rail Data")]
-    [HideInInspector] public List<TrackHorizontalSegment> horizontalSegments = new List<TrackHorizontalSegment>();
-    [HideInInspector] public List<TrackVerticalSegment> verticalSegments = new List<TrackVerticalSegment>();
-    [HideInInspector] public List<TrackCantSegment> cantSegments = new List<TrackCantSegment>();
+    public string baseGeometryId;
+    public List<TrackOffsetSegment> offsetSegments = new();
+    public TrackOffsetDistanceMap offsetDistanceMap;
 }

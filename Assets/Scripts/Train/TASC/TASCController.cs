@@ -131,7 +131,7 @@ public class TASCController : MonoBehaviour
         }
 
         if (Mathf.Abs(stationStop.DistanceToStopM) <= GetStopCompletionDistanceM() &&
-            Mathf.Abs(train.SpeedMS) <= GetHoldingCompleteSpeedMS())
+            Mathf.Abs(train.SpeedMS) <= GetStopCompletionSpeedMS())
         {
             return false;
         }
@@ -685,8 +685,24 @@ public class TASCController : MonoBehaviour
     /// <summary>
     /// 役割: TASCを完全停止扱いで解除する速度を取得します。
     /// </summary>
-    /// <returns>Holding完了速度[m/s]を返します。</returns>
-    private float GetHoldingCompleteSpeedMS() => Mathf.Max(0f, tascProfile.holdingCompleteSpeedKmH) / 3.6f;
+    /// <returns>停止判定速度[m/s]を返します。</returns>
+    private float GetStopCompletionSpeedMS()
+    {
+        float stopSpeedMS = GetStopSpeedThresholdMS();
+        float holdingCompleteSpeedMS = Mathf.Max(0f, tascProfile.holdingCompleteSpeedKmH) / 3.6f;
+
+        if (stopSpeedMS <= Mathf.Epsilon)
+        {
+            return holdingCompleteSpeedMS;
+        }
+
+        if (holdingCompleteSpeedMS <= Mathf.Epsilon)
+        {
+            return stopSpeedMS;
+        }
+
+        return Mathf.Min(stopSpeedMS, holdingCompleteSpeedMS);
+    }
 
     /// <summary>
     /// 役割: TASC が使用してよい最大常用ブレーキノッチを取得します。

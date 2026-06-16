@@ -6,6 +6,7 @@ public class TrackVisualizer : MonoBehaviour
     private const string RightRailPrefix = "RailMesh_R_";
     private const string SleepersPrefix = "Sleepers_";
     private const string CatenaryPolePrefix = "Poles_";
+    private const string CatenaryWirePrefix = "CatenaryWire_";
     private const float SleeperHeightOffsetM = -0.085f;
     private const float SleeperSpacingM = 1f;
 
@@ -30,6 +31,15 @@ public class TrackVisualizer : MonoBehaviour
 
     [Header("架線柱")]
     public CatenaryPolePlacementRule[] catenaryPoles;
+
+    [Header("架線")]
+    public bool generateCatenaryWire = true;
+    public Material catenaryWireMaterial;
+    [Min(0.1f)] public float catenaryWireHeightM = 5f;
+    [Min(0.1f)] public float catenaryWireSampleIntervalM = 5f;
+    [Min(0.001f)] public float catenaryWireWidthM = 0.035f;
+    [Min(0f)] public float catenaryWireStaggerM = 0.25f;
+    [Min(0.1f)] public float catenaryWireStaggerIntervalM = 50f;
 
 
     void Start()
@@ -59,6 +69,8 @@ public class TrackVisualizer : MonoBehaviour
             GenerateRail(edge, resolver, LeftRailPrefix, leftRailProfile);
             GenerateRail(edge, resolver, RightRailPrefix, rightRailProfile);
             GenerateSleepers(edge, resolver);
+            GenerateCatenaryWire(edge, resolver);
+            GenerateCatenaryWire(edge, resolver, 0.5f);
         }
 
         GenerateCatenaryPole(catenaryPoles, resolver);
@@ -107,6 +119,7 @@ public class TrackVisualizer : MonoBehaviour
         generator.profilePoints = profile;
         generator.segmentLengthM = generatorTemplate.segmentLengthM;
         generator.closedShape = generatorTemplate.closedShape;
+        generator.textureMetersPerTile = generatorTemplate.textureMetersPerTile;
 
         if (railMaterial != null)
         {
@@ -149,12 +162,12 @@ public class TrackVisualizer : MonoBehaviour
 
         foreach (CatenaryPolePlacementRule rule in rules)
         {
-            if (rule == null || string.IsNullOrEmpty(rule.edgeId) || rule.prefab == null)
+            if (rule == null || string.IsNullOrEmpty(rule.geometryId) || rule.prefab == null)
             {
                 continue;
             }
 
-            TrackEdge edge = graph.FindEdge(rule.edgeId);
+            TrackGeometry edge = graph.FindGeometry(rule.geometryId);
 
             if (edge == null)
             {
@@ -173,11 +186,11 @@ public class TrackVisualizer : MonoBehaviour
                 continue;
             }
 
-            GameObject parent = CreateGeneratedChild(CatenaryPolePrefix + rule.edgeId);
+            GameObject parent = CreateGeneratedChild(CatenaryPolePrefix + rule.geometryId);
 
             for (float distanceM = startDistanceM; distanceM <= endDistanceM; distanceM += rule.spacingM)
             {
-                if (resolver.TryResolvePose(graph, edge.edgeId, distanceM, out Vector3 position, out _, out Quaternion rotation))
+                if (resolver.TryResolveGeometryPose(graph, rule.geometryId, distanceM, out Vector3 position, out _, out Quaternion rotation))
                 {
                     InstantiateCatenaryPole(position, rotation, parent.transform, rule);
                 }
@@ -194,6 +207,76 @@ public class TrackVisualizer : MonoBehaviour
         position += rotation * Vector3.right * rule.sideOffsetM;
         position.y += rule.heightOffsetM;
         Instantiate(rule.prefab, position, rotation, parent);
+    }
+
+    private void GenerateCatenaryWire(TrackEdge edge, TrackRuntimeResolver resolver, float offset = 0)
+    {
+        if (!generateCatenaryWire || edge == null || edge.lengthM <= 0f)
+        {
+            return;
+        }
+
+        float sampleIntervalM = Mathf.Max(0.1f, catenaryWireSampleIntervalM);
+        int pointCount = Mathf.CeilToInt(edge.lengthM / sampleIntervalM) + 1;
+        if (pointCount < 2)
+        {
+            return;
+        }
+
+        GameObject wireObject = CreateGeneratedChild(CatenaryWirePrefix + edge.edgeId);
+        LineRenderer lineRenderer = wireObject.AddComponent<LineRenderer>();
+
+        lineRenderer.useWorldSpace = false;
+        lineRenderer.positionCount = pointCount;
+        lineRenderer.startWidth = catenaryWireWidthM;
+        lineRenderer.endWidth = catenaryWireWidthM;
+        lineRenderer.numCornerVertices = 2;
+        lineRenderer.numCapVertices = 2;
+
+        Material material = catenaryWireMaterial;
+        if (material == null)
+        {
+            Shader shader = Shader.Find("Sprites/Default");
+            if (shader != null)
+            {
+                material = new Material(shader);
+            }
+        }
+
+        if (material != null)
+        {
+            lineRenderer.material = material;
+        }
+
+        for (int i = 0; i < pointCount; i++)
+        {
+            float distanceM = Mathf.Min(i * sampleIntervalM, edge.lengthM);
+            if (!resolver.TryResolvePose(graph, edge.edgeId, distanceM, out Vector3 position, out _, out Quaternion rotation))
+            {
+                lineRenderer.SetPosition(i, wireObject.transform.InverseTransformPoint(position));
+                continue;
+            }
+
+            float staggerM = CalculateCatenaryWireStagger(distanceM);
+            Vector3 wirePosition =
+                position
+                + Vector3.up * (catenaryWireHeightM + offset)
+                + rotation * Vector3.right * staggerM;
+
+            lineRenderer.SetPosition(i, wireObject.transform.InverseTransformPoint(wirePosition));
+        }
+    }
+
+    private float CalculateCatenaryWireStagger(float distanceM)
+    {
+        if (catenaryWireStaggerM <= 0f)
+        {
+            return 0f;
+        }
+
+        float intervalM = Mathf.Max(0.1f, catenaryWireStaggerIntervalM);
+        float t = Mathf.PingPong(distanceM / intervalM, 1f);
+        return Mathf.Lerp(-catenaryWireStaggerM, catenaryWireStaggerM, t);
     }
 
     private void GenerateBallast(TrackEdge edge, TrackRuntimeResolver resolver)
@@ -213,6 +296,7 @@ public class TrackVisualizer : MonoBehaviour
         );
         generator.segmentLengthM = ballastTemplate.segmentLengthM;
         generator.closedShape = false;
+        generator.textureMetersPerTile = ballastTemplate.textureMetersPerTile;
 
         if (ballastMaterial != null)
         {

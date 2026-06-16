@@ -73,6 +73,7 @@ public class BrakeSystemController : MonoBehaviour
     public float CurrentRegenForceN { get; private set; } = 0f;
     public float CurrentAirForceN { get; private set; } = 0f;
     public float TotalBrakeForceN { get; private set; } = 0f;
+    public float CurrentTargetBCPressureKPa { get; private set; } = 0f;
     public float CurrentRegenDecelMS2 { get; private set; } = 0f;
     public float CurrentAirDecelMS2 { get; private set; } = 0f;
     public float TotalBrakeDecelMS2 { get; private set; } = 0f;
@@ -94,6 +95,7 @@ public class BrakeSystemController : MonoBehaviour
         // エディタ上の編成変更や初期化漏れに備え、件数を毎フレーム同期する
         EnsureCarBrakeStateCount();
         ResolveVVVFControllers();
+        CurrentTargetBCPressureKPa = 0f;
 
         if (trainSpec == null)
         {
@@ -124,7 +126,7 @@ public class BrakeSystemController : MonoBehaviour
             return;
         }
 
-        UpdateRollingPreventionState(speedMS, manualPowerNotch);
+        UpdateRollingPreventionState(speedMS, manualPowerNotch, train.ManualBrakeNotch);
         ApplyNormalBrake(speedMS, deltaTime, hasBrakeCommand, targetTotalBrakeForceN);
         RefreshOutputsFromStates(CurrentConsistMassKg);
 
@@ -208,6 +210,7 @@ public class BrakeSystemController : MonoBehaviour
 
             // 車両ごとの最大BC圧を目標に、遅れを通して実圧へ更新
             float targetBCPressureKPa = Mathf.Max(0f, carSpec.bcMaxPressureKPa);
+            RecordTargetBCPressureKPa(targetBCPressureKPa);
             state.bcPressureKPa = airBrakeUnit.UpdateBCPressureKPa(trainSpec, carSpec, state.bcPressureKPa, targetBCPressureKPa, deltaTime);
             state.airForceN = airBrakeUnit.GetAirBrakeForceN(trainSpec, carSpec, state.bcPressureKPa, speedMS);
         }
@@ -219,9 +222,9 @@ public class BrakeSystemController : MonoBehaviour
     /// <param name="speedMS">現在速度[m/s]を指定します。</param>
     /// <param name="manualPowerNotch">運転士が入力している手動力行ノッチを指定します。</param>
     /// <remarks>返り値はありません。</remarks>
-    private void UpdateRollingPreventionState(float speedMS, int manualPowerNotch)
+    private void UpdateRollingPreventionState(float speedMS, int manualPowerNotch, int manualBrakeNotch)
     {
-        if (manualPowerNotch > 0)
+        if (manualBrakeNotch < 1)
         {
             isRollingPreventionActive = false;
             return;
@@ -465,6 +468,7 @@ public class BrakeSystemController : MonoBehaviour
         BCPressureCandidate rollingCandidate = BuildRollingPreventionBCPressureCandidate(carSpec);
         BCPressureCandidate selectedCandidate = ChooseHigherBCPressureCandidate(normalCandidate, rollingCandidate);
         float targetBCPressureKPa = selectedCandidate.isValid ? selectedCandidate.targetBCPressureKPa : 0f;
+        RecordTargetBCPressureKPa(targetBCPressureKPa);
 
         state.bcPressureKPa = airBrakeUnit.UpdateBCPressureKPa(
             trainSpec,
@@ -474,6 +478,11 @@ public class BrakeSystemController : MonoBehaviour
             deltaTime
         );
         state.airForceN = airBrakeUnit.GetAirBrakeForceN(trainSpec, carSpec, state.bcPressureKPa, speedMS);
+    }
+
+    private void RecordTargetBCPressureKPa(float targetBCPressureKPa)
+    {
+        CurrentTargetBCPressureKPa = Mathf.Max(CurrentTargetBCPressureKPa, Mathf.Max(0f, targetBCPressureKPa));
     }
 
     /// <summary>
@@ -631,6 +640,7 @@ public class BrakeSystemController : MonoBehaviour
         CurrentRegenForceN = 0f;
         CurrentAirForceN = 0f;
         TotalBrakeForceN = 0f;
+        CurrentTargetBCPressureKPa = 0f;
         CurrentRegenDecelMS2 = 0f;
         CurrentAirDecelMS2 = 0f;
         TotalBrakeDecelMS2 = 0f;

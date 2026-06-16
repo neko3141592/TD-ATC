@@ -15,4 +15,10 @@ MonoBehaviour:
   serviceName: Local Test Service
   serviceType: 0
   speedLimit: 33.333332
-  stops: []
+  stops:
+  - stationId: ST_End
+    stopHere: 1
+    dwellSeconds: 0
+  - stationId: ST_Mid
+    stopHere: 1
+    dwellSeconds: 0

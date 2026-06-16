@@ -5,6 +5,7 @@ public class NotchDisplay : MonoBehaviour
 {
 
     [SerializeField] private TrainController train;
+    [SerializeField] private NotchManager notchManager;
     [SerializeField] private TMP_Text notchText;
 
     [Header("Shadow")]
@@ -15,12 +16,13 @@ public class NotchDisplay : MonoBehaviour
 
     void Awake()
     {
-        train = CabReferenceResolver.ResolveTrain(this, train);
-        notchText = GetComponent<TMP_Text>();
+        ResolveReferences();
         ApplyShadowSettings();
     }
     void Update ()
     {
+        ResolveReferences();
+
         if (notchText == null)
         {
             return;
@@ -34,10 +36,43 @@ public class NotchDisplay : MonoBehaviour
             return;
         }
 
+        if (TryGetTascDisplayStep(out int tascBrakeStep))
+        {
+            notchText.text = $"TASC-B{tascBrakeStep}";
+            return;
+        }
+
         if (train.BrakeNotch == train.EmergencyBrakeNotch) notchText.text = $"非常";  
         else if (train.PowerNotch > 0) notchText.text = $"P{train.PowerNotch}";
         else if (train.BrakeNotch > 0) notchText.text = $"B{train.BrakeNotch}"; 
         else notchText.text = "OFF";
+    }
+
+    private void ResolveReferences()
+    {
+        train = CabReferenceResolver.ResolveTrain(this, train);
+
+        if (notchManager == null)
+        {
+            notchManager = CabReferenceResolver.ResolveTrainComponent(this, train, notchManager);
+        }
+
+        if (notchText == null)
+        {
+            notchText = GetComponent<TMP_Text>();
+        }
+    }
+
+    private bool TryGetTascDisplayStep(out int tascBrakeStep)
+    {
+        if (notchManager != null && notchManager.IsTASCBrakeSelected && notchManager.TASCBrakeStep > 0)
+        {
+            tascBrakeStep = notchManager.TASCBrakeStep;
+            return true;
+        }
+
+        tascBrakeStep = 0;
+        return false;
     }
 
     private void ApplyShadowSettings()
@@ -47,11 +82,7 @@ public class NotchDisplay : MonoBehaviour
 
     private void OnValidate()
     {
-        if (notchText == null)
-        {
-            notchText = GetComponent<TMP_Text>();
-        }
-
+        ResolveReferences();
         ApplyShadowSettings();
     }
 }

@@ -9,6 +9,11 @@ public class TrackOffsetDistanceMap
     public float sampleIntervalM = 0.1f;
     public List<float> baseDistanceByOffsetIndex = new();
 
+    public float OffsetLengthM =>
+        baseDistanceByOffsetIndex == null || baseDistanceByOffsetIndex.Count == 0
+            ? 0f
+            : (baseDistanceByOffsetIndex.Count - 1) * sampleIntervalM;
+
     public float SampleBaseDistance (float offsetDistanceM)
     {
         if (baseDistanceByOffsetIndex == null || baseDistanceByOffsetIndex.Count == 0)

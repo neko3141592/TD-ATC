@@ -15,6 +15,13 @@ public class TrackMeshGenerator : MonoBehaviour
     [Header("断面を閉じるか")]
     public bool closedShape = true;
 
+    [Header("テクスチャの実寸")]
+    [Tooltip("テクスチャ1枚を何メートルとして貼るか。1ならUVは1mごとに1周します。")]
+    [Min(0.01f)]
+    public float textureMetersPerTile = 1f;
+
+    public float ResolvedTextureMetersPerTile => textureMetersPerTile > 0.01f ? textureMetersPerTile : 1f;
+
     public void GenerateTrackMesh(TrackRuntimeResolver resolver, TrackGraph graph, string edgeId, float totalLengthM)
     {
         if (!CanGenerate(resolver, graph, edgeId))
@@ -26,8 +33,9 @@ public class TrackMeshGenerator : MonoBehaviour
         int vertsInShape = profilePoints.Length;
         Vector3[] vertices = new Vector3[vertsInShape * (segments + 1)];
         Vector2[] uvs = new Vector2[vertices.Length];
+        float[] profileDistancesM = BuildProfileDistances(vertsInShape);
 
-        BuildVerticesAndUvs(resolver, graph, edgeId, totalLengthM, segments, vertsInShape, vertices, uvs);
+        BuildVerticesAndUvs(resolver, graph, edgeId, totalLengthM, segments, vertsInShape, vertices, uvs, profileDistancesM);
         int[] triangles = BuildTriangles(segments, vertsInShape);
 
         GetComponent<MeshFilter>().mesh = CreateMesh(vertices, triangles, uvs);
@@ -64,7 +72,8 @@ public class TrackMeshGenerator : MonoBehaviour
         int segments,
         int vertsInShape,
         Vector3[] vertices,
-        Vector2[] uvs)
+        Vector2[] uvs,
+        float[] profileDistancesM)
     {
         for (int i = 0; i <= segments; i++)
         {
@@ -72,7 +81,7 @@ public class TrackMeshGenerator : MonoBehaviour
 
             if (resolver.TryResolvePose(graph, edgeId, currentDist, out Vector3 pos, out _, out Quaternion rotation))
             {
-                BuildProfileAtDistance(i, vertsInShape, currentDist, pos, rotation, vertices, uvs);
+                BuildProfileAtDistance(i, vertsInShape, currentDist, pos, rotation, vertices, uvs, profileDistancesM);
             }
         }
     }
@@ -84,8 +93,11 @@ public class TrackMeshGenerator : MonoBehaviour
         Vector3 position,
         Quaternion rotation,
         Vector3[] vertices,
-        Vector2[] uvs)
+        Vector2[] uvs,
+        float[] profileDistancesM)
     {
+        float metersPerTile = ResolvedTextureMetersPerTile;
+
         for (int profileIndex = 0; profileIndex < vertsInShape; profileIndex++)
         {
             int index = segmentIndex * vertsInShape + profileIndex;
@@ -94,8 +106,20 @@ public class TrackMeshGenerator : MonoBehaviour
             Vector3 worldPoint = position + rotation * localOffset;
 
             vertices[index] = transform.InverseTransformPoint(worldPoint);
-            uvs[index] = new Vector2((float)profileIndex / (vertsInShape - 1), distanceM);
+            uvs[index] = new Vector2(profileDistancesM[profileIndex] / metersPerTile, distanceM / metersPerTile);
         }
+    }
+
+    private float[] BuildProfileDistances(int vertsInShape)
+    {
+        float[] profileDistancesM = new float[vertsInShape];
+
+        for (int i = 1; i < vertsInShape; i++)
+        {
+            profileDistancesM[i] = profileDistancesM[i - 1] + Vector2.Distance(profilePoints[i - 1], profilePoints[i]);
+        }
+
+        return profileDistancesM;
     }
 
     private int[] BuildTriangles(int segments, int vertsInShape)

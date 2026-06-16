@@ -140,21 +140,57 @@ public class TrackBuilder
     public void ConnectToNode(TrackNode targetNode, float speedLimitKmH = -1f)
     {
         string edgeId = $"E{targetGraph.edges.Count + 1:000}";
-        string geometryId = $"{edgeId}_Geo";
+        string baseGeometryId = $"{edgeId}_CenterGeo";
+        var offsetSegments = new List<TrackOffsetSegment>
+        {
+            new TrackOffsetSegment
+            {
+                startBaseDistanceM = 0f,
+                baseLengthM = currentEdgeLength,
+                startOffsetM = 0f,
+                endOffsetM = 0f,
+                curveType = TrackOffsetCurveType.Constant
+            }
+        };
+
+        targetGraph.geometries.Add(new TrackGeometry
+        {
+            geometryId = baseGeometryId,
+            lengthM = currentEdgeLength,
+            gaugeM = 1.067f,
+            originPosition = lastNode.worldPosition,
+            originRotation = lastNode.worldRotation,
+            horizontalSegments = new List<TrackHorizontalSegment>(currentHorizontalSegments),
+            verticalSegments = new List<TrackVerticalSegment>(currentVerticalSegments),
+            cantSegments = new List<TrackCantSegment>(currentCantSegments)
+        });
+
+        TrackOffsetDistanceMap distanceMap = TrackOffsetDistanceMapBuilder.Build(
+            targetGraph,
+            new TrackRuntimeResolver(),
+            baseGeometryId,
+            offsetSegments,
+            0.1f,
+            0.05f
+        );
+
+        float edgeLengthM = distanceMap.OffsetLengthM > 0f ? distanceMap.OffsetLengthM : currentEdgeLength;
         TrackEdge newEdge = new TrackEdge
         {
             edgeId = edgeId,
-            geometryId = geometryId,
+            baseGeometryId = baseGeometryId,
+            offsetSegments = offsetSegments,
+            offsetDistanceMap = distanceMap,
             nodeAId = lastNode.nodeId,
             nodeBId = targetNode.nodeId,
-            lengthM = currentEdgeLength,
+            lengthM = edgeLengthM,
             blockSections = new List<BlockSection>
             {
                 new BlockSection
                 {
                     blockId = $"{edgeId}_B000",
                     startDistanceM = 0f,
-                    endDistanceM = currentEdgeLength
+                    endDistanceM = edgeLengthM
                 }
             }
         };
@@ -162,16 +198,6 @@ public class TrackBuilder
         {
             newEdge.speedLimitMS = speedLimitKmH / 3.6f;
         }
-
-        targetGraph.geometries.Add(new TrackGeometry
-        {
-            geometryId = geometryId,
-            lengthM = currentEdgeLength,
-            gaugeM = newEdge.gaugeM,
-            horizontalSegments = new List<TrackHorizontalSegment>(currentHorizontalSegments),
-            verticalSegments = new List<TrackVerticalSegment>(currentVerticalSegments),
-            cantSegments = new List<TrackCantSegment>(currentCantSegments)
-        });
 
         targetGraph.edges.Add(newEdge);
         AddConnectedEdge(lastNode, newEdge.edgeId);

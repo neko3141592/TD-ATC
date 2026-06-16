@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TrainSpec
   massKg: 280000
   maxSpeedMS: 33.33333
-  gearRatio: 6
-  drivelineEfficiency: 0.92
+  gearRatio: 6.06
+  drivelineEfficiency: 0.93
   wheelRadiusM: 0.43
   resistanceA: 3000
   resistanceB: 120
@@ -25,16 +25,16 @@ MonoBehaviour:
   tascBrakeSubstepsPerNotch: 4
   speedHoldActiveThresholdKmh: 40
   brakeNotchDecelerations:
-  - 0.15
-  - 0.3
+  - 0.2
   - 0.45
   - 0.6
-  - 0.8
-  - 0.95
-  - 1.111111
+  - 0.75
+  - 0.9
+  - 1
+  - 1.11
   estimatedEmergencyBrakeDeceleration: 1.25
   bcFillRateKPaPerSec: 250
-  bcReleaseRateKPaPerSec: 175
+  bcReleaseRateKPaPerSec: 200
   brakeFrictionBaseMu: 0.35
   brakeFrictionOffsetKmH: 100
   brakeFrictionSlope: 1.8

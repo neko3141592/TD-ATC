@@ -1,104 +1,63 @@
 using System.Collections.Generic;
-using UnityEditor.Build;
 using UnityEngine;
+
 public class TrackRuntimeResolver
 {
-    // ====== 【新しい数学エンジン部分】 ======
+    private const float OffsetTangentSampleDistanceM = 0.05f;
 
-    /// <summary>
-    /// 役割: CalculateStraight の処理を実行します。
-    /// </summary>
-    /// <param name="L">L を指定します。</param>
-    /// <param name="x">x を指定します。</param>
-    /// <param name="z">z を指定します。</param>
-    /// <param name="angleDegree">angleDegree を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    public static void CalculateStraight(float L, out float x, out float z, out float angleDegree) {
+    public static void CalculateStraight(float lengthM, out float x, out float z, out float angleDegree)
+    {
         x = 0f;
-        z = L;
+        z = lengthM;
         angleDegree = 0f;
     }
-    /// <summary>
-    /// 役割: CalculateCircularCurve の処理を実行します。
-    /// </summary>
-    /// <param name="L">L を指定します。</param>
-    /// <param name="R">R を指定します。</param>
-    /// <param name="x">x を指定します。</param>
-    /// <param name="z">z を指定します。</param>
-    /// <param name="angleDegree">angleDegree を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    public static void CalculateCircularCurve(float L, float R, out float x, out float z, out float angleDegree)
+
+    public static void CalculateCircularCurve(float lengthM, float radiusM, out float x, out float z, out float angleDegree)
     {
-        if (Mathf.Abs(R) < 0.001f)
+        if (Mathf.Abs(radiusM) < 0.001f)
         {
-            CalculateStraight(L, out x, out z, out angleDegree);
+            CalculateStraight(lengthM, out x, out z, out angleDegree);
             return;
         }
 
-        float theta = L / R;
-        x = R * (1f - Mathf.Cos(theta));
-        z = R * Mathf.Sin(theta);
+        float theta = lengthM / radiusM;
+        x = radiusM * (1f - Mathf.Cos(theta));
+        z = radiusM * Mathf.Sin(theta);
         angleDegree = theta * Mathf.Rad2Deg;
     }
 
-    // クロソイド曲線の近似計算（マクローリン展開：直線→カーブ）
-    /// <summary>
-    /// 役割: CalculateClothoidIn の処理を実行します。
-    /// </summary>
-    /// <param name="l">l を指定します。</param>
-    /// <param name="totalL">totalL を指定します。</param>
-    /// <param name="R">R を指定します。</param>
-    /// <param name="x">x を指定します。</param>
-    /// <param name="z">z を指定します。</param>
-    /// <param name="angleDegree">angleDegree を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    public static void CalculateClothoidIn(float l, float totalL, float R, out float x, out float z, out float angleDegree)
+    public static void CalculateClothoidIn(float lengthM, float totalLengthM, float radiusM, out float x, out float z, out float angleDegree)
     {
-        if (Mathf.Abs(R) < 0.001f || totalL < 0.001f)
+        if (Mathf.Abs(radiusM) < 0.001f || totalLengthM < 0.001f)
         {
-            CalculateStraight(l, out x, out z, out angleDegree);
+            CalculateStraight(lengthM, out x, out z, out angleDegree);
             return;
         }
 
-        // 半径Rへ向けて、現在の距離lでの角度
-        float theta = (l * l) / (2f * R * totalL);
+        float theta = (lengthM * lengthM) / (2f * radiusM * totalLengthM);
         angleDegree = theta * Mathf.Rad2Deg;
 
-        // 級数展開による X と Z の計算
         float theta2 = theta * theta;
         float theta4 = theta2 * theta2;
-        
-        z = l * (1f - (theta2 / 10f) + (theta4 / 216f)); 
-        x = l * ((theta / 3f) - (theta * theta2 / 42f)); 
+
+        z = lengthM * (1f - (theta2 / 10f) + (theta4 / 216f));
+        x = lengthM * ((theta / 3f) - (theta * theta2 / 42f));
     }
 
-    // クロソイド曲線の近似計算（カーブ→直線）
-    /// <summary>
-    /// 役割: CalculateClothoidOut の処理を実行します。
-    /// </summary>
-    /// <param name="l">l を指定します。</param>
-    /// <param name="totalL">totalL を指定します。</param>
-    /// <param name="R">R を指定します。</param>
-    /// <param name="x">x を指定します。</param>
-    /// <param name="z">z を指定します。</param>
-    /// <param name="angleDegree">angleDegree を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    public static void CalculateClothoidOut(float l, float totalL, float R, out float x, out float z, out float angleDegree)
+    public static void CalculateClothoidOut(float lengthM, float totalLengthM, float radiusM, out float x, out float z, out float angleDegree)
     {
-        if (Mathf.Abs(R) < 0.001f || totalL < 0.001f)
+        if (Mathf.Abs(radiusM) < 0.001f || totalLengthM < 0.001f)
         {
-            CalculateStraight(l, out x, out z, out angleDegree);
+            CalculateStraight(lengthM, out x, out z, out angleDegree);
             return;
         }
 
-        // 曲率がRから0に変わる時の角度変化
-        float theta = (l / R) - (l * l) / (2f * R * totalL);
+        float theta = (lengthM / radiusM) - (lengthM * lengthM) / (2f * radiusM * totalLengthM);
         angleDegree = theta * Mathf.Rad2Deg;
 
-        // In曲線を逆順に辿ることで正確な位置を算出する
-        CalculateClothoidIn(totalL, totalL, R, out float endX, out float endZ, out float endAngle);
-        float remainL = totalL - l;
-        CalculateClothoidIn(remainL, totalL, R, out float remainX, out float remainZ, out float remainAngle);
+        CalculateClothoidIn(totalLengthM, totalLengthM, radiusM, out float endX, out float endZ, out float endAngle);
+        float remainLengthM = totalLengthM - lengthM;
+        CalculateClothoidIn(remainLengthM, totalLengthM, radiusM, out float remainX, out float remainZ, out _);
 
         float dx = endX - remainX;
         float dz = endZ - remainZ;
@@ -111,65 +70,46 @@ public class TrackRuntimeResolver
         x = dz * sinP - dx * cosP;
     }
 
-    public static void CalculateCubicTransitionIn 
-    (
-        float l,
-        float totalL,
-        float R,
+    public static void CalculateCubicTransitionIn(
+        float lengthM,
+        float totalLengthM,
+        float radiusM,
         out float x,
         out float z,
-        out float angleDegree
-    )
+        out float angleDegree)
     {
-        if (Mathf.Abs(R) < 0.001f || totalL < 0.001f)
+        if (Mathf.Abs(radiusM) < 0.001f || totalLengthM < 0.001f)
         {
-            CalculateStraight(l, out x, out z, out angleDegree);
+            CalculateStraight(lengthM, out x, out z, out angleDegree);
             return;
         }
-        // 曲率 k = l / (R * totalL);
-        // 角度[rad]
-        float theta = (l * l) / (2f * totalL * R);
 
-        // 小角近似によりx,zの変化量を求める
-        // sinθ ≈ θ
-        float dx = (l * l * l) / (6f * totalL * R);
-        // cosθ ≈ 1
-        float dz = l;
-
-        x = dx;
-        z = dz;
-
+        float theta = (lengthM * lengthM) / (2f * totalLengthM * radiusM);
+        x = (lengthM * lengthM * lengthM) / (6f * totalLengthM * radiusM);
+        z = lengthM;
         angleDegree = theta * Mathf.Rad2Deg;
     }
 
-    public static void CalculateCubicTransitionOut
-    (
-        float l,
-        float totalL,
-        float R,
+    public static void CalculateCubicTransitionOut(
+        float lengthM,
+        float totalLengthM,
+        float radiusM,
         out float x,
         out float z,
-        out float angleDegree
-    )
+        out float angleDegree)
     {
-        if (Mathf.Abs(R) < 0.001f || totalL < 0.001f)
+        if (Mathf.Abs(radiusM) < 0.001f || totalLengthM < 0.001f)
         {
-            CalculateStraight(l, out x, out z, out angleDegree);
+            CalculateStraight(lengthM, out x, out z, out angleDegree);
             return;
         }
-        // 曲率 k = (totalL - l) / (R * totalL);
-        float theta = l / R - (l * l) / (2f * R * totalL);
-        float dx = (l * l) / (2f * R) - (l * l * l) / (6f * R * totalL);
-        float dz = l;
 
-        x = dx;
-        z = dz;
-
+        float theta = lengthM / radiusM - (lengthM * lengthM) / (2f * radiusM * totalLengthM);
+        x = (lengthM * lengthM) / (2f * radiusM) - (lengthM * lengthM * lengthM) / (6f * radiusM * totalLengthM);
+        z = lengthM;
         angleDegree = theta * Mathf.Rad2Deg;
     }
 
-
-    // ====== 【メインエンジン：距離から座標を割り出す】 ======
     public bool TryResolvePose(
         TrackGraph graph,
         string edgeId,
@@ -192,19 +132,46 @@ public class TrackRuntimeResolver
         tangent = Vector3.forward;
         rotation = Quaternion.identity;
 
-        if (graph == null || string.IsNullOrEmpty(edgeId)) return false;
+        if (graph == null || string.IsNullOrEmpty(edgeId))
+        {
+            return false;
+        }
 
         TrackEdge edge = graph.FindEdge(edgeId);
-        if (edge == null) return false;
+        return TryResolveOffsetEdgePose(graph, edge, distanceOnEdgeM, out position, out tangent, out rotation);
+    }
 
-        TrackGeometry geometry = graph.FindGeometry(edge.geometryId);
-        if (geometry == null) return false;
+    public bool TryResolveGeometryPose(
+        TrackGraph graph,
+        string geometryId,
+        float distanceM,
+        out Vector3 position,
+        out Vector3 tangent,
+        out Quaternion rotation)
+    {
+        position = Vector3.zero;
+        tangent = Vector3.forward;
+        rotation = Quaternion.identity;
 
-        TrackNode fromNode = graph.FindNode(edge.nodeAId);
-        if (fromNode == null) return false;
+        if (graph == null || string.IsNullOrEmpty(geometryId))
+        {
+            return false;
+        }
 
-        float clampedDistanceOnEdgeM = Mathf.Clamp(distanceOnEdgeM, 0f, Mathf.Max(0f, geometry.lengthM));
-        return TryResolveProfilePose(geometry, fromNode, clampedDistanceOnEdgeM, out position, out tangent, out rotation);
+        TrackGeometry geometry = graph.FindGeometry(geometryId);
+        if (geometry == null)
+        {
+            return false;
+        }
+
+        float clampedDistanceM = Mathf.Clamp(distanceM, 0f, Mathf.Max(0f, geometry.lengthM));
+        return TryResolveNativeGeometryPose(
+            geometry,
+            clampedDistanceM,
+            out position,
+            out tangent,
+            out rotation
+        );
     }
 
     public bool TryGetGradientPermille(
@@ -215,25 +182,12 @@ public class TrackRuntimeResolver
     {
         gradientPermille = 0f;
 
-        if (graph == null || string.IsNullOrEmpty(edgeId))
+        if (!TryGetOffsetEdgeBaseGeometryAndDistance(graph, edgeId, distanceOnEdgeM, out TrackGeometry baseGeometry, out float baseDistanceM))
         {
             return false;
         }
 
-        TrackEdge edge = graph.FindEdge(edgeId);
-        if (edge == null)
-        {
-            return false;
-        }
-
-        TrackGeometry geometry = graph.FindGeometry(edge.geometryId);
-        if (geometry == null)
-        {
-            return false;
-        }
-
-        float clampedDistanceOnEdgeM = Mathf.Clamp(distanceOnEdgeM, 0f, Mathf.Max(0f, geometry.lengthM));
-        gradientPermille = TrackGradientUtility.GetGradientPermilleAt(geometry.verticalSegments, clampedDistanceOnEdgeM);
+        gradientPermille = TrackGradientUtility.GetGradientPermilleAt(baseGeometry.verticalSegments, baseDistanceM);
         return true;
     }
 
@@ -245,31 +199,18 @@ public class TrackRuntimeResolver
     {
         cantMm = 0f;
 
-        if (graph == null || string.IsNullOrEmpty(edgeId))
+        if (!TryGetOffsetEdgeBaseGeometryAndDistance(graph, edgeId, distanceOnEdgeM, out TrackGeometry baseGeometry, out float baseDistanceM))
         {
             return false;
         }
 
-        TrackEdge edge = graph.FindEdge(edgeId);
-        if (edge == null)
-        {
-            return false;
-        }
-
-        TrackGeometry geometry = graph.FindGeometry(edge.geometryId);
-        if (geometry == null)
-        {
-            return false;
-        }
-
-        float clampedDistanceOnEdgeM = Mathf.Clamp(distanceOnEdgeM, 0f, Mathf.Max(0f, geometry.lengthM));
-        cantMm = TrackGradientUtility.GetCantMmAt(geometry.cantSegments, clampedDistanceOnEdgeM);
+        cantMm = TrackGradientUtility.GetCantMmAt(baseGeometry.cantSegments, baseDistanceM);
         return true;
     }
 
-    private bool TryResolveProfilePose(
-        TrackGeometry geometry,
-        TrackNode fromNode,
+    public bool TryResolveOffsetEdgePose(
+        TrackGraph graph,
+        TrackEdge edge,
         float distanceOnEdgeM,
         out Vector3 position,
         out Vector3 tangent,
@@ -279,31 +220,173 @@ public class TrackRuntimeResolver
         tangent = Vector3.forward;
         rotation = Quaternion.identity;
 
-        Vector3 currentPos = fromNode.worldPosition;
-        Quaternion currentRot = GetPlanRotation(fromNode.worldRotation);
-
-        if (!TryResolveHorizontalPosition(geometry.horizontalSegments, distanceOnEdgeM, ref currentPos, ref currentRot))
+        if (!IsOffsetEdge(edge))
         {
             return false;
         }
 
-        float heightM = TrackGradientUtility.GetVerticalHeightAt(geometry.verticalSegments, distanceOnEdgeM);
-        float currentPermille = TrackGradientUtility.GetGradientPermilleAt(geometry.verticalSegments, distanceOnEdgeM);
+        float edgeLengthM = Mathf.Max(0f, edge.lengthM);
+        float clampedDistanceM = Mathf.Clamp(distanceOnEdgeM, 0f, edgeLengthM);
+
+        if (!TryResolveOffsetEdgePosition(graph, edge, clampedDistanceM, out position, out Quaternion baseRotation))
+        {
+            return false;
+        }
+
+        float sample0 = Mathf.Max(0f, clampedDistanceM - OffsetTangentSampleDistanceM);
+        float sample1 = Mathf.Min(edgeLengthM, clampedDistanceM + OffsetTangentSampleDistanceM);
+        if (sample1 - sample0 < 0.001f)
+        {
+            tangent = baseRotation * Vector3.forward;
+            rotation = baseRotation;
+            return true;
+        }
+
+        if (!TryResolveOffsetEdgePosition(graph, edge, sample0, out Vector3 p0, out _) ||
+            !TryResolveOffsetEdgePosition(graph, edge, sample1, out Vector3 p1, out _))
+        {
+            return false;
+        }
+
+        Vector3 delta = p1 - p0;
+        if (delta.sqrMagnitude < 0.000001f)
+        {
+            tangent = baseRotation * Vector3.forward;
+            rotation = baseRotation;
+            return true;
+        }
+
+        tangent = delta.normalized;
+        Vector3 up = baseRotation * Vector3.up;
+        rotation = Quaternion.LookRotation(tangent, up.sqrMagnitude > 0.001f ? up.normalized : Vector3.up);
+        return true;
+    }
+
+    public bool TryResolveOffsetEdgePosition(
+        TrackGraph graph,
+        TrackEdge edge,
+        float distanceOnEdgeM,
+        out Vector3 position,
+        out Quaternion baseRotation)
+    {
+        position = Vector3.zero;
+        baseRotation = Quaternion.identity;
+
+        if (!TryGetOffsetEdgeBaseGeometryAndDistance(graph, edge, distanceOnEdgeM, out _, out float baseDistanceM))
+        {
+            return false;
+        }
+
+        float offsetM = TrackOffsetUtility.EvaluateOffsetAtBaseDistance(edge.offsetSegments, baseDistanceM);
+        if (!TryResolveGeometryPose(
+            graph,
+            edge.baseGeometryId,
+            baseDistanceM,
+            out Vector3 basePosition,
+            out _,
+            out baseRotation))
+        {
+            return false;
+        }
+
+        position = basePosition + baseRotation * Vector3.right * offsetM;
+        return true;
+    }
+
+    private bool TryResolveNativeGeometryPose(
+        TrackGeometry geometry,
+        float distanceM,
+        out Vector3 position,
+        out Vector3 tangent,
+        out Quaternion rotation)
+    {
+        position = Vector3.zero;
+        tangent = Vector3.forward;
+        rotation = Quaternion.identity;
+
+        Vector3 currentPos = geometry.originPosition;
+        Quaternion currentRot = GetPlanRotation(geometry.originRotation);
+
+        if (!TryResolveHorizontalPosition(geometry.horizontalSegments, distanceM, ref currentPos, ref currentRot))
+        {
+            return false;
+        }
+
+        float heightM = TrackGradientUtility.GetVerticalHeightAt(geometry.verticalSegments, distanceM);
+        float currentPermille = TrackGradientUtility.GetGradientPermilleAt(geometry.verticalSegments, distanceM);
 
         position = currentPos;
-        position.y = fromNode.worldPosition.y + heightM;
+        position.y = geometry.originPosition.y + heightM;
 
         float pitchDegree = -Mathf.Atan(currentPermille / 1000f) * Mathf.Rad2Deg;
-        float cantMm = TrackGradientUtility.GetCantMmAt(geometry.cantSegments, distanceOnEdgeM);
+        float cantMm = TrackGradientUtility.GetCantMmAt(geometry.cantSegments, distanceM);
         float rollDegree = Mathf.Atan2(cantMm / 1000f, Mathf.Max(0.001f, geometry.gaugeM)) * Mathf.Rad2Deg;
         rotation = currentRot * Quaternion.Euler(pitchDegree, 0f, rollDegree);
         tangent = rotation * Vector3.forward;
         return true;
     }
 
+    private bool TryGetOffsetEdgeBaseGeometryAndDistance(
+        TrackGraph graph,
+        string edgeId,
+        float distanceOnEdgeM,
+        out TrackGeometry baseGeometry,
+        out float baseDistanceM)
+    {
+        baseGeometry = null;
+        baseDistanceM = 0f;
+
+        if (graph == null || string.IsNullOrEmpty(edgeId))
+        {
+            return false;
+        }
+
+        return TryGetOffsetEdgeBaseGeometryAndDistance(
+            graph,
+            graph.FindEdge(edgeId),
+            distanceOnEdgeM,
+            out baseGeometry,
+            out baseDistanceM
+        );
+    }
+
+    private bool TryGetOffsetEdgeBaseGeometryAndDistance(
+        TrackGraph graph,
+        TrackEdge edge,
+        float distanceOnEdgeM,
+        out TrackGeometry baseGeometry,
+        out float baseDistanceM)
+    {
+        baseGeometry = null;
+        baseDistanceM = 0f;
+
+        if (graph == null ||
+            !IsOffsetEdge(edge) ||
+            edge.offsetDistanceMap == null)
+        {
+            return false;
+        }
+
+        baseGeometry = graph.FindGeometry(edge.baseGeometryId);
+        if (baseGeometry == null)
+        {
+            return false;
+        }
+
+        float clampedDistanceM = Mathf.Clamp(distanceOnEdgeM, 0f, Mathf.Max(0f, edge.lengthM));
+        baseDistanceM = edge.offsetDistanceMap.SampleBaseDistance(clampedDistanceM);
+        baseDistanceM = Mathf.Clamp(baseDistanceM, 0f, Mathf.Max(0f, baseGeometry.lengthM));
+        return true;
+    }
+
+    private static bool IsOffsetEdge(TrackEdge edge)
+    {
+        return edge != null && !string.IsNullOrEmpty(edge.baseGeometryId);
+    }
+
     private static bool TryResolveHorizontalPosition(
         List<TrackHorizontalSegment> segments,
-        float distanceOnEdgeM,
+        float distanceM,
         ref Vector3 currentPos,
         ref Quaternion currentRot)
     {
@@ -324,22 +407,30 @@ public class TrackRuntimeResolver
             float segmentLengthM = Mathf.Max(0f, segment.lengthM);
             float segmentEndM = segmentStartM + segmentLengthM;
 
-            if (distanceOnEdgeM <= segmentStartM)
+            if (distanceM <= segmentStartM)
             {
                 break;
             }
 
-            float localDistanceM = Mathf.Min(distanceOnEdgeM, segmentEndM) - segmentStartM;
+            float localDistanceM = Mathf.Min(distanceM, segmentEndM) - segmentStartM;
             if (localDistanceM <= 0f)
             {
                 continue;
             }
 
-            CalculateHorizontal(segment.trackCurveType, localDistanceM, segmentLengthM, segment.radiusM, out float localX, out float localZ, out float angleDegree);
+            CalculateHorizontal(
+                segment.trackCurveType,
+                localDistanceM,
+                segmentLengthM,
+                segment.radiusM,
+                out float localX,
+                out float localZ,
+                out float angleDegree
+            );
             currentPos += currentRot * new Vector3(localX, 0f, localZ);
             currentRot *= Quaternion.Euler(0f, angleDegree, 0f);
 
-            if (distanceOnEdgeM <= segmentEndM)
+            if (distanceM <= segmentEndM)
             {
                 return true;
             }
@@ -374,36 +465,10 @@ public class TrackRuntimeResolver
         }
     }
 
-    public bool TryResolveOffsetPose (
-        TrackGraph graph,
-        string baseEdgeId,
-        float baseDistanceM,
-        float offsetM,
-        out Vector3 position,
-        out Vector3 tangent,
-        out Quaternion rotation
-    )
-    {
-        position = Vector3.zero;
-        tangent = Vector3.forward;
-        rotation = Quaternion.identity;
-
-        if (!TryResolvePose(graph, baseEdgeId, baseDistanceM, out Vector3 basePosition, out Vector3 baseTangent, out Quaternion baseRotation))
-        {
-            return false;
-        }
-
-        position = basePosition + baseRotation * Vector3.right * offsetM;
-        rotation = baseRotation;
-        tangent = baseTangent;
-        return true;
-    }
-
     private static Quaternion GetPlanRotation(Quaternion worldRotation)
     {
         Vector3 forwardXZ = worldRotation * Vector3.forward;
         forwardXZ.y = 0f;
         return forwardXZ.sqrMagnitude > 0.001f ? Quaternion.LookRotation(forwardXZ.normalized) : Quaternion.identity;
     }
-
 }
