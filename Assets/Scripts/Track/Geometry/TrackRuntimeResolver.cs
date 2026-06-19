@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class TrackRuntimeResolver
 {
-    private const float OffsetTangentSampleDistanceM = 0.05f;
+    private const float OffsetTangentSampleDistanceM = 0.25f;
 
     public static void CalculateStraight(float lengthM, out float x, out float z, out float angleDegree)
     {
@@ -24,50 +24,6 @@ public class TrackRuntimeResolver
         x = radiusM * (1f - Mathf.Cos(theta));
         z = radiusM * Mathf.Sin(theta);
         angleDegree = theta * Mathf.Rad2Deg;
-    }
-
-    public static void CalculateClothoidIn(float lengthM, float totalLengthM, float radiusM, out float x, out float z, out float angleDegree)
-    {
-        if (Mathf.Abs(radiusM) < 0.001f || totalLengthM < 0.001f)
-        {
-            CalculateStraight(lengthM, out x, out z, out angleDegree);
-            return;
-        }
-
-        float theta = (lengthM * lengthM) / (2f * radiusM * totalLengthM);
-        angleDegree = theta * Mathf.Rad2Deg;
-
-        float theta2 = theta * theta;
-        float theta4 = theta2 * theta2;
-
-        z = lengthM * (1f - (theta2 / 10f) + (theta4 / 216f));
-        x = lengthM * ((theta / 3f) - (theta * theta2 / 42f));
-    }
-
-    public static void CalculateClothoidOut(float lengthM, float totalLengthM, float radiusM, out float x, out float z, out float angleDegree)
-    {
-        if (Mathf.Abs(radiusM) < 0.001f || totalLengthM < 0.001f)
-        {
-            CalculateStraight(lengthM, out x, out z, out angleDegree);
-            return;
-        }
-
-        float theta = (lengthM / radiusM) - (lengthM * lengthM) / (2f * radiusM * totalLengthM);
-        angleDegree = theta * Mathf.Rad2Deg;
-
-        CalculateClothoidIn(totalLengthM, totalLengthM, radiusM, out float endX, out float endZ, out float endAngle);
-        float remainLengthM = totalLengthM - lengthM;
-        CalculateClothoidIn(remainLengthM, totalLengthM, radiusM, out float remainX, out float remainZ, out _);
-
-        float dx = endX - remainX;
-        float dz = endZ - remainZ;
-
-        float phi = endAngle * Mathf.Deg2Rad;
-        float sinP = Mathf.Sin(phi);
-        float cosP = Mathf.Cos(phi);
-
-        z = dz * cosP + dx * sinP;
-        x = dz * sinP - dx * cosP;
     }
 
     public static void CalculateCubicTransitionIn(
@@ -233,6 +189,13 @@ public class TrackRuntimeResolver
             return false;
         }
 
+        if (IsConstantOffset(edge.offsetSegments))
+        {
+            tangent = baseRotation * Vector3.forward;
+            rotation = baseRotation;
+            return true;
+        }
+
         float sample0 = Mathf.Max(0f, clampedDistanceM - OffsetTangentSampleDistanceM);
         float sample1 = Mathf.Min(edgeLengthM, clampedDistanceM + OffsetTangentSampleDistanceM);
         if (sample1 - sample0 < 0.001f)
@@ -382,6 +345,25 @@ public class TrackRuntimeResolver
     private static bool IsOffsetEdge(TrackEdge edge)
     {
         return edge != null && !string.IsNullOrEmpty(edge.baseGeometryId);
+    }
+
+    private static bool IsConstantOffset(List<TrackOffsetSegment> offsetSegments)
+    {
+        if (offsetSegments == null || offsetSegments.Count == 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < offsetSegments.Count; i++)
+        {
+            TrackOffsetSegment segment = offsetSegments[i];
+            if (segment == null || segment.curveType != TrackOffsetCurveType.Constant)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static bool TryResolveHorizontalPosition(

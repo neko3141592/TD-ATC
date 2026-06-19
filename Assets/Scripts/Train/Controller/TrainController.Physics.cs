@@ -257,15 +257,93 @@ public partial class TrainController
     private float GetExternalResistanceForceN(float massKg)
     {
         float runningResistanceForceN = ExternalForceCalculator.GetRunningResistanceForceN(trainSpec, speedMS);
-        float directionalGradientPermille = GetCurrentGradientPermilleForPhysics();
-        if (GetMovementDirection() == EdgeTravelDirection.BtoA)
-        {
-            directionalGradientPermille = -directionalGradientPermille;
-        }
-
-        currentGradeResistanceForceN = ExternalForceCalculator.GetGradeResistanceForceN(massKg, directionalGradientPermille);
+        float headGradientPermille = GetCurrentGradientPermilleForPhysics();
+        currentGradeResistanceForceN = GetConsistGradeResistanceForceN(massKg, headGradientPermille);
 
         return runningResistanceForceN + currentGradeResistanceForceN;
+    }
+
+    private float GetConsistGradeResistanceForceN(float consistMassKg, float fallbackGradientPermille)
+    {
+        EnsureRuntimeResolver();
+        SyncCarTrackStatesWithConsist();
+        UpdateCarTrackStates();
+
+        if (resolver == null || trackGraph == null || carTrackStates == null || carTrackStates.Count == 0)
+        {
+            return GetDirectionalGradeResistanceForceN(consistMassKg, fallbackGradientPermille, GetMovementDirection());
+        }
+
+        ConsistDefinition resolvedConsist = ResolveConsistDefinition();
+        float rawMassTotalKg = GetRawCarMassTotalKg(resolvedConsist);
+        if (rawMassTotalKg <= 0f)
+        {
+            return GetDirectionalGradeResistanceForceN(consistMassKg, fallbackGradientPermille, GetMovementDirection());
+        }
+
+        float massScale = Mathf.Max(1f, consistMassKg) / rawMassTotalKg;
+        float totalGradeResistanceForceN = 0f;
+
+        for (int i = 0; i < carTrackStates.Count; i++)
+        {
+            CarTrackState state = carTrackStates[i];
+            float carMassKg = GetRawCarMassKg(resolvedConsist, i) * massScale;
+            float gradientPermille = fallbackGradientPermille;
+            EdgeTravelDirection movementDirection = GetMovementDirection();
+
+            if (state != null)
+            {
+                movementDirection = GetCarMovementDirection(state);
+                if (!string.IsNullOrEmpty(state.edgeId))
+                {
+                    resolver.TryGetGradientPermille(trackGraph, state.edgeId, state.distanceOnEdgeM, out gradientPermille);
+                }
+            }
+
+            totalGradeResistanceForceN += GetDirectionalGradeResistanceForceN(carMassKg, gradientPermille, movementDirection);
+        }
+
+        return totalGradeResistanceForceN;
+    }
+
+    private float GetRawCarMassTotalKg(ConsistDefinition resolvedConsist)
+    {
+        float totalMassKg = 0f;
+        for (int i = 0; i < carTrackStates.Count; i++)
+        {
+            totalMassKg += GetRawCarMassKg(resolvedConsist, i);
+        }
+
+        return totalMassKg;
+    }
+
+    private float GetRawCarMassKg(ConsistDefinition resolvedConsist, int index)
+    {
+        if (resolvedConsist != null &&
+            resolvedConsist.TryGetCar(index, out CarSpec carSpec) &&
+            carSpec != null)
+        {
+            return Mathf.Max(1f, carSpec.massKg);
+        }
+
+        return Mathf.Max(1f, trainSpec != null ? trainSpec.massKg : 1f);
+    }
+
+    private EdgeTravelDirection GetCarMovementDirection(CarTrackState state)
+    {
+        EdgeTravelDirection frontDirection = state != null ? state.frontDirection : CurrentDirection;
+        return reverserPosition == ReverserPosition.Reverse
+            ? TrackGraphUndirectedHelpers.GetOppositeDirection(frontDirection)
+            : frontDirection;
+    }
+
+    private float GetDirectionalGradeResistanceForceN(float massKg, float gradientPermille, EdgeTravelDirection movementDirection)
+    {
+        float directionalGradientPermille = movementDirection == EdgeTravelDirection.BtoA
+            ? -gradientPermille
+            : gradientPermille;
+
+        return ExternalForceCalculator.GetGradeResistanceForceN(massKg, directionalGradientPermille);
     }
 
     private float GetCurrentGradientPermilleForPhysics()

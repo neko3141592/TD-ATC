@@ -27,25 +27,26 @@
         "name": { "type": "string", "minLength": 1 },
         "origin": { "$ref": "#/$defs/vector3" },
         "yawDeg": { "type": "number" },
-        "segments": {
+        "horizontal": {
           "type": "array",
-          "items": { "$ref": "#/$defs/segment" }
+          "items": { "$ref": "#/$defs/horizontal" }
         }
       }
     },
     "track": {
       "type": "object",
-      "required": ["name", "baseCenterLineId", "offset"],
+      "required": ["name", "baseCenterLineId", "offset", "speedLimitKmH"],
       "properties": {
         "name": { "type": "string", "minLength": 1 },
         "baseCenterLineId": { "type": "string", "minLength": 1 },
         "offset": {
           "type": "array",
           "items": { "$ref": "#/$defs/offsetSegment" }
-        }
+        },
+        "speedLimit": { "type": "number" } 
       }
     },
-    "segment": {
+    "horizontal": {
       "type": "object",
       "required": ["type", "lengthM"],
       "properties": {

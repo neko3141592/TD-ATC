@@ -338,19 +338,8 @@ public class TrackGraph : ScriptableObject
                 }
             }
 
-            ValidateEdgeProfiles(errors, edge, nodeById);
+            ValidateOffsetEdge(errors, edge);
         }
-    }
-
-    /// <summary>
-    /// 役割: ValidateEdgeProfiles の処理を検証します。
-    /// </summary>
-    /// <param name="errors">errors を指定します。</param>
-    /// <param name="edge">edge を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void ValidateEdgeProfiles(List<string> errors, TrackEdge edge, Dictionary<string, TrackNode> nodeById)
-    {
-        ValidateOffsetEdge(errors, edge);
     }
 
     private void ValidateOffsetEdge(List<string> errors, TrackEdge edge)

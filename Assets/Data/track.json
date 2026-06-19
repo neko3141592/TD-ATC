@@ -1,39 +1,329 @@
 {
-    "$schema": "./track.schema.json",
-    "version":"1.0",
-    "trackName": "test_course",
-    "geometries": [
-        {
-            "name": "main_center",
-            "origin": { "x": 0, "y": 0, "z": 0 },
-            "yawDeg": 0,
-            "segments": [
-                { "type": "straight", "lengthM": 1000 }
-            ],
-            "vertical": [
-                { "startM": 0, "lengthM": 1000, "startPermille": 0, "endPermille": 0 }
-            ],
-            "cant": [
-                { "startM": 0, "lengthM": 1000, "startMm": 0, "endMm": 0 }
-            ]
-        }
-    ],
-    "tracks": [
-        {
-            "name": "up",
-            "baseCenterLineId": "main_center",
-            "offset": [
-                { "startBaseM": 0, "lengthM": 1000, "type": "constant", "offsetM": -1.9 }
-            ]
-        },
-        {
-            "name": "down",
-            "baseCenterLineId": "main_center",
-            "offset": [
-                { "startBaseM": 0, "lengthM": 1000, "type": "constant", "offsetM": 1.9 }
-            ]
-        }
-    ],
-    "connections": [
-    ]
+  "$schema": "./track.schema.json",
+  "version": "1.0",
+  "trackName": "test_course_9k378",
+  "geometries": [
+    {
+      "name": "main_center",
+      "origin": { "x": 0, "y": 0, "z": 0 },
+      "yawDeg": 0,
+      "segments": [
+        { "type": "straight", "lengthM": 113 },
+        { "type": "transitionIn", "lengthM": 50, "radiusM": 2600 },
+        { "type": "transitionOut", "lengthM": 50, "radiusM": 2600 },
+        { "type": "straight", "lengthM": 300 },
+        { "type": "transitionIn", "lengthM": 100, "radiusM": 350 },
+        { "type": "curve", "lengthM": 204, "radiusM": 350 },
+        { "type": "transitionOut", "lengthM": 100, "radiusM": 350 },
+        { "type": "straight", "lengthM": 607 },
+        { "type": "transitionIn", "lengthM": 100, "radiusM": -450 },
+        { "type": "curve", "lengthM": 305, "radiusM": -450 },
+        { "type": "transitionOut", "lengthM": 100, "radiusM": -450 },
+        { "type": "straight", "lengthM": 735 },
+        { "type": "transitionIn", "lengthM": 55, "radiusM": -1050 },
+        { "type": "transitionOut", "lengthM": 55, "radiusM": -1050 },
+        { "type": "straight", "lengthM": 512 },
+        { "type": "transitionIn", "lengthM": 90, "radiusM": -550 },
+        { "type": "curve", "lengthM": 312, "radiusM": -550 },
+        { "type": "transitionOut", "lengthM": 90, "radiusM": -550 },
+        { "type": "straight", "lengthM": 904 },
+        { "type": "transitionIn", "lengthM": 75, "radiusM": 700 },
+        { "type": "curve", "lengthM": 475, "radiusM": 700 },
+        { "type": "transitionOut", "lengthM": 75, "radiusM": 700 },
+        { "type": "straight", "lengthM": 883 },
+        { "type": "transitionIn", "lengthM": 50, "radiusM": 2300 },
+        { "type": "transitionOut", "lengthM": 50, "radiusM": 2300 },
+        { "type": "transitionIn", "lengthM": 50, "radiusM": -2300 },
+        { "type": "transitionOut", "lengthM": 50, "radiusM": -2300 },
+        { "type": "straight", "lengthM": 583 },
+        { "type": "transitionIn", "lengthM": 100, "radiusM": -650 },
+        { "type": "curve", "lengthM": 352, "radiusM": -650 },
+        { "type": "transitionOut", "lengthM": 100, "radiusM": -650 },
+        { "type": "straight", "lengthM": 47 },
+        { "type": "transitionIn", "lengthM": 100, "radiusM": 650 },
+        { "type": "curve", "lengthM": 450, "radiusM": 650 },
+        { "type": "transitionOut", "lengthM": 100, "radiusM": 650 },
+        { "type": "straight", "lengthM": 1056 }
+      ],
+      "vertical": [
+        { "startM": 0, "lengthM": 452, "startPermille": 0, "endPermille": 0 },
+        { "startM": 452, "lengthM": 100, "startPermille": 0, "endPermille": 18.9 },
+        { "startM": 552, "lengthM": 150, "startPermille": 18.9, "endPermille": 18.9 },
+        { "startM": 702, "lengthM": 150, "startPermille": 18.9, "endPermille": -15.2 },
+        { "startM": 902, "lengthM": 150, "startPermille": -15.2, "endPermille": -15.2 },
+        { "startM": 1052, "lengthM": 100, "startPermille": -15, "endPermille": 0 },
+        { "startM": 1152, "lengthM": 1200, "startPermille": 0, "endPermille": 0 },
+        { "startM": 2352, "lengthM": 50, "startPermille": 0, "endPermille": 4.7 },
+        { "startM": 2402, "lengthM": 730, "startPermille": 4.7, "endPermille": 4.7 },
+        { "startM": 3132, "lengthM": 50, "startPermille": 4.7, "endPermille": 0 },
+        { "startM": 3182, "lengthM": 700, "startPermille": 0, "endPermille": 0 },
+        { "startM": 3882, "lengthM": 50, "startPermille": 0, "endPermille": -3.4 },
+        { "startM": 3932, "lengthM": 500, "startPermille": -3.4, "endPermille": -3.4},
+        { "startM": 4432, "lengthM": 50, "startPermille": -3.4, "endPermille": 0}
+      ],
+      "cant": [
+        { "startM": 0, "lengthM": 9378, "startMm": 0, "endMm": 0 }
+      ]
+    }
+  ],
+  "tracks": [
+    {
+      "name": "up_001",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 0, "lengthM": 513, "type": "constant", "offsetM": -1.9 }
+      ],
+      "speedLimitKmH": 45
+    },
+    {
+      "name": "up_002",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 513, "lengthM": 404, "type": "constant", "offsetM": -1.9 }
+      ],
+      "speedLimitKmH": 60
+    },
+    {
+      "name": "up_003",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 917, "lengthM": 607, "type": "constant", "offsetM": -1.9 }
+      ],
+      "speedLimitKmH": 105
+    },
+    {
+      "name": "up_004",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 1524, "lengthM": 505, "type": "constant", "offsetM": -1.9 }
+      ],
+      "speedLimitKmH": 75
+    },
+    {
+      "name": "up_005",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 2029, "lengthM": 1357, "type": "constant", "offsetM": -1.9 }
+      ],
+      "speedLimitKmH": 105
+    },
+    {
+      "name": "up_006",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 3386, "lengthM": 492, "type": "constant", "offsetM": -1.9 }
+      ],
+      "speedLimitKmH": 80
+    },
+    {
+      "name": "up_007",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 3878, "lengthM": 3195, "type": "constant", "offsetM": -1.9 }
+      ],
+      "speedLimitKmH": 105
+    },
+    {
+      "name": "up_008",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 7073, "lengthM": 1249, "type": "constant", "offsetM": -1.9 }
+      ],
+      "speedLimitKmH": 90
+    },
+    {
+      "name": "up_009",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 8322, "lengthM": 1056, "type": "constant", "offsetM": -1.9 }
+      ],
+      "speedLimitKmH": 105
+    },
+    {
+      "name": "down_001",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 0, "lengthM": 513, "type": "constant", "offsetM": 1.9 }
+      ],
+      "speedLimitKmH": 45
+    },
+    {
+      "name": "down_002",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 513, "lengthM": 404, "type": "constant", "offsetM": 1.9 }
+      ],
+      "speedLimitKmH": 60
+    },
+    {
+      "name": "down_003",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 917, "lengthM": 607, "type": "constant", "offsetM": 1.9 }
+      ],
+      "speedLimitKmH": 105
+    },
+    {
+      "name": "down_004",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 1524, "lengthM": 505, "type": "constant", "offsetM": 1.9 }
+      ],
+      "speedLimitKmH": 75
+    },
+    {
+      "name": "down_005",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 2029, "lengthM": 1357, "type": "constant", "offsetM": 1.9 }
+      ],
+      "speedLimitKmH": 105
+    },
+    {
+      "name": "down_006",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 3386, "lengthM": 492, "type": "constant", "offsetM": 1.9 }
+      ],
+      "speedLimitKmH": 80
+    },
+    {
+      "name": "down_007",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 3878, "lengthM": 3195, "type": "constant", "offsetM": 1.9 }
+      ],
+      "speedLimitKmH": 105
+    },
+    {
+      "name": "down_008",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 7073, "lengthM": 1249, "type": "constant", "offsetM": 1.9 }
+      ],
+      "speedLimitKmH": 90
+    },
+    {
+      "name": "down_009",
+      "baseCenterLineId": "main_center",
+      "offset": [
+        { "startBaseM": 8322, "lengthM": 1056, "type": "constant", "offsetM": 1.9 }
+      ],
+      "speedLimitKmH": 105
+    }
+  ],
+  "connections": [
+    {
+      "name": "C_up_001_002",
+      "points": [
+        { "trackName": "up_001", "end": "end" },
+        { "trackName": "up_002", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_up_002_003",
+      "points": [
+        { "trackName": "up_002", "end": "end" },
+        { "trackName": "up_003", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_up_003_004",
+      "points": [
+        { "trackName": "up_003", "end": "end" },
+        { "trackName": "up_004", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_up_004_005",
+      "points": [
+        { "trackName": "up_004", "end": "end" },
+        { "trackName": "up_005", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_up_005_006",
+      "points": [
+        { "trackName": "up_005", "end": "end" },
+        { "trackName": "up_006", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_up_006_007",
+      "points": [
+        { "trackName": "up_006", "end": "end" },
+        { "trackName": "up_007", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_up_007_008",
+      "points": [
+        { "trackName": "up_007", "end": "end" },
+        { "trackName": "up_008", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_up_008_009",
+      "points": [
+        { "trackName": "up_008", "end": "end" },
+        { "trackName": "up_009", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_down_001_002",
+      "points": [
+        { "trackName": "down_001", "end": "end" },
+        { "trackName": "down_002", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_down_002_003",
+      "points": [
+        { "trackName": "down_002", "end": "end" },
+        { "trackName": "down_003", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_down_003_004",
+      "points": [
+        { "trackName": "down_003", "end": "end" },
+        { "trackName": "down_004", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_down_004_005",
+      "points": [
+        { "trackName": "down_004", "end": "end" },
+        { "trackName": "down_005", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_down_005_006",
+      "points": [
+        { "trackName": "down_005", "end": "end" },
+        { "trackName": "down_006", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_down_006_007",
+      "points": [
+        { "trackName": "down_006", "end": "end" },
+        { "trackName": "down_007", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_down_007_008",
+      "points": [
+        { "trackName": "down_007", "end": "end" },
+        { "trackName": "down_008", "end": "start" }
+      ]
+    },
+    {
+      "name": "C_down_008_009",
+      "points": [
+        { "trackName": "down_008", "end": "end" },
+        { "trackName": "down_009", "end": "start" }
+      ]
+    }
+  ]
 }

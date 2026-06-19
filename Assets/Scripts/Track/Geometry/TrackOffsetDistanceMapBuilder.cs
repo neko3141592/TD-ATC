@@ -14,6 +14,7 @@ public static class TrackOffsetDistanceMapBuilder
         TrackOffsetDistanceMap map = new TrackOffsetDistanceMap
         {
             sampleIntervalM = Mathf.Max(0.001f, sampleIntervalM),
+            offsetLengthM = 0f,
             baseDistanceByOffsetIndex = new()
         };
 
@@ -29,8 +30,19 @@ public static class TrackOffsetDistanceMapBuilder
         }
 
         integrationStepM = Mathf.Max(0.001f, integrationStepM);
+        GetBaseDistanceRange(
+            baseGeometry,
+            offsetSegments,
+            out float startBaseDistanceM,
+            out float endBaseDistanceM
+        );
 
-        float previousBaseDistanceM = 0f;
+        if (endBaseDistanceM <= startBaseDistanceM)
+        {
+            return map;
+        }
+
+        float previousBaseDistanceM = startBaseDistanceM;
         if (!TryResolveOffsetPosition(
             graph,
             resolver,
@@ -42,16 +54,16 @@ public static class TrackOffsetDistanceMapBuilder
             return map;
         }
 
-        map.baseDistanceByOffsetIndex.Add(0f);
+        map.baseDistanceByOffsetIndex.Add(startBaseDistanceM);
 
         double accumulatedOffsetDistanceM = 0.0;
         double nextSampleOffsetDistanceM = map.sampleIntervalM;
 
-        while (previousBaseDistanceM < baseGeometry.lengthM)
+        while (previousBaseDistanceM < endBaseDistanceM)
         {
             float nextBaseDistanceM = Mathf.Min(
                 previousBaseDistanceM + integrationStepM,
-                baseGeometry.lengthM
+                endBaseDistanceM
             );
 
             if (!TryResolveOffsetPosition(
@@ -89,7 +101,54 @@ public static class TrackOffsetDistanceMapBuilder
             previousOffsetPosition = nextOffsetPosition;
         }
 
+        map.offsetLengthM = (float)accumulatedOffsetDistanceM;
+        if (
+            map.offsetLengthM > 0f &&
+            map.baseDistanceByOffsetIndex.Count > 0 &&
+            Mathf.Abs(map.baseDistanceByOffsetIndex[map.baseDistanceByOffsetIndex.Count - 1] - endBaseDistanceM) > 0.0001f
+        )
+        {
+            map.baseDistanceByOffsetIndex.Add(endBaseDistanceM);
+        }
+
         return map;
+    }
+
+    private static void GetBaseDistanceRange(
+        TrackGeometry baseGeometry,
+        List<TrackOffsetSegment> offsetSegments,
+        out float startBaseDistanceM,
+        out float endBaseDistanceM)
+    {
+        startBaseDistanceM = 0f;
+        endBaseDistanceM = baseGeometry != null ? Mathf.Max(0f, baseGeometry.lengthM) : 0f;
+
+        if (baseGeometry == null || offsetSegments == null || offsetSegments.Count == 0)
+        {
+            return;
+        }
+
+        float minStartM = float.PositiveInfinity;
+        float maxEndM = float.NegativeInfinity;
+        for (int i = 0; i < offsetSegments.Count; i++)
+        {
+            TrackOffsetSegment segment = offsetSegments[i];
+            if (segment == null || segment.baseLengthM <= 0f)
+            {
+                continue;
+            }
+
+            minStartM = Mathf.Min(minStartM, segment.startBaseDistanceM);
+            maxEndM = Mathf.Max(maxEndM, segment.EndBaseDistanceM);
+        }
+
+        if (float.IsInfinity(minStartM) || float.IsInfinity(maxEndM))
+        {
+            return;
+        }
+
+        startBaseDistanceM = Mathf.Clamp(minStartM, 0f, baseGeometry.lengthM);
+        endBaseDistanceM = Mathf.Clamp(maxEndM, startBaseDistanceM, baseGeometry.lengthM);
     }
 
     private static bool TryResolveOffsetPosition(

@@ -38,13 +38,14 @@ public partial class TrainController
             return;
         }
 
-        if (!TryGetPositionBehind(state.offsetFromHeadM, out string edgeId, out float distOnEdge))
+        if (!TryGetPositionBehind(state.offsetFromHeadM, out string edgeId, out float distOnEdge, out EdgeTravelDirection frontDirection))
         {
             return;
         }
 
         state.edgeId = edgeId;
         state.distanceOnEdgeM = distOnEdge;
+        state.frontDirection = frontDirection;
 
         if (resolver.TryResolvePose(trackGraph, edgeId, distOnEdge, out Vector3 carPos, out Vector3 carTan, out Quaternion carRot))
         {

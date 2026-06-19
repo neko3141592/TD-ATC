@@ -120,8 +120,14 @@ public partial class TrainController
     /// <returns>処理が成功した場合は true、それ以外は false を返します。</returns>
     public bool TryGetPositionBehind(float offsetM, out string edgeId, out float distOnEdge)
     {
+        return TryGetPositionBehind(offsetM, out edgeId, out distOnEdge, out _);
+    }
+
+    private bool TryGetPositionBehind(float offsetM, out string edgeId, out float distOnEdge, out EdgeTravelDirection frontDirection)
+    {
         edgeId = currentEdgeId;
         distOnEdge = distanceOnEdgeM;
+        frontDirection = CurrentDirection;
 
         if (trackGraph == null || string.IsNullOrEmpty(currentEdgeId))
         {
@@ -152,6 +158,7 @@ public partial class TrainController
         }
 
         TrackTraceSegment lastSegment = positionBehindSegments[positionBehindSegments.Count - 1];
+        frontDirection = TrackGraphUndirectedHelpers.GetOppositeDirection(lastSegment.direction);
         edgeId = lastSegment.edgeId;
         distOnEdge = lastSegment.direction == EdgeTravelDirection.AtoB
             ? lastSegment.endDistanceOnEdgeM

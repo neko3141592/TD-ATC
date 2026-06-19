@@ -20,6 +20,7 @@ public class TrackEdge
     public string nodeAId; // 片側ノード ID です。
     public string nodeBId; // もう片側のノード ID です。
 
+
     public List<BlockSection> blockSections = new();
 
     // このエッジ上を走行するための基本データです。
@@ -29,5 +30,7 @@ public class TrackEdge
 
     public string baseGeometryId;
     public List<TrackOffsetSegment> offsetSegments = new();
+    
+    [HideInInspector]
     public TrackOffsetDistanceMap offsetDistanceMap;
 }

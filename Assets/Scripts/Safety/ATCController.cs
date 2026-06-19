@@ -1,6 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ATCSignalAspect
+{
+    Green,
+    Red,
+    Off
+}
+
 public class ATCController : MonoBehaviour
 {
     private enum AtcControlState
@@ -19,6 +26,7 @@ public class ATCController : MonoBehaviour
     }
 
     private const float MinimumEmergencyPatternGapKmH = 10f;
+    private const float StopIndicationThresholdKmH = 0.5f;
 
     [Header("References")]
     [SerializeField] private TrainController train;
@@ -96,8 +104,26 @@ public class ATCController : MonoBehaviour
     public bool IsAtcServiceBrakeActive => currentAtcState == AtcControlState.ServicePattern;
     public bool IsAtcEmergencyBrakeActive => currentAtcState == AtcControlState.EmergencyPattern;
     public bool IsNextBlockOccupied => isNextBlockOccupied;
+    public ATCSignalAspect CurrentSignalAspect => ResolveSignalAspect();
     public string NextBlockSignalBlockId => nextBlockSignalBlockId;
     public float NextBlockSignalDistanceM => nextBlockSignalDistanceM;
+
+    private ATCSignalAspect ResolveSignalAspect()
+    {
+        if (IsAtcCutOutActive)
+        {
+            return ATCSignalAspect.Off;
+        }
+
+        if (isNextBlockOccupied || (HasAtcIndication && CurrentPatternAllowSpeedKmH <= StopIndicationThresholdKmH))
+        {
+            return ATCSignalAspect.Red;
+        }
+
+        return ATCSignalAspect.Green;
+    }
+
+    private bool HasAtcIndication => !string.IsNullOrEmpty(currentPatternSourceLabel) && currentPatternSourceLabel != "--";
 
     /// <summary>
     /// 役割: ATC 制限候補の情報をひとまとめに保持します。

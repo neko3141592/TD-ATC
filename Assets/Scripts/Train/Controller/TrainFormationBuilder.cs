@@ -27,6 +27,10 @@ public class TrainFormationBuilder : MonoBehaviour
     [SerializeField] private Vector3 frontCabModuleLocalEuler = Vector3.zero;
     [SerializeField] private Vector3 rearCabModuleLocalEuler = new Vector3(0f, 180f, 0f);
 
+    [Header("Visual Root")]
+    [SerializeField] private string visualRootName = "VisualRoot";
+    [SerializeField] private Vector3 rearCabVisualRootLocalPositionOffset = Vector3.zero;
+
     private const string CarsRootName = "Cars";
     private const string TractionEquipmentsRootName = "TractionEquipments";
 
@@ -324,6 +328,7 @@ public class TrainFormationBuilder : MonoBehaviour
         instance.name = CreateCarObjectName(carIndex, carSpec);
         ResetGeneratedTransform(instance.transform);
         ConfigureTrainCar(instance, carIndex, carSpec);
+        ApplyRearCabVisualRootOffset(instance.transform, carSpec);
         AddCabModuleIfNeeded(instance.transform, carSpec);
     }
 
@@ -400,6 +405,37 @@ public class TrainFormationBuilder : MonoBehaviour
         }
 
         return 0f;
+    }
+
+    private void ApplyRearCabVisualRootOffset(Transform carRoot, CarSpec carSpec)
+    {
+        if (carRoot == null ||
+            carSpec == null ||
+            carSpec.carRole != CarRole.Cab ||
+            carSpec.cabEnd != CabEnd.Rear ||
+            rearCabVisualRootLocalPositionOffset == Vector3.zero)
+        {
+            return;
+        }
+
+        Transform visualRoot = FindVisualRoot(carRoot);
+        if (visualRoot == null)
+        {
+            Debug.LogWarning($"{nameof(TrainFormationBuilder)} on {name}: rear cab has no visual root '{visualRootName}'. spec={carSpec.name}", carSpec);
+            return;
+        }
+
+        visualRoot.localPosition += rearCabVisualRootLocalPositionOffset;
+    }
+
+    private Transform FindVisualRoot(Transform carRoot)
+    {
+        if (carRoot == null || string.IsNullOrEmpty(visualRootName))
+        {
+            return null;
+        }
+
+        return carRoot.Find(visualRootName);
     }
 
     /// <summary>
