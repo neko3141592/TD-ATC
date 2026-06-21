@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TrainSpec
   massKg: 280000
   maxSpeedMS: 33.33333
-  gearRatio: 6.06
+  gearRatio: 7.07
   drivelineEfficiency: 0.93
   wheelRadiusM: 0.43
   resistanceA: 3000

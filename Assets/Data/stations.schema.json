@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Stations Data",
+  "type": "object",
+  "required": ["version", "stations"],
+  "properties": {
+    "version": { "type": "string"},
+    "name": { "type": "string"},
+    "stations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/station"}
+    }
+  },
+  "$defs": {
+      "station": {
+        "type": "object",
+        "required": ["id", "name", "type", "stationTracks", "stops"],
+        "properties": {
+          "id": { "type": "string"},
+          "name": {"type": "string"},
+          "type": {
+            "type": "string",
+            "enum": ["station", "halt", "signalBox"]
+          },
+          "stationTracks": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/stationTracks" }
+          },
+          "stops": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/stop" }
+          }
+        }
+      },
+      "stationTracks": {
+        "type": "object",
+        "required": ["id", "name", "type", "servedEdges"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["side", "island", "bay", "other"]
+          },
+          "servedEdges": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          }
+        }
+      },
+      "stop": {
+        "type": "object",
+        "required": ["id", "name", "edgeId", "distances"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "edgeId": { "type": "string" },
+          "distances": { 
+            "type": "array",
+            "items": { "$ref": "#/$defs/distance" }
+          }
+        }
+      },
+      "distance": {
+        "type": "object",
+        "required": [ "consistLength", "distanceOnEdgeM" ],
+        "properties": {
+          "consistLength": { "type": "integer", "minimum": 6 },
+          "distanceOnEdgeM": { "type": "number" }
+        }
+      }
+  }
+  
+}

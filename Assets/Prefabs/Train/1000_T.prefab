@@ -116,6 +116,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Takamizu_moha1101 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7081734107193346532, guid: 1347e3380912b2743ac124df9a2896df, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8000712648577371693, guid: 1347e3380912b2743ac124df9a2896df, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 256025250578783556, guid: 1347e3380912b2743ac124df9a2896df, type: 3}
     - {fileID: 256025250578783623, guid: 1347e3380912b2743ac124df9a2896df, type: 3}

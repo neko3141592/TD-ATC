@@ -1,0 +1,5 @@
+{
+    "$schema": "./stations.schema.json",
+    "version": "1.0",
+    "name": "Nakatetsu Stations Data"
+}

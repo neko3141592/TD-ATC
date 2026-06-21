@@ -13,6 +13,8 @@ public class TrackGraph : ScriptableObject
 
     public List<TurnoutConnection> turnoutConnections = new();
 
+    
+
     public List<TrackGeometry> geometries = new();
 
     /// <summary>
