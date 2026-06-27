@@ -24,6 +24,7 @@ public partial class TrainController : MonoBehaviour
     private float distance = 0f;
 
     private float currentAccelerationMS2 = 0f;
+    private float currentJerkMS3 = 0f;
     private float currentGradientPermille = 0f;
     private float currentCantMm = 0f;
     private float currentGradeResistanceForceN = 0f;
@@ -57,10 +58,12 @@ public partial class TrainController : MonoBehaviour
 
     
 
-    public float SpeedKmH => speedMS * 3.6f;
-    public float SpeedMS => speedMS;
+    public float SpeedKmH => Mathf.Abs(speedMS) * 3.6f;
+    public float SpeedMS => Mathf.Abs(speedMS);
+    public float SignedSpeedKmH => speedMS * 3.6f;
+    public float SignedSpeedMS => speedMS;
     // CurrentDirection は車両前頭が向いている線路上の基準方向です。
-    // 実際に動く向きは逆転器位置を反映した CurrentMovementDirection を使います。
+    // 実際に動く向きは符号付き速度を反映した CurrentMovementDirection を使います。
     public EdgeTravelDirection CurrentDirection { get; private set; }
     public EdgeTravelDirection CurrentMovementDirection => GetMovementDirection();
     public ReverserPosition Reverser => reverserPosition;
@@ -89,7 +92,9 @@ public partial class TrainController : MonoBehaviour
     public float CurrentBCPressureKPa => brakeSystem != null ? brakeSystem.CurrentBCPressureKPa : 0f;
     public float CurrentTargetBCPressureKPa => brakeSystem != null ? brakeSystem.CurrentTargetBCPressureKPa : 0f;
     public bool IsRollingPreventionActive => brakeSystem != null && brakeSystem.IsRollingPreventionActive;
+    public bool IsGradientStart => brakeSystem != null && brakeSystem.IsGradientStart;
     public float CurrentAccelerationMS2 => currentAccelerationMS2;
+    public float CurrentJerkMS3 => currentJerkMS3;
     public float CurrentConsistMassKg => GetCurrentConsistMassKg();
     public float CurrentGradientPermille => currentGradientPermille;
     public float CurrentCantMm => currentCantMm;

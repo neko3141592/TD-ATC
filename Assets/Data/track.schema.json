@@ -2,21 +2,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Train Track JSON",
   "type": "object",
-  "required": ["version", "trackName", "geometries", "tracks"],
+  "required": ["version", "trackName", "geometries", "trackGroups"],
   "properties": {
+    "$schema": { "type": "string" },
     "version": { "type": "string" },
     "trackName": { "type": "string" },
     "geometries": {
       "type": "array",
       "items": { "$ref": "#/$defs/geometry" }
     },
-    "tracks": {
+    "trackGroups": {
       "type": "array",
-      "items": { "$ref": "#/$defs/track" }
-    },
-    "connections": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/connection" }
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/trackGroup" }
     }
   },
   "$defs": {
@@ -27,9 +25,37 @@
         "name": { "type": "string", "minLength": 1 },
         "origin": { "$ref": "#/$defs/vector3" },
         "yawDeg": { "type": "number" },
-        "horizontal": {
+        "segments": {
           "type": "array",
           "items": { "$ref": "#/$defs/horizontal" }
+        },
+        "vertical": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/vertical" }
+        },
+        "cant": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/cant" }
+        }
+      }
+    },
+    "trackGroup": {
+      "type": "object",
+      "required": ["id", "name", "tracks"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "tracks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/track" }
+        },
+        "connections": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/connection" }
+        },
+        "signals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/signal" }
         }
       }
     },
@@ -43,7 +69,12 @@
           "type": "array",
           "items": { "$ref": "#/$defs/offsetSegment" }
         },
-        "speedLimit": { "type": "number" } 
+        "boundaryDistanceM": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0 }
+        },
+        "blockIntervalM": { "type": "number", "minimum": 0 },
+        "speedLimitKmH": { "type": "number" }
       }
     },
     "horizontal": {
@@ -53,6 +84,26 @@
         "type": { "enum": ["straight", "curve", "transitionIn", "transitionOut"] },
         "lengthM": { "type": "number", "exclusiveMinimum": 0 },
         "radiusM": { "type": "number" }
+      }
+    },
+    "vertical": {
+      "type": "object",
+      "required": ["startM", "lengthM", "startPermille", "endPermille"],
+      "properties": {
+        "startM": { "type": "number", "minimum": 0 },
+        "lengthM": { "type": "number", "minimum": 0 },
+        "startPermille": { "type": "number" },
+        "endPermille": { "type": "number" }
+      }
+    },
+    "cant": {
+      "type": "object",
+      "required": ["startM", "lengthM", "startMm", "endMm"],
+      "properties": {
+        "startM": { "type": "number", "minimum": 0 },
+        "lengthM": { "type": "number", "minimum": 0 },
+        "startMm": { "type": "number" },
+        "endMm": { "type": "number" }
       }
     },
     "offsetSegment": {
@@ -84,6 +135,16 @@
             }
           }
         }
+      }
+    },
+    "signal": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "trackName": { "type": "string" },
+        "distanceM": { "type": "number", "minimum": 0 }
       }
     },
     "vector3": {

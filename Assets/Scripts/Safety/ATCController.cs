@@ -60,6 +60,7 @@ public class ATCController : MonoBehaviour
 
     [Header("Pattern / ATC Tuning")]
     [SerializeField] private float limitChangeEpsilonMS = 0.01f;
+    [SerializeField] private int patternBrakeNotch = 4;
     [SerializeField] private float fallbackPatternDecelerationMS2 = 1.8f;
     [SerializeField] private float atcReleaseMarginKmH = 3f;
     [SerializeField] private float overspeedToleranceMS = 0.1f;
@@ -89,6 +90,11 @@ public class ATCController : MonoBehaviour
     private float previousPatternAllowSpeedMS = 0f;
     private readonly List<AtcTargetCandidate> candidateBuffer = new();
     private readonly List<TrackTraceSegment> speedLimitTraceBuffer = new();
+    private AtcTargetCandidate lastSpeedLimitCandidate;
+    private AtcTargetCandidate lastOccupiedBlockCandidate;
+    private AtcTargetCandidate lastServiceSpeedLimitCandidate;
+    private AtcTargetCandidate lastSelectedCandidate;
+    private string lastSpeedLimitRawTargetDebugLabel = "Raw Speed Limit: --";
 
     public float CurrentLimitSpeedKmH => currentLimitSpeedMS * 3.6f;
     public float CurrentPatternAllowSpeedKmH => patternAllowSpeedMS * 3.6f;
@@ -107,6 +113,11 @@ public class ATCController : MonoBehaviour
     public ATCSignalAspect CurrentSignalAspect => ResolveSignalAspect();
     public string NextBlockSignalBlockId => nextBlockSignalBlockId;
     public float NextBlockSignalDistanceM => nextBlockSignalDistanceM;
+    public string SpeedLimitCandidateDebugLabel => FormatCandidateDebugLabel(lastSpeedLimitCandidate);
+    public string OccupiedBlockCandidateDebugLabel => FormatCandidateDebugLabel(lastOccupiedBlockCandidate);
+    public string ServiceSpeedLimitCandidateDebugLabel => FormatCandidateDebugLabel(lastServiceSpeedLimitCandidate);
+    public string SelectedCandidateDebugLabel => FormatCandidateDebugLabel(lastSelectedCandidate);
+    public string SpeedLimitRawTargetDebugLabel => lastSpeedLimitRawTargetDebugLabel;
 
     private ATCSignalAspect ResolveSignalAspect()
     {
@@ -209,6 +220,9 @@ public class ATCController : MonoBehaviour
         AtcTargetCandidate occupiedBlockCandidate = BuildOccupiedBlockCandidate();
         AtcTargetCandidate serviceSpeedLimitCandidate = BuildServiceSpeedLimitCandidate();
         UpdateNextBlockSignalState();
+        lastSpeedLimitCandidate = speedLimitCandidate;
+        lastOccupiedBlockCandidate = occupiedBlockCandidate;
+        lastServiceSpeedLimitCandidate = serviceSpeedLimitCandidate;
 
         candidateBuffer.Clear();
         candidateBuffer.Add(speedLimitCandidate);
@@ -216,6 +230,7 @@ public class ATCController : MonoBehaviour
         candidateBuffer.Add(serviceSpeedLimitCandidate);
 
         AtcTargetCandidate selectedCandidate = ChooseMoreRestrictive(candidateBuffer);
+        lastSelectedCandidate = selectedCandidate;
         ApplyPatternCandidate(selectedCandidate);
         UpdatePatternRaiseDingState();
         UpdatePatternApproachLampState();
@@ -362,6 +377,7 @@ public class ATCController : MonoBehaviour
     /// <returns>速度制限由来の ATC 制限候補を返します。</returns>
     private AtcTargetCandidate BuildSpeedLimitCandidate(TrackEdge currentEdge)
     {
+        lastSpeedLimitRawTargetDebugLabel = "Raw Speed Limit: --";
         AtcTargetCandidate candidate = new AtcTargetCandidate
         {
             isValid = true,
@@ -394,9 +410,11 @@ public class ATCController : MonoBehaviour
                 train.CurrentMovementDirection
             ))
         {
+            lastSpeedLimitRawTargetDebugLabel = "Raw Speed Limit: trace failed";
             return candidate;
         }
 
+        bool hasRawSpeedLimitTarget = false;
         for (int i = 0; i < speedLimitTraceBuffer.Count; i++)
         {
             TrackTraceSegment segment = speedLimitTraceBuffer[i];
@@ -425,6 +443,14 @@ public class ATCController : MonoBehaviour
                     rawEmergencyAllowSpeedMS,
                     allowSpeedMS
                 );
+
+                if (!hasRawSpeedLimitTarget)
+                {
+                    bool isAdoptable = allowSpeedMS < currentLimitSpeedMS;
+                    lastSpeedLimitRawTargetDebugLabel =
+                        $"Raw Speed Limit: {aheadEdge.edgeId} D {targetDistanceM:0.0} m / RawA {allowSpeedMS * 3.6f:0.0} km/h / T {aheadLimitSpeedMS * 3.6f:0.0} km/h / Adopt {(isAdoptable ? "Y" : "N")}";
+                    hasRawSpeedLimitTarget = true;
+                }
 
                 if (allowSpeedMS < candidate.allowedSpeedMS)
                 {
@@ -534,7 +560,7 @@ public class ATCController : MonoBehaviour
             return candidate;
         }
 
-        float decel = Mathf.Max(0f, train.Spec.GetBrakeDeceleration(5));
+        float decel = Mathf.Max(0f, train.Spec.GetBrakeDeceleration(patternBrakeNotch));
         float emergencyDecel = Mathf.Max(0f, train.Spec.GetEstimatedEmergencyBrakeDeceleration() - safetyDecelMS);
 
         if (!blockOccupancyManager.TryFindFirstOccupiedBlockAhead(
@@ -549,6 +575,9 @@ public class ATCController : MonoBehaviour
         float targetDistanceM = Mathf.Max(0f, distanceToBlockM - occupiedBlockSafetyMarginM);
 
         candidate.isValid = true;
+        candidate.sourceLabel = string.IsNullOrEmpty(occupiedBlockId)
+            ? "Occupied Block"
+            : $"Occupied Block {occupiedBlockId} RawD {distanceToBlockM:0.0} m";
         candidate.distanceM = targetDistanceM;
         candidate.targetSpeedMS = 0f;
         candidate.allowedSpeedMS = ATCPatternCalculator.CalculateAllowSpeedMS(
@@ -776,6 +805,26 @@ public class ATCController : MonoBehaviour
         return Mathf.Max(0f, fallbackPatternDecelerationMS2);
     }
 
+    private string FormatCandidateDebugLabel(AtcTargetCandidate candidate)
+    {
+        string source = string.IsNullOrEmpty(candidate.sourceLabel) ? "--" : candidate.sourceLabel;
+        if (!candidate.isValid)
+        {
+            return $"{source}: --";
+        }
+
+        return $"{source}: D {candidate.distanceM:0.0} m / A {candidate.allowedSpeedMS * 3.6f:0.0} km/h / T {candidate.targetSpeedMS * 3.6f:0.0} km/h";
+    }
+
+    private void ResetCandidateDebugState()
+    {
+        lastSpeedLimitCandidate = new AtcTargetCandidate { sourceLabel = "Speed Limit" };
+        lastOccupiedBlockCandidate = new AtcTargetCandidate { sourceLabel = "Occupied Block" };
+        lastServiceSpeedLimitCandidate = new AtcTargetCandidate { sourceLabel = "Service Speed Limit" };
+        lastSelectedCandidate = new AtcTargetCandidate { sourceLabel = "Selected" };
+        lastSpeedLimitRawTargetDebugLabel = "Raw Speed Limit: --";
+    }
+
     /// <summary>
     /// 役割: ResolveRuntimeReferences の処理を実行します。
     /// </summary>
@@ -813,5 +862,6 @@ public class ATCController : MonoBehaviour
         hasPreviousNextBlockSignalState = false;
         hasPreviousPatternAllowSpeed = false;
         previousPatternAllowSpeedMS = 0f;
+        ResetCandidateDebugState();
     }
 }

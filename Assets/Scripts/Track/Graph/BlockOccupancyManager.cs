@@ -359,7 +359,7 @@ public class BlockOccupancyManager : MonoBehaviour
                 targetTrain.DistanceOnEdgeM,
                 lookaheadDistanceM,
                 aheadSegments,
-                targetTrain.CurrentDirection
+                targetTrain.CurrentMovementDirection
             ))
         {
             return false;

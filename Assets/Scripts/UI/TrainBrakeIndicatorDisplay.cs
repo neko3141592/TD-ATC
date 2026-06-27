@@ -11,37 +11,67 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
     [SerializeField] private IndicatorObjectPair rollingPrevent;
     [SerializeField] private IndicatorObjectPair keep;
     [SerializeField] private IndicatorObjectPair regenReleased;
+    [SerializeField] private IndicatorObjectPair gradientStart;
 
     [Header("Display Delay")]
     [SerializeField, Min(0f)] private float updateLagSeconds = 0f;
+
+    [Header("Lit Scale")]
+    [SerializeField, Min(0f)] private float litScaleMultiplier = 1f;
 
     private float nextReadTime = 0f;
     private bool displayedRollingPreventOn = false;
     private bool displayedKeepOn = false;
     private bool displayedRegenReleasedOn = false;
 
+    private bool displayedGradientStartOn = false;
+
     [System.Serializable]
     private struct IndicatorObjectPair
     {
         [SerializeField] private GameObject offObject;
         [SerializeField] private GameObject onObject;
+        [SerializeField, HideInInspector] private bool hasBaseScales;
+        [SerializeField, HideInInspector] private Vector3 offBaseScale;
+        [SerializeField, HideInInspector] private Vector3 onBaseScale;
 
         /// <summary>
         /// 役割: 表示灯の状態に合わせて、消灯用 GameObject と点灯用 GameObject を切り替えます。
         /// </summary>
         /// <param name="isOn">点灯させる場合は true、消灯させる場合は false を指定します。</param>
+        /// <param name="litScaleMultiplier">点灯時に適用するスケール倍率を指定します。</param>
         /// <remarks>返り値はありません。</remarks>
-        public void SetLit(bool isOn)
+        public void SetLit(bool isOn, float litScaleMultiplier)
         {
+            EnsureBaseScales();
+
             if (offObject != null)
             {
+                offObject.transform.localScale = offBaseScale;
                 offObject.SetActive(!isOn);
             }
 
             if (onObject != null)
             {
+                onObject.transform.localScale = onBaseScale * Mathf.Max(0f, litScaleMultiplier);
                 onObject.SetActive(isOn);
             }
+        }
+
+        /// <summary>
+        /// 役割: インスペクター上で調整された元スケールを保持します。
+        /// </summary>
+        /// <remarks>返り値はありません。</remarks>
+        private void EnsureBaseScales()
+        {
+            if (hasBaseScales)
+            {
+                return;
+            }
+
+            offBaseScale = offObject != null ? offObject.transform.localScale : Vector3.one;
+            onBaseScale = onObject != null ? onObject.transform.localScale : Vector3.one;
+            hasBaseScales = true;
         }
     }
 
@@ -101,6 +131,7 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
         displayedRollingPreventOn = train != null && train.IsRollingPreventionActive;
         displayedKeepOn = ntim != null && ntim.SpeedHoldActive;
         displayedRegenReleasedOn = brakeSystem != null && brakeSystem.IsRegenReleased;
+        displayedGradientStartOn = brakeSystem != null && brakeSystem.IsGradientStart;
     }
 
     /// <summary>
@@ -109,9 +140,10 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void ApplyIndicators()
     {
-        rollingPrevent.SetLit(displayedRollingPreventOn);
-        keep.SetLit(displayedKeepOn);
-        regenReleased.SetLit(displayedRegenReleasedOn);
+        rollingPrevent.SetLit(displayedRollingPreventOn, litScaleMultiplier);
+        keep.SetLit(displayedKeepOn, litScaleMultiplier);
+        regenReleased.SetLit(displayedRegenReleasedOn, litScaleMultiplier);
+        gradientStart.SetLit(displayedGradientStartOn, litScaleMultiplier);
     }
 
     /// <summary>

@@ -1,5 +1,374 @@
 {
     "$schema": "./stations.schema.json",
     "version": "1.0",
-    "name": "Nakatetsu Stations Data"
+    "name": "Nakatetsu Stations Data",
+    "stations": [
+        {
+            "id": "NT01",
+            "name": "NT01",
+            "type": "station",
+            "stationTracks": [
+                {
+                    "id": "NT01_P1",
+                    "name": "下り1番",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT01_P1"
+                    ]
+                },
+                {
+                    "id": "NT01_P2",
+                    "name": "下り2番",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT01_P2"
+                    ]
+                }
+            ],
+            "stops": [
+                { 
+                    "id": "NT01_P1_STOP",
+                    "name": "下り1番 停止位置",
+                    "edgeId": "NT01_P1",
+                    "distances": [
+                        { 
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20 
+                        }
+                    ]
+                },
+                { 
+                    "id": "NT01_P2_STOP",
+                    "name": "下り2番 停止位置",
+                    "edgeId": "NT01_P2",
+                    "distances": [
+                        { 
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20 
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "NT02",
+            "name": "NT02",
+            "type": "halt",
+            "stationTracks": [
+                {
+                    "id": "NT02_P1",
+                    "name": "下り",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT02_P1"
+                    ]
+                },
+                {
+                    "id": "NT02_P2",
+                    "name": "上り",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT02_P2"
+                    ]
+                }
+            ],
+            "stops": [
+                { 
+                    "id": "NT02_P1_STOP",
+                    "name": "下り 停止位置",
+                    "edgeId": "NT02_P1",
+                    "distances": [
+                        { 
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 200 
+                        }
+                    ]
+                },
+                { 
+                    "id": "NT02_P2_STOP",
+                    "name": "上り 停止位置",
+                    "edgeId": "NT02_P2",
+                    "distances": [
+                        { 
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20 
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "NT03",
+            "name": "NT03",
+            "type": "halt",
+            "stationTracks": [
+                {
+                    "id": "NT03_P1",
+                    "name": "下り",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT03_P1"
+                    ]
+                },
+                {
+                    "id": "NT03_P2",
+                    "name": "上り",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT03_P2"
+                    ]
+                }
+            ],
+            "stops": [
+                {
+                    "id": "NT03_P1_STOP",
+                    "name": "下り 停止位置",
+                    "edgeId": "NT03_P1",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                },
+                {
+                    "id": "NT03_P2_STOP",
+                    "name": "上り 停止位置",
+                    "edgeId": "NT03_P2",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "NT04",
+            "name": "NT04",
+            "type": "halt",
+            "stationTracks": [
+                {
+                    "id": "NT04_P1",
+                    "name": "下り",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT04_P1"
+                    ]
+                },
+                {
+                    "id": "NT04_P2",
+                    "name": "上り",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT04_P2"
+                    ]
+                }
+            ],
+            "stops": [
+                {
+                    "id": "NT04_P1_STOP",
+                    "name": "下り 停止位置",
+                    "edgeId": "NT04_P1",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                },
+                {
+                    "id": "NT04_P2_STOP",
+                    "name": "上り 停止位置",
+                    "edgeId": "NT04_P2",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "NT05",
+            "name": "NT05",
+            "type": "station",
+            "stationTracks": [
+                {
+                    "id": "NT05_P1",
+                    "name": "下り1番",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT05_P1"
+                    ]
+                },
+                {
+                    "id": "NT05_P2",
+                    "name": "下り2番",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT05_P2"
+                    ]
+                },
+                {
+                    "id": "NT05_P3",
+                    "name": "上り1番",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT05_P3"
+                    ]
+                },
+                {
+                    "id": "NT05_P4",
+                    "name": "上り2番",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT05_P4"
+                    ]
+                }
+            ],
+            "stops": [
+                {
+                    "id": "NT05_P1_STOP",
+                    "name": "下り1番 停止位置",
+                    "edgeId": "NT05_P1",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                },
+                {
+                    "id": "NT05_P2_STOP",
+                    "name": "下り2番 停止位置",
+                    "edgeId": "NT05_P2",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                },
+                {
+                    "id": "NT05_P3_STOP",
+                    "name": "上り1番 停止位置",
+                    "edgeId": "NT05_P3",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                },
+                {
+                    "id": "NT05_P4_STOP",
+                    "name": "上り2番 停止位置",
+                    "edgeId": "NT05_P4",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "NT06",
+            "name": "NT06",
+            "type": "halt",
+            "stationTracks": [
+                {
+                    "id": "NT06_P1",
+                    "name": "下り",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT06_P1"
+                    ]
+                },
+                {
+                    "id": "NT06_P2",
+                    "name": "上り",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT06_P2"
+                    ]
+                }
+            ],
+            "stops": [
+                {
+                    "id": "NT06_P1_STOP",
+                    "name": "下り 停止位置",
+                    "edgeId": "NT06_P1",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                },
+                {
+                    "id": "NT06_P2_STOP",
+                    "name": "上り 停止位置",
+                    "edgeId": "NT06_P2",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "NT07",
+            "name": "NT07",
+            "type": "halt",
+            "stationTracks": [
+                {
+                    "id": "NT07_P1",
+                    "name": "下り",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT07_P1"
+                    ]
+                },
+                {
+                    "id": "NT07_P2",
+                    "name": "上り",
+                    "type": "side",
+                    "servedEdges": [
+                        "NT07_P2"
+                    ]
+                }
+            ],
+            "stops": [
+                {
+                    "id": "NT07_P1_STOP",
+                    "name": "下り 停止位置",
+                    "edgeId": "NT07_P1",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                },
+                {
+                    "id": "NT07_P2_STOP",
+                    "name": "上り 停止位置",
+                    "edgeId": "NT07_P2",
+                    "distances": [
+                        {
+                            "consistLength": 10,
+                            "distanceOnEdgeM": 20
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
 }

@@ -35,11 +35,13 @@ public static class TrackRouteTracer
             return false;
         }
 
+        string activeEdgeId = currentEdgeId;
         float remainingLookaheadM = lookaheadDistanceM;
         float initialEdgeLengthM = Mathf.Max(0f, currentEdge.lengthM);
         float currentDistanceOnEdgeM = Mathf.Clamp(distanceOnEdgeM, 0f, initialEdgeLengthM);
         float distanceFromOriginM = 0f;
 
+        const float endpointEpsilonM = 0.01f;
         const int maxSegments = 256;
         int guard = 0;
 
@@ -77,19 +79,24 @@ public static class TrackRouteTracer
             {
                 return true;
             }
+            // If no distance was traced and we are not at the exit yet,
+            // do not jump to the connected edge. This is a defensive guard
+            // against invalid distances, zero-length progress, or helper mismatch.
 
-            if (direction == EdgeTravelDirection.AtoB && currentDistanceOnEdgeM < edgeLengthM)
-            {
-                return true;
-            }
+            // if (direction == EdgeTravelDirection.AtoB && currentDistanceOnEdgeM < edgeLengthM - endpointEpsilonM)
+            // {
+            //     return true;
+            // }
 
-            if (direction == EdgeTravelDirection.BtoA && currentDistanceOnEdgeM > 0f)
-            {
-                return true;
-            }
+            // if (direction == EdgeTravelDirection.BtoA && currentDistanceOnEdgeM > endpointEpsilonM)
+            // {
+            //     return true;
+            // }
+
+            currentDistanceOnEdgeM = TrackGraphUndirectedHelpers.ClampDistanceAtExit(currentEdge, direction);
 
             string currentNodeId = TrackGraphUndirectedHelpers.GetExitNodeId(currentEdge, direction);
-            string nextEdgeId = TrackGraphUndirectedHelpers.ResolveConnectedEdge(graph, currentNodeId, currentEdgeId);
+            string nextEdgeId = TrackGraphUndirectedHelpers.ResolveConnectedEdge(graph, currentNodeId, activeEdgeId);
 
             if (string.IsNullOrEmpty(nextEdgeId))
             {
@@ -106,6 +113,7 @@ public static class TrackRouteTracer
             EdgeTravelDirection nextDirection = TrackGraphUndirectedHelpers.GetTravelDirectionFromNode(nextEdge, currentNodeId);
 
             currentEdge = nextEdge;
+            activeEdgeId = nextEdgeId;
             direction = nextDirection;
             currentDistanceOnEdgeM = TrackGraphUndirectedHelpers.GetEntryDistanceOnEdge(nextEdge, currentNodeId);
         }

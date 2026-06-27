@@ -4,6 +4,8 @@ public class NotchManager : MonoBehaviour
 {
 
     [SerializeField] private TrainController train;
+    [SerializeField] private EBController ebController;
+
     private int maxPowerNotch = 5;
     private int maxBrakeNotch = 8;
     private int maxTascServiceBrakeNotch = 7;
@@ -31,6 +33,11 @@ public class NotchManager : MonoBehaviour
         if (train == null)
         {
             train = GetComponent<TrainController>();
+        }
+
+        if (ebController == null)
+        {
+            ebController = GetComponent<EBController>();
         }
     }
 
@@ -156,6 +163,18 @@ public class NotchManager : MonoBehaviour
         int manualRank = GetIntegerBrakeRank(manualBrakeNotch);
         int atcRank = GetIntegerBrakeRank(atcBrakeNotch);
         int tascRank = Mathf.Max(0, tascBrakeStep);
+
+        if (ebController == null)
+        {
+            return;
+        }
+
+        if (ebController.IsEBHolding)
+        {
+            ResolvedBrakeNotch = train.EmergencyBrakeNotch;
+            ResolvedPowerNotch = 0;
+            return;
+        }
 
         IsTASCBrakeSelected = tascRank > 0 && tascRank >= manualRank && tascRank >= atcRank;
         if (IsTASCBrakeSelected)

@@ -28,6 +28,11 @@ public class BrakeSystemController : MonoBehaviour
     [SerializeField] private bool regenRelease = false;
     public bool IsRegenReleased => regenRelease;
 
+    [Header("Gradient Start")]
+    [SerializeField] private bool gradientStart = false;
+    [SerializeField] private float gradientStartPressureKPa = 250f;
+    public bool IsGradientStart => gradientStart && !(train.SpeedMS > 1f);
+
     /// <summary>
     /// 役割: BC圧を決める候補を表します。
     /// </summary>
@@ -422,6 +427,26 @@ public class BrakeSystemController : MonoBehaviour
         };
     }
 
+    private BCPressureCandidate BuildGradientStartCandidate(CarSpec carSpec)
+    {
+        if (!gradientStart || carSpec == null || train.SpeedMS > 1f)
+        {
+            return new BCPressureCandidate
+            {
+                isValid = false,
+                sourceLabel = "Gradient Start",
+                targetBCPressureKPa = 0f
+            };
+        }
+
+        return new BCPressureCandidate
+        {
+            isValid = true,
+            sourceLabel = "Gradient Start",
+            targetBCPressureKPa = Mathf.Clamp(gradientStartPressureKPa, 0f, carSpec.bcMaxPressureKPa)
+        };
+    }
+
     /// <summary>
     /// 役割: 2つのBC圧候補から高いBC圧を要求する候補を選びます。
     /// </summary>
@@ -466,7 +491,9 @@ public class BrakeSystemController : MonoBehaviour
     )
     {
         BCPressureCandidate rollingCandidate = BuildRollingPreventionBCPressureCandidate(carSpec);
+        BCPressureCandidate gradientStartCandidate = BuildGradientStartCandidate(carSpec);
         BCPressureCandidate selectedCandidate = ChooseHigherBCPressureCandidate(normalCandidate, rollingCandidate);
+        selectedCandidate = ChooseHigherBCPressureCandidate(selectedCandidate, gradientStartCandidate);
         float targetBCPressureKPa = selectedCandidate.isValid ? selectedCandidate.targetBCPressureKPa : 0f;
         RecordTargetBCPressureKPa(targetBCPressureKPa);
 

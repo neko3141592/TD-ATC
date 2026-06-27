@@ -54,6 +54,7 @@ public class TrainHUD : MonoBehaviour
         string atcEmergencyPatternText = "--";
         string atcTargetDistanceText = "--";
         string atcBrakeLatchedText = "--";
+        string atcCandidateDebugText = "Selected: --\nSpeed Limit: --\nRaw Speed Limit: --\nOccupied Block: --\nService Speed Limit: --";
         if (atc != null)
         {
             atcLimitText = $"{atc.CurrentLimitSpeedKmH:0.0} km/h";
@@ -63,6 +64,12 @@ public class TrainHUD : MonoBehaviour
             atcEmergencyPatternText = $"{atc.CurrentPatternEmergencyAllowSpeedKmH:0.0} km/h";
             atcTargetDistanceText = $"{atc.CurrentPatternTargetDistanceM:0.0} m";
             atcBrakeLatchedText = atc.IsAtcBrakeLatched ? "On" : "Off";
+            atcCandidateDebugText =
+                $"{atc.SelectedCandidateDebugLabel}\n" +
+                $"{atc.SpeedLimitCandidateDebugLabel}\n" +
+                $"{atc.SpeedLimitRawTargetDebugLabel}\n" +
+                $"{atc.OccupiedBlockCandidateDebugLabel}\n" +
+                $"{atc.ServiceSpeedLimitCandidateDebugLabel}";
         }
 
         float totalBrakeForceKN = train.CurrentBrakeForceN / 1000f;
@@ -311,6 +318,7 @@ public class TrainHUD : MonoBehaviour
             $"Speed: {train.SpeedKmH:0.0} km/h\n" +
             $"Distance: {train.DistanceM:0.0} m\n" +
             $"Accel: {train.CurrentAccelerationMS2:+0.00;-0.00;0.00} m/s^2\n" +
+            $"Jerk: {train.CurrentJerkMS3:+0.00;-0.00;0.00} m/s^3\n" +
             $"Gradient: {train.CurrentGradientPermille:+0.0;-0.0;0.0} permille\n" +
             $"Cant: {train.CurrentCantMm:+0.0;-0.0;0.0} mm\n" +
             $"Traction Force: {tractionForceKN:0.0} kN\n" +
@@ -330,6 +338,9 @@ public class TrainHUD : MonoBehaviour
             $"ATC Emergency Pattern: {atcEmergencyPatternText}\n" +
             $"ATC Target Distance: {atcTargetDistanceText}\n" +
             $"ATC Brake Latched: {atcBrakeLatchedText}\n" +
+            $"ATC Edge: {train.CurrentEdgeId} @ {train.DistanceOnEdgeM:0.0} m ({train.CurrentMovementDirection})\n" +
+            "[ATC Candidates]\n" +
+            atcCandidateDebugText + "\n" +
             "\n" +
             tascSection.ToString() +
             "\n" +

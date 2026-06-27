@@ -7,8 +7,7 @@ public class TrackLayoutJson
     public string version;
     public string trackName;
     public List<TrackGeometryJson> geometries;
-    public List<TrackJson> tracks;
-    public List<TrackConnectionJson> connections;
+    public List<TrackGroupJson> trackGroups;
 }
 
 [Serializable]
@@ -28,6 +27,8 @@ public class TrackJson
     public string name;
     public string baseCenterLineId;
     public List<TrackOffsetSegmentJson> offset;
+    public List<float> boundaryDistanceM;
+    public float blockIntervalM;
     public float speedLimitKmH;
 }
 
@@ -88,4 +89,28 @@ public class TrackVector3Json
     public float x;
     public float y;
     public float z;
+}
+
+[Serializable]
+public class TrackSignalJson
+{
+    // TODO: 信号データ定義の実装
+}
+
+
+[Serializable] 
+public class TrackGroupJson
+{
+    public string id;
+    public string name;
+
+    // edgeデータ
+    public List<TrackJson> tracks;
+
+    // edge接続データ
+    public List<TrackConnectionJson> connections;
+
+    // 信号データ
+    public List<TrackSignalJson> signals;
+
 }

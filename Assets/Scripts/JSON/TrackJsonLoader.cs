@@ -47,7 +47,6 @@ public static class TrackJsonLoader
         }
 
         layout.geometries ??= new List<TrackGeometryJson>();
-        layout.tracks ??= new List<TrackJson>();
-        layout.connections ??= new List<TrackConnectionJson>();
+        layout.trackGroups ??= new List<TrackGroupJson>();
     }
 }

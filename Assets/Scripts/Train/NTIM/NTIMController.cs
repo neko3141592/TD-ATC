@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class NTIMController : MonoBehaviour
@@ -17,6 +18,7 @@ public class NTIMController : MonoBehaviour
     public bool SpeedHoldActive => speedHoldState == SpeedHoldState.Active;
     public float SpeedHoldTargetMS => speedHoldTargetMS;
     public string SpeedHoldStateLabel => speedHoldState.ToString();
+    public bool BCReleaseInterlockActive { get; private set; }
 
     [Header("Torque Controll")]
 
@@ -24,6 +26,9 @@ public class NTIMController : MonoBehaviour
     [SerializeField] private float constantAccelerationEndSpeedMS = 15f;
     [SerializeField] private float[] powerNotchRatios = { 0.2f, 0.4f, 0.6f, 0.8f, 1.0f };
     [SerializeField] private AnimationCurve[] powerNotchGainCurves;
+
+    [Header("BC Release Interlock")]
+    [SerializeField, Min(0f)] private float bcReleaseThresholdKPa = 5f;
 
     [Header("Speed Hold")]
     [SerializeField, Min(0f)] private float speedHoldArmingSeconds = 1f;
@@ -56,6 +61,7 @@ public class NTIMController : MonoBehaviour
             TargetForcePerVvvfN = 0f;
             ActiveVvvfCount = 0;
             CurrentRegionLabel = "--";
+            BCReleaseInterlockActive = false;
             ClearSpeedHold();
             DistributeTargetForce(0f);
             return;
@@ -78,6 +84,12 @@ public class NTIMController : MonoBehaviour
 
         targetForceN = CalculateTargetForceNFromNotch(maxAvailableForceN);
 
+        BCReleaseInterlockActive = !AreAllBCReleasedForTraction();
+        if (BCReleaseInterlockActive)
+        {
+            targetForceN = 0f;
+            CurrentRegionLabel = "BC Interlock";
+        }
 
         DistributeTargetForce(targetForceN);
 
@@ -329,9 +341,40 @@ public class NTIMController : MonoBehaviour
         return Mathf.Max(0f, powerNotchRatios[index]);
     }
 
+    private bool AreAllBCReleasedForTraction()
+    {
+        if (train == null)
+        {
+            return false;
+        }
+
+        IReadOnlyList<CarBrakeState> carBrakeStates = train.CurrentCarBrakeStates;
+
+        if (train.IsGradientStart)
+        {
+            return true;
+        }
+        if (carBrakeStates == null || carBrakeStates.Count == 0)
+        {
+            return train.CurrentBCPressureKPa < bcReleaseThresholdKPa;
+        }
+
+        for (int i = 0; i < carBrakeStates.Count; i++)
+        {
+            CarBrakeState state = carBrakeStates[i];
+            if (state != null && state.bcPressureKPa >= bcReleaseThresholdKPa)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private void OnValidate()
     {
         targetAccelerationMS2 = Mathf.Max(0f, targetAccelerationMS2);
+        bcReleaseThresholdKPa = Mathf.Max(0f, bcReleaseThresholdKPa);
         int maxPowerNotch = train != null && train.Spec != null
             ? Mathf.Max(1, train.Spec.maxPowerNotch)
             : Mathf.Max(1, powerNotchRatios != null ? powerNotchRatios.Length : 5);

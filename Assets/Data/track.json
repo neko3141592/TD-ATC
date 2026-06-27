@@ -5,342 +5,1611 @@
   "geometries": [
     {
       "name": "main_center",
-      "origin": { "x": 0, "y": 0, "z": 0 },
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
       "yawDeg": 0,
       "segments": [
-        { "type": "straight", "lengthM": 113 },
-        { "type": "transitionIn", "lengthM": 50, "radiusM": 2600 },
-        { "type": "transitionOut", "lengthM": 50, "radiusM": 2600 },
-        { "type": "straight", "lengthM": 300 },
-        { "type": "transitionIn", "lengthM": 100, "radiusM": 350 },
-        { "type": "curve", "lengthM": 204, "radiusM": 350 },
-        { "type": "transitionOut", "lengthM": 100, "radiusM": 350 },
-        { "type": "straight", "lengthM": 607 },
-        { "type": "transitionIn", "lengthM": 100, "radiusM": -450 },
-        { "type": "curve", "lengthM": 305, "radiusM": -450 },
-        { "type": "transitionOut", "lengthM": 100, "radiusM": -450 },
-        { "type": "straight", "lengthM": 735 },
-        { "type": "transitionIn", "lengthM": 55, "radiusM": -1050 },
-        { "type": "transitionOut", "lengthM": 55, "radiusM": -1050 },
-        { "type": "straight", "lengthM": 512 },
-        { "type": "transitionIn", "lengthM": 90, "radiusM": -550 },
-        { "type": "curve", "lengthM": 312, "radiusM": -550 },
-        { "type": "transitionOut", "lengthM": 90, "radiusM": -550 },
-        { "type": "straight", "lengthM": 904 },
-        { "type": "transitionIn", "lengthM": 75, "radiusM": 700 },
-        { "type": "curve", "lengthM": 475, "radiusM": 700 },
-        { "type": "transitionOut", "lengthM": 75, "radiusM": 700 },
-        { "type": "straight", "lengthM": 883 },
-        { "type": "transitionIn", "lengthM": 50, "radiusM": 2300 },
-        { "type": "transitionOut", "lengthM": 50, "radiusM": 2300 },
-        { "type": "transitionIn", "lengthM": 50, "radiusM": -2300 },
-        { "type": "transitionOut", "lengthM": 50, "radiusM": -2300 },
-        { "type": "straight", "lengthM": 583 },
-        { "type": "transitionIn", "lengthM": 100, "radiusM": -650 },
-        { "type": "curve", "lengthM": 352, "radiusM": -650 },
-        { "type": "transitionOut", "lengthM": 100, "radiusM": -650 },
-        { "type": "straight", "lengthM": 47 },
-        { "type": "transitionIn", "lengthM": 100, "radiusM": 650 },
-        { "type": "curve", "lengthM": 450, "radiusM": 650 },
-        { "type": "transitionOut", "lengthM": 100, "radiusM": 650 },
-        { "type": "straight", "lengthM": 1056 }
+        {
+          "type": "straight",
+          "lengthM": 113
+        },
+        {
+          "type": "transitionIn",
+          "lengthM": 50,
+          "radiusM": 2600
+        },
+        {
+          "type": "transitionOut",
+          "lengthM": 50,
+          "radiusM": 2600
+        },
+        {
+          "type": "straight",
+          "lengthM": 300
+        },
+        {
+          "type": "transitionIn",
+          "lengthM": 100,
+          "radiusM": 350
+        },
+        {
+          "type": "curve",
+          "lengthM": 204,
+          "radiusM": 350
+        },
+        {
+          "type": "transitionOut",
+          "lengthM": 100,
+          "radiusM": 350
+        },
+        {
+          "type": "straight",
+          "lengthM": 607
+        },
+        {
+          "type": "transitionIn",
+          "lengthM": 100,
+          "radiusM": -450
+        },
+        {
+          "type": "curve",
+          "lengthM": 305,
+          "radiusM": -450
+        },
+        {
+          "type": "transitionOut",
+          "lengthM": 100,
+          "radiusM": -450
+        },
+        {
+          "type": "straight",
+          "lengthM": 735
+        },
+        {
+          "type": "transitionIn",
+          "lengthM": 55,
+          "radiusM": -1050
+        },
+        {
+          "type": "transitionOut",
+          "lengthM": 55,
+          "radiusM": -1050
+        },
+        {
+          "type": "straight",
+          "lengthM": 512
+        },
+        {
+          "type": "transitionIn",
+          "lengthM": 90,
+          "radiusM": -550
+        },
+        {
+          "type": "curve",
+          "lengthM": 312,
+          "radiusM": -550
+        },
+        {
+          "type": "transitionOut",
+          "lengthM": 90,
+          "radiusM": -550
+        },
+        {
+          "type": "straight",
+          "lengthM": 904
+        },
+        {
+          "type": "transitionIn",
+          "lengthM": 75,
+          "radiusM": 700
+        },
+        {
+          "type": "curve",
+          "lengthM": 475,
+          "radiusM": 700
+        },
+        {
+          "type": "transitionOut",
+          "lengthM": 75,
+          "radiusM": 700
+        },
+        {
+          "type": "straight",
+          "lengthM": 883
+        },
+        {
+          "type": "transitionIn",
+          "lengthM": 50,
+          "radiusM": 2300
+        },
+        {
+          "type": "transitionOut",
+          "lengthM": 50,
+          "radiusM": 2300
+        },
+        {
+          "type": "transitionIn",
+          "lengthM": 50,
+          "radiusM": -2300
+        },
+        {
+          "type": "transitionOut",
+          "lengthM": 50,
+          "radiusM": -2300
+        },
+        {
+          "type": "straight",
+          "lengthM": 583
+        },
+        {
+          "type": "transitionIn",
+          "lengthM": 100,
+          "radiusM": -650
+        },
+        {
+          "type": "curve",
+          "lengthM": 352,
+          "radiusM": -650
+        },
+        {
+          "type": "transitionOut",
+          "lengthM": 100,
+          "radiusM": -650
+        },
+        {
+          "type": "straight",
+          "lengthM": 47
+        },
+        {
+          "type": "transitionIn",
+          "lengthM": 100,
+          "radiusM": 650
+        },
+        {
+          "type": "curve",
+          "lengthM": 450,
+          "radiusM": 650
+        },
+        {
+          "type": "transitionOut",
+          "lengthM": 100,
+          "radiusM": 650
+        },
+        {
+          "type": "straight",
+          "lengthM": 1056
+        }
       ],
       "vertical": [
-        { "startM": 0, "lengthM": 421.7, "startPermille": 0, "endPermille": 0 },
-        { "startM": 421.7, "lengthM": 47.6, "startPermille": 0, "endPermille": 0 },
-        { "startM": 469.3, "lengthM": 108.8, "startPermille": 0, "endPermille": 18.9 },
-        { "startM": 578.1, "lengthM": 157.3, "startPermille": 18.9, "endPermille": 18.9 },
-        { "startM": 735.4, "lengthM": 154.2, "startPermille": 18.9, "endPermille": -15.2 },
-        { "startM": 889.6, "lengthM": 159.3, "startPermille": -15.2, "endPermille": -15.2 },
-        { "startM": 1048.9, "lengthM": 77.8, "startPermille": -15.2, "endPermille": -2.4 },
-        { "startM": 1126.7, "lengthM": 36.5, "startPermille": -2.4, "endPermille": 0.6 },
-        { "startM": 1163.2, "lengthM": 673.7, "startPermille": 0.6, "endPermille": 0.6 },
-        { "startM": 1836.9, "lengthM": 71.5, "startPermille": 0.6, "endPermille": -1.1 },
-        { "startM": 1908.4, "lengthM": 368.2, "startPermille": -1.1, "endPermille": -1.1 },
-        { "startM": 2276.6, "lengthM": 82.3, "startPermille": -1.1, "endPermille": 0 },
-        { "startM": 2358.9, "lengthM": 55.5, "startPermille": 0, "endPermille": 4.8 },
-        { "startM": 2414.4, "lengthM": 707.4, "startPermille": 4.8, "endPermille": 4.8 },
-        { "startM": 3121.8, "lengthM": 57.8, "startPermille": 4.8, "endPermille": 0 },
-        { "startM": 3179.6, "lengthM": 356.7, "startPermille": 0, "endPermille": 0.8 },
-        { "startM": 3536.3, "lengthM": 294.2, "startPermille": 0.8, "endPermille": -0.5 },
-        { "startM": 3830.5, "lengthM": 56.7, "startPermille": -0.5, "endPermille": -3.6 },
-        { "startM": 3887.2, "lengthM": 548.7, "startPermille": -3.6, "endPermille": -3.6 },
-        { "startM": 4435.9, "lengthM": 55.5, "startPermille": -3.6, "endPermille": 0 },
-        { "startM": 4491.4, "lengthM": 376.2, "startPermille": 0, "endPermille": 1.1 },
-        { "startM": 4867.6, "lengthM": 351.3, "startPermille": 1.1, "endPermille": 0 },
-        { "startM": 5218.9, "lengthM": 116.8, "startPermille": 0, "endPermille": 24.6 },
-        { "startM": 5335.7, "lengthM": 350.5, "startPermille": 24.6, "endPermille": 24.6 },
-        { "startM": 5686.2, "lengthM": 108.6, "startPermille": 24.6, "endPermille": 0 },
-        { "startM": 5794.8, "lengthM": 76.3, "startPermille": 0, "endPermille": 0.7 },
-        { "startM": 5871.1, "lengthM": 117.5, "startPermille": 0.7, "endPermille": -9.4 },
-        { "startM": 5988.6, "lengthM": 208.7, "startPermille": -9.4, "endPermille": -9.4 },
-        { "startM": 6197.3, "lengthM": 107.3, "startPermille": -9.4, "endPermille": 0 },
-        { "startM": 6304.6, "lengthM": 253.6, "startPermille": 0, "endPermille": -1.4 },
-        { "startM": 6558.2, "lengthM": 259.7, "startPermille": -1.4, "endPermille": 0 }
+        {
+          "startM": 0,
+          "lengthM": 421.7,
+          "startPermille": 0,
+          "endPermille": 0
+        },
+        {
+          "startM": 421.7,
+          "lengthM": 47.6,
+          "startPermille": 0,
+          "endPermille": 0
+        },
+        {
+          "startM": 469.3,
+          "lengthM": 108.8,
+          "startPermille": 0,
+          "endPermille": 22
+        },
+        {
+          "startM": 578.1,
+          "lengthM": 157.3,
+          "startPermille": 22,
+          "endPermille": 22
+        },
+        {
+          "startM": 735.4,
+          "lengthM": 154.2,
+          "startPermille": 22,
+          "endPermille": -18.2
+        },
+        {
+          "startM": 889.6,
+          "lengthM": 159.3,
+          "startPermille": -18.2,
+          "endPermille": -18.2
+        },
+        {
+          "startM": 1048.9,
+          "lengthM": 77.8,
+          "startPermille": -18.2,
+          "endPermille": 0
+        },
+        {
+          "startM": 1126.7,
+          "lengthM": 36.5,
+          "startPermille": 0,
+          "endPermille": 0
+        },
+        {
+          "startM": 1163.2,
+          "lengthM": 673.7,
+          "startPermille": 0,
+          "endPermille": 0
+        },
+        {
+          "startM": 1836.9,
+          "lengthM": 71.5,
+          "startPermille": 0,
+          "endPermille": -1.1
+        },
+        {
+          "startM": 1908.4,
+          "lengthM": 368.2,
+          "startPermille": -1.1,
+          "endPermille": -1.1
+        },
+        {
+          "startM": 2276.6,
+          "lengthM": 82.3,
+          "startPermille": -1.1,
+          "endPermille": 0
+        },
+        {
+          "startM": 2358.9,
+          "lengthM": 55.5,
+          "startPermille": 0,
+          "endPermille": 4.8
+        },
+        {
+          "startM": 2414.4,
+          "lengthM": 707.4,
+          "startPermille": 4.8,
+          "endPermille": 4.8
+        },
+        {
+          "startM": 3121.8,
+          "lengthM": 57.8,
+          "startPermille": 4.8,
+          "endPermille": 0
+        },
+        {
+          "startM": 3179.6,
+          "lengthM": 356.7,
+          "startPermille": 0,
+          "endPermille": 0.8
+        },
+        {
+          "startM": 3536.3,
+          "lengthM": 294.2,
+          "startPermille": 0.8,
+          "endPermille": -0.5
+        },
+        {
+          "startM": 3830.5,
+          "lengthM": 56.7,
+          "startPermille": -0.5,
+          "endPermille": -3.6
+        },
+        {
+          "startM": 3887.2,
+          "lengthM": 548.7,
+          "startPermille": -3.6,
+          "endPermille": -3.6
+        },
+        {
+          "startM": 4435.9,
+          "lengthM": 55.5,
+          "startPermille": -3.6,
+          "endPermille": 0
+        },
+        {
+          "startM": 4491.4,
+          "lengthM": 376.2,
+          "startPermille": 0,
+          "endPermille": 1.1
+        },
+        {
+          "startM": 4867.6,
+          "lengthM": 351.3,
+          "startPermille": 1.1,
+          "endPermille": 0
+        },
+        {
+          "startM": 5218.9,
+          "lengthM": 116.8,
+          "startPermille": 0,
+          "endPermille": 28
+        },
+        {
+          "startM": 5335.7,
+          "lengthM": 650.5,
+          "startPermille": 28,
+          "endPermille": 28
+        },
+        {
+          "startM": 5986.2,
+          "lengthM": 108.6,
+          "startPermille": 28,
+          "endPermille": 0
+        },
+        {
+          "startM": 6094.8,
+          "lengthM": 76.3,
+          "startPermille": 0,
+          "endPermille": 0
+        },
+        {
+          "startM": 6171.1,
+          "lengthM": 117.5,
+          "startPermille": 0,
+          "endPermille": -9.4
+        },
+        {
+          "startM": 6288.6,
+          "lengthM": 208.7,
+          "startPermille": -9.4,
+          "endPermille": -9.4
+        },
+        {
+          "startM": 6497.3,
+          "lengthM": 107.3,
+          "startPermille": -9.4,
+          "endPermille": 0
+        },
+        {
+          "startM": 6604.6,
+          "lengthM": 253.6,
+          "startPermille": 0,
+          "endPermille": -1.4
+        },
+        {
+          "startM": 6858.2,
+          "lengthM": 259.7,
+          "startPermille": -1.4,
+          "endPermille": 0
+        }
       ],
       "cant": [
-        { "startM": 0, "lengthM": 9378, "startMm": 0, "endMm": 0 }
+        {
+          "startM": 0,
+          "lengthM": 9378,
+          "startMm": 0,
+          "endMm": 0
+        }
       ]
     }
   ],
-  "tracks": [
+  "trackGroups": [
     {
-      "name": "up_001",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 0, "lengthM": 513, "type": "constant", "offsetM": -1.9 }
+      "id": "station_NT01",
+      "name": "NT01 Station",
+      "tracks": [
+        {
+          "name": "NT01_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 0,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 45
+        },
+        {
+          "name": "NT01_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 0,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 45
+        }
       ],
-      "speedLimitKmH": 45
-    },
-    {
-      "name": "up_002",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 513, "lengthM": 404, "type": "constant", "offsetM": -1.9 }
+      "connections": [
+        {
+          "name": "C_NT01_P1_NT01_NT02_P1",
+          "points": [
+            {
+              "trackName": "NT01_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT01_NT02_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT01_P2_NT01_NT02_P2",
+          "points": [
+            {
+              "trackName": "NT01_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT01_NT02_P2",
+              "end": "start"
+            }
+          ]
+        }
       ],
-      "speedLimitKmH": 60
+      "signals": []
     },
     {
-      "name": "up_003",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 917, "lengthM": 607, "type": "constant", "offsetM": -1.9 }
+      "id": "between_NT01_NT02",
+      "name": "NT01-NT02 Interstation",
+      "tracks": [
+        {
+          "name": "NT01_NT02_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 220,
+              "lengthM": 293,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "blockIntervalM": 250,
+          "speedLimitKmH": 45
+        },
+        {
+          "name": "NT01_NT02_P1_S02",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 513,
+              "lengthM": 404,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "blockIntervalM": 250,
+          "speedLimitKmH": 60
+        },
+        {
+          "name": "NT01_NT02_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 220,
+              "lengthM": 293,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "blockIntervalM": 250,
+          "speedLimitKmH": 45
+        },
+        {
+          "name": "NT01_NT02_P2_S02",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 513,
+              "lengthM": 404,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "blockIntervalM": 250,
+          "speedLimitKmH": 60
+        }
       ],
-      "speedLimitKmH": 105
-    },
-    {
-      "name": "up_004",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 1524, "lengthM": 505, "type": "constant", "offsetM": -1.9 }
+      "connections": [
+        {
+          "name": "C_NT01_NT02_P1_NT02_P1",
+          "points": [
+            {
+              "trackName": "NT01_NT02_P1_S02",
+              "end": "end"
+            },
+            {
+              "trackName": "NT02_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT01_NT02_P2_NT02_P2",
+          "points": [
+            {
+              "trackName": "NT01_NT02_P2_S02",
+              "end": "end"
+            },
+            {
+              "trackName": "NT02_P2",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT01_NT02_P1_NT01_NT02_P1_S02",
+          "points": [
+            {
+              "trackName": "NT01_NT02_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT01_NT02_P1_S02",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT01_NT02_P2_NT01_NT02_P2_S02",
+          "points": [
+            {
+              "trackName": "NT01_NT02_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT01_NT02_P2_S02",
+              "end": "start"
+            }
+          ]
+        }
       ],
-      "speedLimitKmH": 75
+      "signals": []
     },
     {
-      "name": "up_005",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 2029, "lengthM": 1357, "type": "constant", "offsetM": -1.9 }
+      "id": "station_NT02",
+      "name": "NT02 Station",
+      "tracks": [
+        {
+          "name": "NT02_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 917,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT02_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 917,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        }
       ],
-      "speedLimitKmH": 105
-    },
-    {
-      "name": "up_006",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 3386, "lengthM": 492, "type": "constant", "offsetM": -1.9 }
+      "connections": [
+        {
+          "name": "C_NT02_P1_NT02_NT03_P1",
+          "points": [
+            {
+              "trackName": "NT02_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT02_NT03_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT02_P2_NT02_NT03_P2",
+          "points": [
+            {
+              "trackName": "NT02_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT02_NT03_P2",
+              "end": "start"
+            }
+          ]
+        }
       ],
-      "speedLimitKmH": 80
+      "signals": []
     },
     {
-      "name": "up_007",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 3878, "lengthM": 3195, "type": "constant", "offsetM": -1.9 }
+      "id": "between_NT02_NT03",
+      "name": "NT02-NT03 Interstation",
+      "tracks": [
+        {
+          "name": "NT02_NT03_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 1137,
+              "lengthM": 387,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 105,
+          "blockIntervalM": 250
+        },
+        {
+          "name": "NT02_NT03_P1_S02",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 1524,
+              "lengthM": 505,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 75,
+          "blockIntervalM": 250
+        },
+        {
+          "name": "NT02_NT03_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 1137,
+              "lengthM": 387,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 105,
+          "blockIntervalM": 250
+        },
+        {
+          "name": "NT02_NT03_P2_S02",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 1524,
+              "lengthM": 505,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 75,
+          "blockIntervalM": 250
+        }
       ],
-      "speedLimitKmH": 105
-    },
-    {
-      "name": "up_008",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 7073, "lengthM": 1249, "type": "constant", "offsetM": -1.9 }
+      "connections": [
+        {
+          "name": "C_NT02_NT03_P1_NT03_P1",
+          "points": [
+            {
+              "trackName": "NT02_NT03_P1_S02",
+              "end": "end"
+            },
+            {
+              "trackName": "NT03_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT02_NT03_P2_NT03_P2",
+          "points": [
+            {
+              "trackName": "NT02_NT03_P2_S02",
+              "end": "end"
+            },
+            {
+              "trackName": "NT03_P2",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT02_NT03_P1_NT02_NT03_P1_S02",
+          "points": [
+            {
+              "trackName": "NT02_NT03_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT02_NT03_P1_S02",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT02_NT03_P2_NT02_NT03_P2_S02",
+          "points": [
+            {
+              "trackName": "NT02_NT03_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT02_NT03_P2_S02",
+              "end": "start"
+            }
+          ]
+        }
       ],
-      "speedLimitKmH": 90
+      "signals": []
     },
     {
-      "name": "up_009",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 8322, "lengthM": 1056, "type": "constant", "offsetM": -1.9 }
+      "id": "station_NT03",
+      "name": "NT03 Station",
+      "tracks": [
+        {
+          "name": "NT03_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 2029,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT03_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 2029,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        }
       ],
-      "speedLimitKmH": 105
-    },
-    {
-      "name": "down_001",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 0, "lengthM": 513, "type": "constant", "offsetM": 1.9 }
+      "connections": [
+        {
+          "name": "C_NT03_P1_NT03_NT04_P1",
+          "points": [
+            {
+              "trackName": "NT03_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT03_NT04_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT03_P2_NT03_NT04_P2",
+          "points": [
+            {
+              "trackName": "NT03_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT03_NT04_P2",
+              "end": "start"
+            }
+          ]
+        }
       ],
-      "speedLimitKmH": 45
+      "signals": []
     },
     {
-      "name": "down_002",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 513, "lengthM": 404, "type": "constant", "offsetM": 1.9 }
+      "id": "between_NT03_NT04",
+      "name": "NT03-NT04 Interstation",
+      "tracks": [
+        {
+          "name": "NT03_NT04_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 2249,
+              "lengthM": 1137,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 105,
+          "blockIntervalM": 250
+        },
+        {
+          "name": "NT03_NT04_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 2249,
+              "lengthM": 1137,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 105,
+          "blockIntervalM": 250
+        }
       ],
-      "speedLimitKmH": 60
-    },
-    {
-      "name": "down_003",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 917, "lengthM": 607, "type": "constant", "offsetM": 1.9 }
+      "connections": [
+        {
+          "name": "C_NT03_NT04_P1_NT04_P1",
+          "points": [
+            {
+              "trackName": "NT03_NT04_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT04_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT03_NT04_P2_NT04_P2",
+          "points": [
+            {
+              "trackName": "NT03_NT04_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT04_P2",
+              "end": "start"
+            }
+          ]
+        }
       ],
-      "speedLimitKmH": 105
+      "signals": []
     },
     {
-      "name": "down_004",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 1524, "lengthM": 505, "type": "constant", "offsetM": 1.9 }
+      "id": "station_NT04",
+      "name": "NT04 Station",
+      "tracks": [
+        {
+          "name": "NT04_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3386,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 80
+        },
+        {
+          "name": "NT04_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3386,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 80
+        }
       ],
-      "speedLimitKmH": 75
-    },
-    {
-      "name": "down_005",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 2029, "lengthM": 1357, "type": "constant", "offsetM": 1.9 }
+      "connections": [
+        {
+          "name": "C_NT04_P1_NT04_NT05_P1",
+          "points": [
+            {
+              "trackName": "NT04_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT04_NT05_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT04_P2_NT04_NT05_P2",
+          "points": [
+            {
+              "trackName": "NT04_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT04_NT05_P2",
+              "end": "start"
+            }
+          ]
+        }
       ],
-      "speedLimitKmH": 105
+      "signals": []
     },
     {
-      "name": "down_006",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 3386, "lengthM": 492, "type": "constant", "offsetM": 1.9 }
+      "id": "between_NT04_NT05",
+      "name": "NT04-NT05 Interstation",
+      "tracks": [
+        {
+          "name": "NT04_NT05_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3606,
+              "lengthM": 252,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 80,
+          "blockIntervalM": 250
+        },
+        {
+          "name": "NT04_NT05_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3606,
+              "lengthM": 252,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 80,
+          "blockIntervalM": 250
+        }
       ],
-      "speedLimitKmH": 80
-    },
-    {
-      "name": "down_007",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 3878, "lengthM": 3195, "type": "constant", "offsetM": 1.9 }
+      "connections": [
+        {
+          "name": "C_NT04_NT05_P1_NT05_P1_ENTRY",
+          "points": [
+            {
+              "trackName": "NT04_NT05_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P1_ENTRY",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT04_NT05_P2_NT05_P3_ENTRY",
+          "points": [
+            {
+              "trackName": "NT04_NT05_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P3_ENTRY",
+              "end": "start"
+            }
+          ]
+        }
       ],
-      "speedLimitKmH": 105
+      "signals": []
     },
     {
-      "name": "down_008",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 7073, "lengthM": 1249, "type": "constant", "offsetM": 1.9 }
+      "id": "station_NT05",
+      "name": "NT05 Station",
+      "tracks": [
+        {
+          "name": "NT05_P1_ENTRY",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3858,
+              "lengthM": 20,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 80
+        },
+        {
+          "name": "NT05_P1_ENTRY_S02",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3878,
+              "lengthM": 100,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT05_P2_DIVERGE",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3858,
+              "lengthM": 120,
+              "type": "cubic",
+              "startOffsetM": -1.9,
+              "endOffsetM": -7.6
+            }
+          ],
+          "speedLimitKmH": 45
+        },
+        {
+          "name": "NT05_P3_ENTRY",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3858,
+              "lengthM": 20,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 80
+        },
+        {
+          "name": "NT05_P3_ENTRY_S02",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3878,
+              "lengthM": 100,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT05_P4_DIVERGE",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3858,
+              "lengthM": 120,
+              "type": "cubic",
+              "startOffsetM": 1.9,
+              "endOffsetM": 7.6
+            }
+          ],
+          "speedLimitKmH": 45
+        },
+        {
+          "name": "NT05_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3978,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT05_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3978,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": -7.6
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT05_P3",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3978,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT05_P4",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 3978,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": 7.6
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT05_P1_EXIT",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 4198,
+              "lengthM": 120,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT05_P2_MERGE",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 4198,
+              "lengthM": 120,
+              "type": "cubic",
+              "startOffsetM": -7.6,
+              "endOffsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 45
+        },
+        {
+          "name": "NT05_P3_EXIT",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 4198,
+              "lengthM": 120,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT05_P4_MERGE",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 4198,
+              "lengthM": 120,
+              "type": "cubic",
+              "startOffsetM": 7.6,
+              "endOffsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 45
+        }
       ],
-      "speedLimitKmH": 90
-    },
-    {
-      "name": "down_009",
-      "baseCenterLineId": "main_center",
-      "offset": [
-        { "startBaseM": 8322, "lengthM": 1056, "type": "constant", "offsetM": 1.9 }
+      "connections": [
+        {
+          "name": "C_NT05_P1_ENTRY_NT05_P1",
+          "points": [
+            {
+              "trackName": "NT05_P1_ENTRY_S02",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P2_DIVERGE_NT05_P2",
+          "points": [
+            {
+              "trackName": "NT05_P2_DIVERGE",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P2",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P3_ENTRY_NT05_P3",
+          "points": [
+            {
+              "trackName": "NT05_P3_ENTRY_S02",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P3",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P4_DIVERGE_NT05_P4",
+          "points": [
+            {
+              "trackName": "NT05_P4_DIVERGE",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P4",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P1_NT05_P1_EXIT",
+          "points": [
+            {
+              "trackName": "NT05_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P1_EXIT",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P2_NT05_P2_MERGE",
+          "points": [
+            {
+              "trackName": "NT05_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P2_MERGE",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P3_NT05_P3_EXIT",
+          "points": [
+            {
+              "trackName": "NT05_P3",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P3_EXIT",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P4_NT05_P4_MERGE",
+          "points": [
+            {
+              "trackName": "NT05_P4",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P4_MERGE",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P1_EXIT_NT05_NT06_P1",
+          "points": [
+            {
+              "trackName": "NT05_P1_EXIT",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_NT06_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P3_EXIT_NT05_NT06_P2",
+          "points": [
+            {
+              "trackName": "NT05_P3_EXIT",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_NT06_P2",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P1_ENTRY_NT05_P1_ENTRY_S02",
+          "points": [
+            {
+              "trackName": "NT05_P1_ENTRY",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P1_ENTRY_S02",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_P3_ENTRY_NT05_P3_ENTRY_S02",
+          "points": [
+            {
+              "trackName": "NT05_P3_ENTRY",
+              "end": "end"
+            },
+            {
+              "trackName": "NT05_P3_ENTRY_S02",
+              "end": "start"
+            }
+          ]
+        }
       ],
-      "speedLimitKmH": 105
-    }
-  ],
-  "connections": [
-    {
-      "name": "C_up_001_002",
-      "points": [
-        { "trackName": "up_001", "end": "end" },
-        { "trackName": "up_002", "end": "start" }
-      ]
+      "signals": []
     },
     {
-      "name": "C_up_002_003",
-      "points": [
-        { "trackName": "up_002", "end": "end" },
-        { "trackName": "up_003", "end": "start" }
-      ]
+      "id": "between_NT05_NT06",
+      "name": "NT05-NT06 Interstation",
+      "tracks": [
+        {
+          "name": "NT05_NT06_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 4318,
+              "lengthM": 2755,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 105,
+          "blockIntervalM": 250
+        },
+        {
+          "name": "NT05_NT06_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 4318,
+              "lengthM": 2755,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 105,
+          "blockIntervalM": 250
+        }
+      ],
+      "connections": [
+        {
+          "name": "C_NT05_NT06_P1_NT06_P1",
+          "points": [
+            {
+              "trackName": "NT05_NT06_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT06_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT05_NT06_P2_NT06_P2",
+          "points": [
+            {
+              "trackName": "NT05_NT06_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT06_P2",
+              "end": "start"
+            }
+          ]
+        }
+      ],
+      "signals": []
     },
     {
-      "name": "C_up_003_004",
-      "points": [
-        { "trackName": "up_003", "end": "end" },
-        { "trackName": "up_004", "end": "start" }
-      ]
+      "id": "station_NT06",
+      "name": "NT06 Station",
+      "tracks": [
+        {
+          "name": "NT06_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 7073,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 90
+        },
+        {
+          "name": "NT06_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 7073,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 90
+        }
+      ],
+      "connections": [
+        {
+          "name": "C_NT06_P1_NT06_NT07_P1",
+          "points": [
+            {
+              "trackName": "NT06_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT06_NT07_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT06_P2_NT06_NT07_P2",
+          "points": [
+            {
+              "trackName": "NT06_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT06_NT07_P2",
+              "end": "start"
+            }
+          ]
+        }
+      ],
+      "signals": []
     },
     {
-      "name": "C_up_004_005",
-      "points": [
-        { "trackName": "up_004", "end": "end" },
-        { "trackName": "up_005", "end": "start" }
-      ]
+      "id": "between_NT06_NT07",
+      "name": "NT06-NT07 Interstation",
+      "tracks": [
+        {
+          "name": "NT06_NT07_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 7293,
+              "lengthM": 1029,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 90,
+          "blockIntervalM": 250
+        },
+        {
+          "name": "NT06_NT07_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 7293,
+              "lengthM": 1029,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 90,
+          "blockIntervalM": 250
+        }
+      ],
+      "connections": [
+        {
+          "name": "C_NT06_NT07_P1_NT07_P1",
+          "points": [
+            {
+              "trackName": "NT06_NT07_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT07_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT06_NT07_P2_NT07_P2",
+          "points": [
+            {
+              "trackName": "NT06_NT07_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT07_P2",
+              "end": "start"
+            }
+          ]
+        }
+      ],
+      "signals": []
     },
     {
-      "name": "C_up_005_006",
-      "points": [
-        { "trackName": "up_005", "end": "end" },
-        { "trackName": "up_006", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_up_006_007",
-      "points": [
-        { "trackName": "up_006", "end": "end" },
-        { "trackName": "up_007", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_up_007_008",
-      "points": [
-        { "trackName": "up_007", "end": "end" },
-        { "trackName": "up_008", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_up_008_009",
-      "points": [
-        { "trackName": "up_008", "end": "end" },
-        { "trackName": "up_009", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_down_001_002",
-      "points": [
-        { "trackName": "down_001", "end": "end" },
-        { "trackName": "down_002", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_down_002_003",
-      "points": [
-        { "trackName": "down_002", "end": "end" },
-        { "trackName": "down_003", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_down_003_004",
-      "points": [
-        { "trackName": "down_003", "end": "end" },
-        { "trackName": "down_004", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_down_004_005",
-      "points": [
-        { "trackName": "down_004", "end": "end" },
-        { "trackName": "down_005", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_down_005_006",
-      "points": [
-        { "trackName": "down_005", "end": "end" },
-        { "trackName": "down_006", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_down_006_007",
-      "points": [
-        { "trackName": "down_006", "end": "end" },
-        { "trackName": "down_007", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_down_007_008",
-      "points": [
-        { "trackName": "down_007", "end": "end" },
-        { "trackName": "down_008", "end": "start" }
-      ]
-    },
-    {
-      "name": "C_down_008_009",
-      "points": [
-        { "trackName": "down_008", "end": "end" },
-        { "trackName": "down_009", "end": "start" }
-      ]
+      "id": "station_NT07",
+      "name": "NT07 Station",
+      "tracks": [
+        {
+          "name": "NT07_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 8322,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT07_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 8322,
+              "lengthM": 220,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT07_END_P1",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 8542,
+              "lengthM": 836,
+              "type": "constant",
+              "offsetM": -1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        },
+        {
+          "name": "NT07_END_P2",
+          "baseCenterLineId": "main_center",
+          "offset": [
+            {
+              "startBaseM": 8542,
+              "lengthM": 836,
+              "type": "constant",
+              "offsetM": 1.9
+            }
+          ],
+          "speedLimitKmH": 105
+        }
+      ],
+      "connections": [
+        {
+          "name": "C_NT07_P1_NT07_END_P1",
+          "points": [
+            {
+              "trackName": "NT07_P1",
+              "end": "end"
+            },
+            {
+              "trackName": "NT07_END_P1",
+              "end": "start"
+            }
+          ]
+        },
+        {
+          "name": "C_NT07_P2_NT07_END_P2",
+          "points": [
+            {
+              "trackName": "NT07_P2",
+              "end": "end"
+            },
+            {
+              "trackName": "NT07_END_P2",
+              "end": "start"
+            }
+          ]
+        }
+      ],
+      "signals": []
     }
   ]
 }

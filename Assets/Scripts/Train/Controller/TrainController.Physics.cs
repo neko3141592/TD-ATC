@@ -10,9 +10,12 @@ public partial class TrainController
     }
 
     [SerializeField, Min(0.01f)] private float automaticNotchStepIntervalS = 0.08f;
+    [SerializeField, Min(0f)] private float brakeHoldSpeedThresholdMS = 0.05f;
+    [SerializeField, Min(0f)] private float brakeHoldForceMarginN = 1f;
 
     private AutomaticNotchTarget automaticNotchTarget = AutomaticNotchTarget.None;
     private float nextAutomaticNotchStepTime;
+    private float preAcceleration = 0f;
 
     /// <summary>
     /// 役割: HandleInput の処理を入力や状態を処理します。
@@ -161,7 +164,7 @@ public partial class TrainController
 
     private bool CanChangeReverser(int powerNotch)
     {
-        return powerNotch <= 0 && speedMS <= 0.05f;
+        return powerNotch <= 0 && Mathf.Abs(speedMS) <= 0.05f;
     }
 
     /// <summary>
@@ -177,10 +180,11 @@ public partial class TrainController
         bool isEmergencyBrake = brakeNotch >= EmergencyBrakeNotch;
         bool useTascBrakeStep = notchManager.IsTASCBrakeSelected;
         int tascBrakeStep = notchManager.TASCBrakeStep;
+        float absSpeedMS = Mathf.Abs(speedMS);
 
         if (brakeSystem != null)
         {
-            brakeSystem.UpdateBrake(brakeNotch, speedMS, Time.deltaTime, isEmergencyBrake, useTascBrakeStep, tascBrakeStep, ManualPowerNotch);
+            brakeSystem.UpdateBrake(brakeNotch, absSpeedMS, Time.deltaTime, isEmergencyBrake, useTascBrakeStep, tascBrakeStep, ManualPowerNotch);
         }
 
         float massKg = GetCurrentConsistMassKg();
@@ -189,11 +193,22 @@ public partial class TrainController
         float externalForceN = GetExternalResistanceForceN(massKg);
         float tractionForceN = GetTractionForceN();
         currentTractionForceN = tractionForceN;
-        float vehicleForceN = tractionForceN - brakeForceN;
+        float nonBrakeForceN = tractionForceN + externalForceN;
 
-        // 運動方程式: F_net = (F_traction - F_brake) - F_external
-        float netForceN = vehicleForceN - externalForceN;
+        if (TryApplyBrakeHold(brakeForceN, nonBrakeForceN))
+        {
+            return;
+        }
+
+        float brakeForceSignedN = GetBrakeForceN(brakeForceN, nonBrakeForceN);
+
+        // 符号付き速度系: 正方向は CurrentDirection、負方向はその反対。
+        float netForceN = nonBrakeForceN + brakeForceSignedN;
         float acceleration = netForceN / massKg;
+
+        // ジャークの更新
+        currentJerkMS3 = (acceleration - preAcceleration) / Time.deltaTime;
+        preAcceleration = acceleration;
 
         IntegrateMotion(acceleration);
     }
@@ -256,14 +271,49 @@ public partial class TrainController
     /// <returns>計算または参照した値を返します。</returns>
     private float GetExternalResistanceForceN(float massKg)
     {
-        float runningResistanceForceN = ExternalForceCalculator.GetRunningResistanceForceN(trainSpec, speedMS);
+        float runningResistanceForceN = ExternalForceCalculator.GetRunningResistanceForceN(trainSpec, Mathf.Abs(speedMS));
         float headGradientPermille = GetCurrentGradientPermilleForPhysics();
-        currentGradeResistanceForceN = GetConsistGradeResistanceForceN(massKg, headGradientPermille);
+        currentGradeResistanceForceN = GetConsistGradeForceN(massKg, headGradientPermille);
 
-        return runningResistanceForceN + currentGradeResistanceForceN;
+        return GetOpposingVelocityForceN(runningResistanceForceN) + currentGradeResistanceForceN;
     }
 
-    private float GetConsistGradeResistanceForceN(float consistMassKg, float fallbackGradientPermille)
+    private bool TryApplyBrakeHold(float brakeForceN, float nonBrakeForceN)
+    {
+        if (brakeForceN <= 0f || Mathf.Abs(speedMS) > brakeHoldSpeedThresholdMS)
+        {
+            return false;
+        }
+
+        if (Mathf.Abs(nonBrakeForceN) > brakeForceN + brakeHoldForceMarginN)
+        {
+            return false;
+        }
+
+        speedMS = 0f;
+        currentAccelerationMS2 = 0f;
+        currentJerkMS3 = 0f;
+        preAcceleration = 0f;
+        return true;
+    }
+
+    private float GetBrakeForceN(float brakeForceN, float nonBrakeForceN)
+    {
+        float safeBrakeForceN = Mathf.Max(0f, brakeForceN);
+        if (safeBrakeForceN <= 0f)
+        {
+            return 0f;
+        }
+
+        if (Mathf.Abs(speedMS) <= brakeHoldSpeedThresholdMS && Mathf.Abs(nonBrakeForceN) > 0.001f)
+        {
+            return -Mathf.Sign(nonBrakeForceN) * safeBrakeForceN;
+        }
+
+        return GetOpposingVelocityForceN(safeBrakeForceN);
+    }
+
+    private float GetConsistGradeForceN(float consistMassKg, float fallbackGradientPermille)
     {
         EnsureRuntimeResolver();
         SyncCarTrackStatesWithConsist();
@@ -271,14 +321,14 @@ public partial class TrainController
 
         if (resolver == null || trackGraph == null || carTrackStates == null || carTrackStates.Count == 0)
         {
-            return GetDirectionalGradeResistanceForceN(consistMassKg, fallbackGradientPermille, GetMovementDirection());
+            return GetSignedGradeForceN(consistMassKg, fallbackGradientPermille, CurrentDirection);
         }
 
         ConsistDefinition resolvedConsist = ResolveConsistDefinition();
         float rawMassTotalKg = GetRawCarMassTotalKg(resolvedConsist);
         if (rawMassTotalKg <= 0f)
         {
-            return GetDirectionalGradeResistanceForceN(consistMassKg, fallbackGradientPermille, GetMovementDirection());
+            return GetSignedGradeForceN(consistMassKg, fallbackGradientPermille, CurrentDirection);
         }
 
         float massScale = Mathf.Max(1f, consistMassKg) / rawMassTotalKg;
@@ -289,18 +339,18 @@ public partial class TrainController
             CarTrackState state = carTrackStates[i];
             float carMassKg = GetRawCarMassKg(resolvedConsist, i) * massScale;
             float gradientPermille = fallbackGradientPermille;
-            EdgeTravelDirection movementDirection = GetMovementDirection();
+            EdgeTravelDirection frontDirection = CurrentDirection;
 
             if (state != null)
             {
-                movementDirection = GetCarMovementDirection(state);
+                frontDirection = state.frontDirection;
                 if (!string.IsNullOrEmpty(state.edgeId))
                 {
                     resolver.TryGetGradientPermille(trackGraph, state.edgeId, state.distanceOnEdgeM, out gradientPermille);
                 }
             }
 
-            totalGradeResistanceForceN += GetDirectionalGradeResistanceForceN(carMassKg, gradientPermille, movementDirection);
+            totalGradeResistanceForceN += GetSignedGradeForceN(carMassKg, gradientPermille, frontDirection);
         }
 
         return totalGradeResistanceForceN;
@@ -332,18 +382,29 @@ public partial class TrainController
     private EdgeTravelDirection GetCarMovementDirection(CarTrackState state)
     {
         EdgeTravelDirection frontDirection = state != null ? state.frontDirection : CurrentDirection;
-        return reverserPosition == ReverserPosition.Reverse
+        return speedMS < -0.001f
             ? TrackGraphUndirectedHelpers.GetOppositeDirection(frontDirection)
             : frontDirection;
     }
 
-    private float GetDirectionalGradeResistanceForceN(float massKg, float gradientPermille, EdgeTravelDirection movementDirection)
+    private float GetSignedGradeForceN(float massKg, float gradientPermille, EdgeTravelDirection frontDirection)
     {
-        float directionalGradientPermille = movementDirection == EdgeTravelDirection.BtoA
+        float directionalGradientPermille = frontDirection == EdgeTravelDirection.BtoA
             ? -gradientPermille
             : gradientPermille;
 
-        return ExternalForceCalculator.GetGradeResistanceForceN(massKg, directionalGradientPermille);
+        return -ExternalForceCalculator.GetGradeResistanceForceN(massKg, directionalGradientPermille);
+    }
+
+    private float GetOpposingVelocityForceN(float forceMagnitudeN)
+    {
+        float safeForceMagnitudeN = Mathf.Max(0f, forceMagnitudeN);
+        if (safeForceMagnitudeN <= 0f || Mathf.Abs(speedMS) <= 0.001f)
+        {
+            return 0f;
+        }
+
+        return speedMS > 0f ? -safeForceMagnitudeN : safeForceMagnitudeN;
     }
 
     private float GetCurrentGradientPermilleForPhysics()
@@ -366,7 +427,8 @@ public partial class TrainController
     /// <returns>計算または参照した値を返します。</returns>
     private float GetTractionForceN()
     {
-        if (reverserPosition == ReverserPosition.Neutral)
+        int forceSign = GetReverserForceSign();
+        if (forceSign == 0)
         {
             if (tractionSystem != null)
             {
@@ -401,11 +463,24 @@ public partial class TrainController
 
         if (tractionSystem != null)
         {
-            tractionSystem.ApplyExternalTractionForce(totalMotorTractionForceN);
+            tractionSystem.ApplyExternalTractionForce(Mathf.Abs(totalMotorTractionForceN));
             tractionSystem.ApplyExternalMotorCurrents(vvvfControllers);
         }
 
-        return Mathf.Max(0f, totalMotorTractionForceN);
+        return Mathf.Max(0f, totalMotorTractionForceN) * forceSign;
+    }
+
+    private int GetReverserForceSign()
+    {
+        switch (reverserPosition)
+        {
+            case ReverserPosition.Forward:
+                return 1;
+            case ReverserPosition.Reverse:
+                return -1;
+            default:
+                return 0;
+        }
     }
 
     /// <summary>
@@ -417,19 +492,21 @@ public partial class TrainController
     {
         currentAccelerationMS2 = acceleration;
         speedMS += acceleration * Time.deltaTime;
-        speedMS = Mathf.Max(0f, speedMS);
-
-        // 速度更新後の値で距離を進めることで、停止直前の負速度混入を避ける。
-        float deltaDistanceM = speedMS * Time.deltaTime;
-        distance += deltaDistanceM;
-
-        if (GetMovementDirection() == EdgeTravelDirection.AtoB)
+        if (Mathf.Abs(speedMS) < 0.0001f)
         {
-            distanceOnEdgeM += deltaDistanceM;
+            speedMS = 0f;
+        }
+
+        float signedDeltaDistanceM = speedMS * Time.deltaTime;
+        distance += Mathf.Abs(signedDeltaDistanceM);
+
+        if (CurrentDirection == EdgeTravelDirection.AtoB)
+        {
+            distanceOnEdgeM += signedDeltaDistanceM;
         }
         else
         {
-            distanceOnEdgeM -= deltaDistanceM;
+            distanceOnEdgeM -= signedDeltaDistanceM;
         }
         
         AdvanceEdgeTransitionIfNeeded();

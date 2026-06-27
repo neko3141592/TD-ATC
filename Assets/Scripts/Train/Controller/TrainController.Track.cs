@@ -106,7 +106,7 @@ public partial class TrainController
 
     private EdgeTravelDirection GetMovementDirection()
     {
-        return reverserPosition == ReverserPosition.Reverse
+        return speedMS < -0.001f
             ? TrackGraphUndirectedHelpers.GetOppositeDirection(CurrentDirection)
             : CurrentDirection;
     }

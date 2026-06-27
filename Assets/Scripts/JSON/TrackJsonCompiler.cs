@@ -17,12 +17,18 @@ public static class TrackJsonCompiler
             Debug.LogError("Cannot compile track JSON. TrackLayoutJson is null.", graph);
             return;
         }
+        
+        if (!CollectTracksAndConnectionsFromGroups(layout, out var tracks, out var connections))
+        {
+            Debug.LogError("Cannot compile track JSON. No track groups were found.", graph);
+            return;
+        }
 
         ClearGraphData(graph);
         CompileGeometries(graph, layout.geometries);
-        CompileTracks(graph, layout.tracks, 0.05f, 0.005f);
+        CompileTracks(graph, tracks, 0.05f, 0.005f);
         
-        ApplyConnections(graph, layout.connections);
+        ApplyConnections(graph, connections);
 
         graph.UpdateNodeTypesAndJunctionIds();
         graph.SyncTurnoutStates();
@@ -32,6 +38,40 @@ public static class TrackJsonCompiler
         {
             Debug.LogError("Compiled TrackGraph has validation errors:\n- " + string.Join("\n- ", errors), graph);
         }
+    }
+
+    private static bool CollectTracksAndConnectionsFromGroups(
+        TrackLayoutJson layout, 
+        out List<TrackJson> tracks, 
+        out List<TrackConnectionJson> connections
+    )
+    {
+        tracks = new List<TrackJson>();
+        connections = new List<TrackConnectionJson>(); 
+        if (layout?.trackGroups == null || layout.trackGroups.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (TrackGroupJson trackGroup in layout.trackGroups)
+        {
+            if (trackGroup == null)
+            {
+                continue;
+            }
+
+            if (trackGroup.tracks != null)
+            {
+                tracks.AddRange(trackGroup.tracks);
+            } 
+
+            if (trackGroup.connections != null)
+            {
+                connections.AddRange(trackGroup.connections);
+            }
+        }
+
+        return tracks.Count > 0;
     }
 
     public static void CompileGeometries(TrackGraph graph, List<TrackGeometryJson> geometries)
@@ -125,6 +165,8 @@ public static class TrackJsonCompiler
                 endNodeId,
                 trackJson.baseCenterLineId,
                 offsetSegments,
+                trackJson.boundaryDistanceM,
+                trackJson.blockIntervalM,
                 speedLimitKmH,
                 sampleIntervalM,
                 integrationStepM
@@ -417,6 +459,8 @@ public static class TrackJsonCompiler
         string endNodeId,
         string baseGeometryId,
         List<TrackOffsetSegment> segments,
+        List<float> blockBoundaryDistanceM,
+        float blockIntervalM,
         float speedLimitKmH,
         float sampleIntervalM,
         float integrationStepM)
@@ -471,7 +515,7 @@ public static class TrackJsonCompiler
             baseGeometryId = baseGeometryId,
             offsetSegments = segments,
             offsetDistanceMap = distanceMap,
-            blockSections = CreateSingleBlockSection(edgeId, offsetLengthM),
+            blockSections = CreateBlockSections(edgeId, offsetLengthM, blockBoundaryDistanceM, blockIntervalM, graph),
             lengthM = offsetLengthM,
             speedLimitMS = speedLimitKmH / 3.6f,
             gaugeM = baseGeometry.gaugeM
@@ -611,6 +655,109 @@ public static class TrackJsonCompiler
                 endDistanceM = Mathf.Max(0f, lengthM)
             }
         };
+    }
+
+    private static List<BlockSection> CreateBlockSections(
+        string edgeId,
+        float lengthM,
+        List<float> boundaryDistanceM,
+        float blockIntervalM,
+        UnityEngine.Object context)
+    {
+        const float epsilonM = 0.001f;
+        float safeLengthM = Mathf.Max(0f, lengthM);
+        if (safeLengthM <= epsilonM)
+        {
+            return CreateSingleBlockSection(edgeId, safeLengthM);
+        }
+
+        if (boundaryDistanceM != null && boundaryDistanceM.Count > 0)
+        {
+            if (TryCreateManualBlockSections(edgeId, safeLengthM, boundaryDistanceM, context, out List<BlockSection> manualSections))
+            {
+                return manualSections;
+            }
+
+            return CreateSingleBlockSection(edgeId, safeLengthM);
+        }
+
+        if (blockIntervalM <= epsilonM || blockIntervalM >= safeLengthM - epsilonM)
+        {
+            return CreateSingleBlockSection(edgeId, safeLengthM);
+        }
+
+        var sections = new List<BlockSection>();
+        float startM = 0f;
+        int blockIndex = 0;
+        while (startM + blockIntervalM < safeLengthM - epsilonM)
+        {
+            float endM = startM + blockIntervalM;
+            AddBlockSection(sections, edgeId, blockIndex, startM, endM);
+            startM = endM;
+            blockIndex++;
+        }
+
+        AddBlockSection(sections, edgeId, blockIndex, startM, safeLengthM);
+        return sections;
+    }
+
+    private static bool TryCreateManualBlockSections(
+        string edgeId,
+        float lengthM,
+        List<float> boundaryDistanceM,
+        UnityEngine.Object context,
+        out List<BlockSection> sections)
+    {
+        const float epsilonM = 0.001f;
+        sections = new List<BlockSection>();
+
+        float previousBoundaryM = float.NegativeInfinity;
+        var validBoundaries = new List<float>();
+        for (int i = 0; i < boundaryDistanceM.Count; i++)
+        {
+            float boundaryM = boundaryDistanceM[i];
+            if (boundaryM <= previousBoundaryM + epsilonM)
+            {
+                Debug.LogWarning($"Track '{edgeId}' block boundaries must be strictly increasing. Falling back to single block.", context);
+                sections = null;
+                return false;
+            }
+
+            previousBoundaryM = boundaryM;
+            if (boundaryM <= epsilonM || boundaryM >= lengthM - epsilonM)
+            {
+                Debug.LogWarning($"Track '{edgeId}' ignored block boundary outside edge range: {boundaryM:0.###}m.", context);
+                continue;
+            }
+
+            validBoundaries.Add(boundaryM);
+        }
+
+        if (validBoundaries.Count == 0)
+        {
+            return false;
+        }
+
+        float startM = 0f;
+        for (int i = 0; i < validBoundaries.Count; i++)
+        {
+            float boundaryM = validBoundaries[i];
+            AddBlockSection(sections, edgeId, i, startM, boundaryM);
+            startM = boundaryM;
+        }
+
+        AddBlockSection(sections, edgeId, validBoundaries.Count, startM, lengthM);
+        return true;
+    }
+
+    private static void AddBlockSection(List<BlockSection> sections, string edgeId, int blockIndex, float startM, float endM)
+    {
+        sections.Add(new BlockSection
+        {
+            blockId = $"{edgeId}_B{blockIndex:000}",
+            startDistanceM = Mathf.Max(0f, startM),
+            endDistanceM = Mathf.Max(0f, endM)
+        });
     }
 
     private static void ApplyConnections(TrackGraph graph, List<TrackConnectionJson> connections)
