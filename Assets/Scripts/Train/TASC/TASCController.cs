@@ -7,14 +7,21 @@ public enum TascControlMode
     Holding,
 }
 
-public class TASCController : MonoBehaviour
+public class TASCController : MonoBehaviour, ITimsDataSource
 {
+    public float TransmissionIntervalSeconds => 0.05f;
+
     [Header("References")]
     [SerializeField] private TrainController train;
     [SerializeField] private TrainSpec trainSpec;
     [SerializeField] private NotchManager notchManager;
     [SerializeField] private StationStopController stationStop;
     [SerializeField] private TASCProfile tascProfile;
+
+    [SerializeField] private TimsCarTerminal terminal;
+
+    [Header("Settings")]
+    [SerializeField] private int carIndex = 0;
 
     [Header("Runtime Status (Debug)")]
     [SerializeField] private bool isTascActive = false;
@@ -68,6 +75,7 @@ public class TASCController : MonoBehaviour
             ClearTascCommand();
             return;
         }
+
 
         targetDistanceM = Mathf.Max(0f, stationStop.DistanceToStopM - GetSafetyMarginM());
         if (IsHoldingDistanceActive(stationStop.DistanceToStopM))
@@ -458,6 +466,11 @@ public class TASCController : MonoBehaviour
             train = GetComponent<TrainController>();
         }
 
+        if (terminal == null)
+        {
+            terminal = GetComponentInChildren<TimsCarTerminal>();
+        }
+
         if (trainSpec == null && train != null)
         {
             trainSpec = train.Spec;
@@ -750,5 +763,13 @@ public class TASCController : MonoBehaviour
         int clampedNotch = Mathf.Clamp(brakeNotch, 1, maxServiceNotch);
         int substeps = trainSpec.GetTascBrakeSubstepsPerNotch();
         return ClampTascBrakeStep(((clampedNotch - 1) * substeps) + 1);
+    }
+
+    public void WriteTimsData(TimsCarTerminal terminal)
+    {
+        terminal.LocalBus.SetBool(
+            new TimsTagKey("TASC", "IsTASCActive"),
+            isTascActive
+        );
     }
 }

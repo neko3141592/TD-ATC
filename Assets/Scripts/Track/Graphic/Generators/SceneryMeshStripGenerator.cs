@@ -45,7 +45,7 @@ public class SceneryMeshStripGenerator : MonoBehaviour
             return;
         }
 
-        List<int> triangles = BuildTriangles(segmentCount, profileCount, rule.closedShape);
+        List<int> triangles = SceneryMeshBuilder.BuildTriangles(segmentCount, profileCount, rule.closedShape);
 
         Mesh mesh = new Mesh();
         mesh.name = string.IsNullOrEmpty(rule.name) ? "Scenery Mesh Strip" : rule.name;
@@ -104,43 +104,5 @@ public class SceneryMeshStripGenerator : MonoBehaviour
         }
 
         return true;
-    }
-
-    private List<int> BuildTriangles(int segmentCount, int profileCount, bool closedShape)
-    {
-        int profileEdges = closedShape ? profileCount : profileCount - 1;
-        List<int> triangles = new List<int>(segmentCount * profileEdges * 6);
-
-        for (int segment = 0; segment < segmentCount; segment++)
-        {
-            int currentStart = segment * profileCount;
-            int nextStart = (segment + 1) * profileCount;
-
-            for (int p = 0; p < profileEdges; p++)
-            {
-                // 次の頂点番号
-                int nextP = (p + 1) % profileCount;
-
-                // 断面currentの頂点1
-                int a = currentStart + p;
-                // 断面currentの頂点2
-                int b = currentStart + nextP;
-
-                // 断面nextの頂点1
-                int c = nextStart + p;
-                // 断面nextの頂点2
-                int d = nextStart + nextP;
-
-                triangles.Add(a);
-                triangles.Add(c);
-                triangles.Add(b);
-
-                triangles.Add(b);
-                triangles.Add(c);
-                triangles.Add(d);
-            }
-        }
-
-        return triangles;
     }
 }

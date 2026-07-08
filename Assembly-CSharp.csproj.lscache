@@ -101,7 +101,7 @@ Assets/Scripts/
   MotorSpec.cs
   MotorTractionCalculator.cs
  Train/
-  NTIM/NTIMController.cs
+  NTIM/TimsTractionForceController.cs
   Operation/NotchManager.cs
   TASC/
    TASCController.cs

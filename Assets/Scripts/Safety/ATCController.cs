@@ -8,7 +8,7 @@ public enum ATCSignalAspect
     Off
 }
 
-public class ATCController : MonoBehaviour
+public class ATCController : MonoBehaviour, ITimsDataSource
 {
     private enum AtcControlState
     {
@@ -29,9 +29,9 @@ public class ATCController : MonoBehaviour
     private const float StopIndicationThresholdKmH = 0.5f;
 
     [Header("References")]
+    [SerializeField] private TimsSystem tims;
     [SerializeField] private TrainController train;
     [SerializeField] private TrainSpec trainSpec;
-    [SerializeField] private NotchManager notchManager;
     [SerializeField] private BlockOccupancyManager blockOccupancyManager;
     [SerializeField] private TrainServiceDefinition trainService;
 
@@ -83,6 +83,7 @@ public class ATCController : MonoBehaviour
     private float previousLimitSpeedMS = 0f;
     private bool isATCBrakeLatched = false;
     private int previousManualBrakeNotch = 0;
+    private int currentAtcBrakeStep = 0;
     [SerializeField] private AtcControlState currentAtcState = AtcControlState.Normal;
     [SerializeField] private bool isPatternApproachLampActive = false;
     private bool hasPreviousNextBlockSignalState = false;
@@ -118,6 +119,7 @@ public class ATCController : MonoBehaviour
     public string ServiceSpeedLimitCandidateDebugLabel => FormatCandidateDebugLabel(lastServiceSpeedLimitCandidate);
     public string SelectedCandidateDebugLabel => FormatCandidateDebugLabel(lastSelectedCandidate);
     public string SpeedLimitRawTargetDebugLabel => lastSpeedLimitRawTargetDebugLabel;
+    public float TransmissionIntervalSeconds => 0.05f;
 
     private ATCSignalAspect ResolveSignalAspect()
     {
@@ -185,7 +187,7 @@ public class ATCController : MonoBehaviour
             hasPreviousLimit = false;
             isATCBrakeLatched = false;
             previousManualBrakeNotch = train != null ? train.ManualBrakeNotch : 0;
-            SendATCBrake(0);
+            SetATCBrake(0);
             return;
         }
 
@@ -208,7 +210,7 @@ public class ATCController : MonoBehaviour
             isATCBrakeLatched = false;
             emergencyOperationBrakeHolding = false;
             previousManualBrakeNotch = train.ManualBrakeNotch;
-            SendATCBrake(0);
+            SetATCBrake(0);
             return;
         }
 
@@ -238,8 +240,8 @@ public class ATCController : MonoBehaviour
         UpdateATCBrakeLatch();
         UpdateAtcEmergencyReleaseSequence();
 
-        // ATCブレーキ司令を送信する。非常パターン時だけ非常ノッチに切り替える。
-        SendATCBrake(ResolveATCBrakeCommandNotch());
+        // ATCブレーキ司令をTIMSへ送信する。非常パターン時だけ非常ノッチに切り替える。
+        SetATCBrake(ResolveATCBrakeCommandNotch());
     }
 
     /// <summary>
@@ -257,22 +259,17 @@ public class ATCController : MonoBehaviour
     }
 
     /// <summary>
-    /// 役割: SendATCBrake の処理を実行します。
+    /// 役割: SetATCBrake の処理を実行します。
     /// </summary>
     /// <param name="brakeNotch">brakeNotch を指定します。</param>
     /// <remarks>返り値はありません。</remarks>
-    private void SendATCBrake(int brakeNotch)
+    private void SetATCBrake(int brakeNotch)
     {
-        if (notchManager == null)
-        {
-            return;
-        }
-
-        notchManager.SetATCBrakeNotch(Mathf.Max(0, brakeNotch));
+        currentAtcBrakeStep = ConvertBrakeNotchToStep(brakeNotch);
     }
 
     /// <summary>
-    /// 役割: 現在のATC状態から、NotchManagerへ送信するATCブレーキノッチを決定します。
+    /// 役割: 現在のATC状態から、TIMSへ送信するATCブレーキノッチを決定します。
     /// </summary>
     /// <returns>送信するATCブレーキノッチを返します。</returns>
     
@@ -701,7 +698,7 @@ public class ATCController : MonoBehaviour
             return;
         }
 
-        bool hasAtcBrakeCommand = isATCBrakeLatched || train.ATCBrakeNotch > 0;
+        bool hasAtcBrakeCommand = isATCBrakeLatched || isLocking() || currentAtcBrakeStep > 0;
         if (!hasAtcBrakeCommand)
         {
             currentAtcState = AtcControlState.Normal;
@@ -831,15 +828,63 @@ public class ATCController : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void ResolveRuntimeReferences()
     {
+        if (tims == null)
+        {
+            tims = GetComponentInParent<TimsSystem>();
+        }
+
+        if (train == null)
+        {
+            train = GetComponentInParent<TrainController>();
+        }
+
         if (trainSpec == null && train != null)
         {
             trainSpec = train.Spec;
         }
+    }
 
-        if (notchManager == null && train != null)
+    private int ConvertBrakeNotchToStep(int brakeNotch)
+    {
+        if (brakeNotch <= 0)
         {
-            notchManager = train.GetComponent<NotchManager>();
+            return 0;
         }
+
+        int subStepCount = tims != null && tims.ControlConfig != null
+            ? tims.ControlConfig.brakeSubstepCount
+            : 1;
+
+        TimsNotchHelper.ToContinuousBrakeNotch(
+            brakeNotch,
+            0,
+            Mathf.Max(1, subStepCount),
+            out int brakeStep
+        );
+
+        return Mathf.Max(0, brakeStep);
+    }
+
+    public void WriteTimsData(TimsCarTerminal terminal)
+    {
+        if (terminal == null)
+        {
+            return;
+        }
+
+        TimsDataBus localBus = terminal.LocalBus;
+        localBus.SetInt(new TimsTagKey("ATC", "BrakeStep"), currentAtcBrakeStep);
+        localBus.SetFloat(new TimsTagKey("ATC", "LimitSpeedKmh"), CurrentLimitSpeedKmH);
+        localBus.SetFloat(new TimsTagKey("ATC", "PatternAllowSpeedKmh"), CurrentPatternAllowSpeedKmH);
+        localBus.SetFloat(new TimsTagKey("ATC", "PatternEmergencyAllowSpeedKmh"), CurrentPatternEmergencyAllowSpeedKmH);
+        localBus.SetFloat(new TimsTagKey("ATC", "PatternTargetDistanceM"), CurrentPatternTargetDistanceM);
+        localBus.SetString(new TimsTagKey("ATC", "State"), CurrentAtcStateLabel);
+        localBus.SetString(new TimsTagKey("ATC", "SignalAspect"), CurrentSignalAspect.ToString());
+        localBus.SetBool(new TimsTagKey("ATC", "IsBrakeLatched"), isATCBrakeLatched);
+        localBus.SetBool(new TimsTagKey("ATC", "IsServiceBrakeActive"), IsAtcServiceBrakeActive);
+        localBus.SetBool(new TimsTagKey("ATC", "IsEmergencyBrakeActive"), IsAtcEmergencyBrakeActive);
+        localBus.SetBool(new TimsTagKey("ATC", "IsPatternApproaching"), isPatternApproachLampActive);
+        localBus.SetBool(new TimsTagKey("ATC", "IsCutOut"), IsAtcCutOutActive);
     }
 
     /// <summary>

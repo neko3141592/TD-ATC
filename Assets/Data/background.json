@@ -1,0 +1,85 @@
+{
+    "$schema": "./background.schema.json",
+    "version": "1",
+    "materials": {
+        "rail" : "Assets/Materials/Track/Rail/Rail.mat",
+        "ballast": "Assets/Materials/Track/Ballast/Ballast.mat",
+        "cutSlopeConcrete": "Assets/Materials/Track/CurSlope/Concrete.mat"
+    },
+    "prefabs": {
+
+    },
+    "backgroundGroups": [
+        {
+            "id": "NT03_NT04",
+            "name":"NT03_NT04",
+            "lofts": [
+                {
+                    "id": "NT03_NT04_CutSlopeLeft",
+                    "name": "NT03_NT04_CutSlopeLeft",
+                    "defaultMaterial": "cutSlopeConcrete",
+                    "sampleIntervalM": 2.5,
+                    "anchor": {
+                       "id": "NT03_NT04_P1",
+                        "kind": "Geometry",
+                        "startDistanceM": 0,
+                        "endDistanceM": 10000
+                    },
+                    "guideLines": [
+                        {
+                            "id": "groundLeft",
+                            "baseOffsetM": -30,
+                            "heightM": 0,
+                            "heightMode": "ConstantWorldY"
+                        },
+                        {
+                            "id": "groundRight",
+                            "baseOffsetM": -6.5,
+                            "heightM": 0,
+                            "heightMode": "ConstantWorldY"
+                        },
+                        {
+                            "id": "Track",
+                            "baseOffsetM": -2.85,
+                            "heightM": 0,
+                            "heightMode": "AnchorRelative"
+                        }
+                    ]
+                },
+                {
+                    "id": "NT03_NT04_CutSlopeRight",
+                    "name": "NT03_NT04_CutSlopeRight",
+                    "defaultMaterial": "cutSlopeConcrete",
+                    "sampleIntervalM": 2.5,
+                    "anchor": {
+                       "id": "NT03_NT04_P2",
+                        "kind": "Geometry",
+                        "startDistanceM": 0,
+                        "endDistanceM": 10000
+                    },
+                    "guideLines": [
+                        {
+                            "id": "Track",
+                            "baseOffsetM": 2.85,
+                            "heightM": 0,
+                            "heightMode": "AnchorRelative"
+                        },
+                        {
+                            "id": "groundRight",
+                            "baseOffsetM": 6.5,
+                            "heightM": 0,
+                            "heightMode": "ConstantWorldY"
+                        },
+                        {
+                            "id": "groundLeft",
+                            "baseOffsetM": 30,
+                            "heightM": 0,
+                            "heightMode": "ConstantWorldY"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+
+}

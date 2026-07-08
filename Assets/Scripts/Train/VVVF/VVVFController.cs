@@ -1,7 +1,6 @@
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 
-public class VVVFController : MonoBehaviour
+public class VVVFController : MonoBehaviour, ITimsDataSource
 {
     [Header("References")]
     [SerializeField] private TrainController train;
@@ -9,6 +8,7 @@ public class VVVFController : MonoBehaviour
     [SerializeField] private MotorSpec motorSpec;
     [SerializeField] private MotorModel[] motors;
     [SerializeField] private int assignedCarIndex = -1;
+    [SerializeField] private TimsCarTerminal terminal;
 
     private enum DriveMode
     {
@@ -25,6 +25,7 @@ public class VVVFController : MonoBehaviour
     public MotorModel[] Motors => motors;
     public int AssignedCarIndex => assignedCarIndex;
     public int MotorCount => motors != null ? motors.Length : 0;
+    public float TransmissionIntervalSeconds => 0.05f;
     public float RatedPowerW =>
         motorSpec != null ? motorSpec.ratedPowerW * MotorCount : 0f;
 
@@ -69,6 +70,11 @@ public class VVVFController : MonoBehaviour
             motors = GetComponentsInChildren<MotorModel>();
         }
 
+        if (terminal == null)
+        {
+            terminal = GetComponentInParent<TimsCarTerminal>();
+        }
+
         randomFactor = Random.Range(0.9f, 1.1f);
 
 
@@ -84,6 +90,7 @@ public class VVVFController : MonoBehaviour
 
     private void Update()
     {
+        ReadBrakeCommandFromTims();
         UpdateDrive(Time.deltaTime);
     }
 
@@ -385,6 +392,64 @@ public class VVVFController : MonoBehaviour
 
         
         UpdateTargetMotorTorque();
+    }
+
+    private void ReadBrakeCommandFromTims()
+    {
+        if (terminal == null)
+        {
+            terminal = GetComponentInParent<TimsCarTerminal>();
+        }
+
+        if (terminal == null)
+        {
+            return;
+        }
+
+        if (!terminal.LocalBus.TryGetFloat(
+            new TimsTagKey("BrakeSystem", "TargetRegenForcekN"),
+            out float targetRegenForcekN))
+        {
+            return;
+        }
+
+        float targetRegenForceN = targetRegenForcekN * 1000f;
+        float safeTargetRegenForceN = Mathf.Max(0f, targetRegenForceN);
+        if (safeTargetRegenForceN > 0.01f)
+        {
+            SetTargetTractionForce(-safeTargetRegenForceN);
+            return;
+        }
+
+        if (currentDriveMode == DriveMode.Regen)
+        {
+            SetTargetTractionForce(0f);
+        }
+    }
+
+    public void WriteTimsData(TimsCarTerminal terminal)
+    {
+        if (terminal == null)
+        {
+            return;
+        }
+
+        TimsDataBus dataBus = terminal.LocalBus;
+        float regenForceN = Mathf.Max(0f, -TotalMotorTractionForceN);
+        float speedMS = train != null ? train.SpeedMS : 0f;
+
+        dataBus.SetFloat(new TimsTagKey("VVVF", "TargetTractionForceN"), TargetTractionForceN);
+        dataBus.SetFloat(new TimsTagKey("VVVF", "TotalMotorTractionForceN"), TotalMotorTractionForceN);
+        dataBus.SetFloat(new TimsTagKey("VVVF", "TargetMotorTorqueNm"), TargetMotorTorqueNm);
+        dataBus.SetFloat(new TimsTagKey("VVVF", "MotorRpm"), MotorRpm);
+        dataBus.SetFloat(new TimsTagKey("VVVF", "WheelRpm"), WheelRpm);
+        dataBus.SetFloat(new TimsTagKey("VVVF", "FrequencyHz"), FrequencyHz);
+        dataBus.SetFloat(new TimsTagKey("VVVF", "SlipFrequencyHz"), SlipFrequencyHz);
+        dataBus.SetFloat(new TimsTagKey("VVVF", "LineVoltageRmsV"), LineVoltageRmsV);
+        dataBus.SetInt(new TimsTagKey("VVVF", "MotorCount"), MotorCount);
+        dataBus.SetString(new TimsTagKey("VVVF", "DriveMode"), DriveModeLabel);
+        dataBus.SetFloat(new TimsTagKey("BrakeSystem", "RegenForcekN"), regenForceN / 1000f);
+        dataBus.SetFloat(new TimsTagKey("BrakeSystem", "RegenCapN"), GetRegenCapForceN(speedMS));
     }
 
     private void ResetValues()

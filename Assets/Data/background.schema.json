@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Background Scenery Data",
+  "type": "object",
+  "required": ["version"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": {
+      "description": "Background data format version.",
+      "oneOf": [
+        { "type": "integer", "minimum": 1 },
+        { "type": "string", "minLength": 1 }
+      ]
+    },
+    "name": { "type": "string" },
+    "materials": {
+      "description": "Material registry. Keys are material ids used by rules; values are Unity asset paths.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/assetPath" }
+    },
+    "prefabs": {
+      "description": "Prefab registry. Keys are prefab ids used by rules; values are Unity asset paths.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/assetPath" }
+    },
+    "backgroundGroups": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/backgroundGroup" }
+    },
+    "lofts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/loft" }
+    },
+    "meshStrips": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/meshStrip" }
+    },
+    "linearPrefabs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/linearPrefab" }
+    },
+    "singlePrefabs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/singlePrefab" }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assetPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^Assets/.+"
+    },
+    "anchor": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["Geometry", "Edge"] },
+        "id": { "$ref": "#/$defs/id" },
+        "startDistanceM": { "type": "number", "minimum": 0, "default": 0 },
+        "endDistanceM": { "type": "number", "minimum": 0 }
+      }
+    },
+    "backgroundGroup": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["lofts"] },
+        { "required": ["meshStrips"] },
+        { "required": ["linearPrefabs"] },
+        { "required": ["singlePrefabs"] }
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "enabled": { "type": "boolean", "default": true },
+        "lofts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/loft" }
+        },
+        "meshStrips": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/meshStrip" }
+        },
+        "linearPrefabs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/linearPrefab" }
+        },
+        "singlePrefabs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/singlePrefab" }
+        }
+      }
+    },
+    "vector3": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number", "default": 0 },
+        "y": { "type": "number", "default": 0 },
+        "z": { "type": "number", "default": 0 }
+      }
+    },
+    "guideLine": {
+      "type": "object",
+      "required": ["id", "baseOffsetM", "heightMode"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "baseOffsetM": { "type": "number" },
+        "heightMode": {
+          "description": "AnchorRelative follows the anchor frame. ConstantWorldY and LinearWorldY use world Y.",
+          "enum": ["AnchorRelative", "ConstantWorldY", "LinearWorldY"]
+        },
+        "heightM": {
+          "description": "Used by AnchorRelative as local height offset, and by ConstantWorldY as world Y if y is omitted.",
+          "type": "number",
+          "default": 0
+        },
+        "y": {
+          "description": "World Y for ConstantWorldY.",
+          "type": "number"
+        },
+        "startY": {
+          "description": "World Y at the anchor start distance for LinearWorldY.",
+          "type": "number"
+        },
+        "endY": {
+          "description": "World Y at the anchor end distance for LinearWorldY.",
+          "type": "number"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "heightMode": { "const": "LinearWorldY" } },
+            "required": ["heightMode"]
+          },
+          "then": { "required": ["startY", "endY"] }
+        }
+      ]
+    },
+    "loftSurfaceMaterial": {
+      "type": "object",
+      "required": ["surfaceIndex", "material"],
+      "additionalProperties": false,
+      "properties": {
+        "surfaceIndex": {
+          "description": "Surface number between guideLines[i] and guideLines[i + 1].",
+          "type": "integer",
+          "minimum": 0
+        },
+        "material": { "$ref": "#/$defs/id" }
+      }
+    },
+    "loft": {
+      "type": "object",
+      "required": ["id", "anchor", "guideLines", "defaultMaterial"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "anchor": { "$ref": "#/$defs/anchor" },
+        "sampleIntervalM": { "type": "number", "exclusiveMinimum": 0, "default": 2 },
+        "closedShape": { "type": "boolean", "default": false },
+        "textureMetersPerTile": { "type": "number", "exclusiveMinimum": 0, "default": 2 },
+        "guideLines": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/guideLine" }
+        },
+        "defaultMaterial": { "$ref": "#/$defs/id" },
+        "surfaceMaterials": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/loftSurfaceMaterial" }
+        }
+      }
+    },
+    "profilePoint": {
+      "type": "object",
+      "required": ["offsetM", "heightMode", "heightM"],
+      "additionalProperties": false,
+      "properties": {
+        "offsetM": { "type": "number" },
+        "heightMode": { "enum": ["TrackRelative", "ConstantWorldY", "GroundProfile"] },
+        "heightM": { "type": "number" }
+      }
+    },
+    "meshStrip": {
+      "type": "object",
+      "required": ["id", "anchor", "profilePoints", "material"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "anchor": { "$ref": "#/$defs/anchor" },
+        "baseOffsetM": { "type": "number", "default": 0 },
+        "heightOffsetM": { "type": "number", "default": 0 },
+        "profilePoints": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/profilePoint" }
+        },
+        "closedShape": { "type": "boolean", "default": false },
+        "sampleIntervalM": { "type": "number", "exclusiveMinimum": 0, "default": 2 },
+        "material": { "$ref": "#/$defs/id" },
+        "textureMetersPerTile": { "type": "number", "exclusiveMinimum": 0, "default": 2 }
+      }
+    },
+    "linearPrefab": {
+      "type": "object",
+      "required": ["id", "anchor", "prefab", "spacingM"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "anchor": { "$ref": "#/$defs/anchor" },
+        "prefab": { "$ref": "#/$defs/id" },
+        "spacingM": { "type": "number", "exclusiveMinimum": 0 },
+        "offsetM": { "type": "number", "default": 0 },
+        "heightMode": { "enum": ["AnchorRelative", "ConstantWorldY", "LinearWorldY"] },
+        "heightOffsetM": { "type": "number", "default": 0 },
+        "y": { "type": "number" },
+        "startY": { "type": "number" },
+        "endY": { "type": "number" },
+        "rotationOffsetEuler": { "$ref": "#/$defs/vector3" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "heightMode": { "const": "LinearWorldY" } },
+            "required": ["heightMode"]
+          },
+          "then": { "required": ["startY", "endY"] }
+        }
+      ]
+    },
+    "singlePrefab": {
+      "type": "object",
+      "required": ["id", "anchor", "prefab"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "anchor": { "$ref": "#/$defs/anchor" },
+        "prefab": { "$ref": "#/$defs/id" },
+        "baseOffsetM": { "type": "number", "default": 0 },
+        "heightOffsetM": { "type": "number", "default": 0 },
+        "rotationOffsetEuler": { "$ref": "#/$defs/vector3" }
+      }
+    }
+  }
+}

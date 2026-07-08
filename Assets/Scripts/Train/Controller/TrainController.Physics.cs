@@ -2,170 +2,10 @@ using UnityEngine;
 
 public partial class TrainController
 {
-    private enum AutomaticNotchTarget
-    {
-        None,
-        Neutral,
-        MaxServiceBrake
-    }
-
-    [SerializeField, Min(0.01f)] private float automaticNotchStepIntervalS = 0.08f;
     [SerializeField, Min(0f)] private float brakeHoldSpeedThresholdMS = 0.05f;
     [SerializeField, Min(0f)] private float brakeHoldForceMarginN = 1f;
 
-    private AutomaticNotchTarget automaticNotchTarget = AutomaticNotchTarget.None;
-    private float nextAutomaticNotchStepTime;
     private float preAcceleration = 0f;
-
-    /// <summary>
-    /// 役割: HandleInput の処理を入力や状態を処理します。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
-    void HandleInput()
-    {
-        if (notchManager == null)
-        {
-            return;
-        }
-
-        if (!acceptPlayerInput)
-        {
-            notchManager.SetManualNotches(0, 0);
-            return;
-        }
-
-        int powerNotch = notchManager.ManualPowerNotch;
-        int brakeNotch = notchManager.ManualBrakeNotch;
-        int emergencyBrakeNotch = EmergencyBrakeNotch;
-
-        HandleReverserInput(powerNotch);
-
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            StopAutomaticNotchMove();
-            if (powerNotch > 0) powerNotch--;
-            else if (brakeNotch < emergencyBrakeNotch) brakeNotch++;
-        }
-
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            StartAutomaticNotchMove(AutomaticNotchTarget.Neutral);
-        }
-
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            StartAutomaticNotchMove(AutomaticNotchTarget.MaxServiceBrake);
-        }
-
-        if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            StopAutomaticNotchMove();
-            if (brakeNotch > 0) brakeNotch--;
-            else if (powerNotch < trainSpec.maxPowerNotch) powerNotch++;
-        }
-
-        ApplyAutomaticNotchMove(ref powerNotch, ref brakeNotch, emergencyBrakeNotch);
-        notchManager.SetManualNotches(powerNotch, brakeNotch);
-    }
-
-    private void StartAutomaticNotchMove(AutomaticNotchTarget target)
-    {
-        automaticNotchTarget = target;
-        nextAutomaticNotchStepTime = 0f;
-    }
-
-    private void StopAutomaticNotchMove()
-    {
-        automaticNotchTarget = AutomaticNotchTarget.None;
-    }
-
-    private void ApplyAutomaticNotchMove(ref int powerNotch, ref int brakeNotch, int emergencyBrakeNotch)
-    {
-        if (automaticNotchTarget == AutomaticNotchTarget.None || Time.time < nextAutomaticNotchStepTime)
-        {
-            return;
-        }
-
-        bool moved = false;
-        switch (automaticNotchTarget)
-        {
-            case AutomaticNotchTarget.Neutral:
-                moved = StepTowardNeutral(ref powerNotch, ref brakeNotch);
-                break;
-            case AutomaticNotchTarget.MaxServiceBrake:
-                moved = StepTowardMaxServiceBrake(ref powerNotch, ref brakeNotch, emergencyBrakeNotch);
-                break;
-        }
-
-        if (!moved)
-        {
-            StopAutomaticNotchMove();
-            return;
-        }
-
-        nextAutomaticNotchStepTime = Time.time + Mathf.Max(0.01f, automaticNotchStepIntervalS);
-    }
-
-    private static bool StepTowardNeutral(ref int powerNotch, ref int brakeNotch)
-    {
-        if (brakeNotch > 0)
-        {
-            brakeNotch--;
-            return true;
-        }
-
-        if (powerNotch > 0)
-        {
-            powerNotch--;
-            return true;
-        }
-
-        return false;
-    }
-
-    private static bool StepTowardMaxServiceBrake(ref int powerNotch, ref int brakeNotch, int emergencyBrakeNotch)
-    {
-        if (powerNotch > 0)
-        {
-            powerNotch--;
-            return true;
-        }
-
-        int maxServiceBrakeNotch = Mathf.Max(0, emergencyBrakeNotch - 1);
-        if (brakeNotch < maxServiceBrakeNotch)
-        {
-            brakeNotch++;
-            return true;
-        }
-
-        return false;
-    }
-
-    private void HandleReverserInput(int powerNotch)
-    {
-        if (!CanChangeReverser(powerNotch))
-        {
-            return;
-        }
-
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            reverserPosition = ReverserPosition.Forward;
-        }
-        else if (Input.GetKeyDown(KeyCode.N))
-        {
-            reverserPosition = ReverserPosition.Neutral;
-        }
-        else if (Input.GetKeyDown(KeyCode.R))
-        {
-            reverserPosition = ReverserPosition.Reverse;
-        }
-    }
-
-    private bool CanChangeReverser(int powerNotch)
-    {
-        return powerNotch <= 0 && Mathf.Abs(speedMS) <= 0.05f;
-    }
 
     /// <summary>
     /// 役割: ApplyPhysics の処理を適用します。
@@ -173,22 +13,9 @@ public partial class TrainController
     /// <remarks>返り値はありません。</remarks>
     void ApplyPhysics()
     {
-        notchManager.ConfigureLimits(trainSpec.maxPowerNotch, EmergencyBrakeNotch, trainSpec.GetTascBrakeSubstepsPerNotch());
-
-        int powerNotch = PowerNotch;
-        int brakeNotch = BrakeNotch;
-        bool isEmergencyBrake = brakeNotch >= EmergencyBrakeNotch;
-        bool useTascBrakeStep = notchManager.IsTASCBrakeSelected;
-        int tascBrakeStep = notchManager.TASCBrakeStep;
-        float absSpeedMS = Mathf.Abs(speedMS);
-
-        if (brakeSystem != null)
-        {
-            brakeSystem.UpdateBrake(brakeNotch, absSpeedMS, Time.deltaTime, isEmergencyBrake, useTascBrakeStep, tascBrakeStep, ManualPowerNotch);
-        }
-
         float massKg = GetCurrentConsistMassKg();
-        GetBrakeOutputs(brakeNotch, useTascBrakeStep, tascBrakeStep, massKg, out float brakeDeceleration, out float brakeForceN);
+        float brakeForceN = GetBrakeCylinderForceN();
+        UpdateBrakeCylinderOutputs(brakeForceN, massKg);
 
         float externalForceN = GetExternalResistanceForceN(massKg);
         float tractionForceN = GetTractionForceN();
@@ -219,6 +46,11 @@ public partial class TrainController
     /// <returns>計算または参照した値を返します。</returns>
     private float GetCurrentConsistMassKg()
     {
+        if (TryGetCurrentLoadedConsistMassKg(out float loadedConsistMassKg))
+        {
+            return loadedConsistMassKg;
+        }
+
         if (brakeSystem != null && brakeSystem.CurrentConsistMassKg > 0f)
         {
             return brakeSystem.CurrentConsistMassKg;
@@ -232,37 +64,78 @@ public partial class TrainController
         return Mathf.Max(1f, trainSpec.massKg);
     }
 
-    /// <summary>
-    /// 役割: GetBrakeOutputs の処理を取得します。
-    /// </summary>
-    /// <param name="brakeNotch">brakeNotch を指定します。</param>
-    /// <param name="useTascBrakeStep">TASC の連続ブレーキ段を使う場合は true を指定します。</param>
-    /// <param name="tascBrakeStep">TASC の連続ブレーキ段を指定します。</param>
-    /// <param name="massKg">massKg を指定します。</param>
-    /// <param name="brakeDecelerationMS2">出力結果を受け取る brakeDecelerationMS2 です。</param>
-    /// <param name="brakeForceN">出力結果を受け取る brakeForceN です。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void GetBrakeOutputs(int brakeNotch, bool useTascBrakeStep, int tascBrakeStep, float massKg, out float brakeDecelerationMS2, out float brakeForceN)
+    private bool TryGetCurrentLoadedConsistMassKg(out float massKg)
     {
-        brakeDecelerationMS2 = 0f;
-        brakeForceN = 0f;
-
-        if (brakeSystem != null)
+        massKg = 0f;
+        ConsistDefinition resolvedConsist = ResolveConsistDefinition();
+        if (resolvedConsist == null || resolvedConsist.CarCount <= 0)
         {
-            brakeDecelerationMS2 = brakeSystem.TotalBrakeDecelMS2;
-            brakeForceN = brakeSystem.TotalBrakeForceN;
+            return false;
+        }
+
+        for (int i = 0; i < resolvedConsist.CarCount; i++)
+        {
+            massKg += GetCurrentCarMassKg(resolvedConsist, i);
+        }
+
+        massKg = Mathf.Max(1f, massKg);
+        return true;
+    }
+
+    private float GetBrakeCylinderForceN()
+    {
+        if (brakeCylinders == null || brakeCylinders.Length == 0)
+        {
+            RefreshBrakeCylindersFromChildren();
+        }
+
+        if (brakeCylinders == null)
+        {
+            return 0f;
+        }
+
+        float totalBrakeForceN = 0f;
+        for (int i = 0; i < brakeCylinders.Length; i++)
+        {
+            BrakeCylinder cylinder = brakeCylinders[i];
+            if (cylinder == null)
+            {
+                continue;
+            }
+
+            totalBrakeForceN += Mathf.Max(0f, cylinder.BrakeForceN);
+        }
+
+        return totalBrakeForceN;
+    }
+
+    private void UpdateBrakeCylinderOutputs(float brakeForceN, float massKg)
+    {
+        currentBrakeForceN = Mathf.Max(0f, brakeForceN);
+        currentAirBrakeForceN = currentBrakeForceN;
+
+        float safeMassKg = Mathf.Max(1f, massKg);
+        currentBrakeDecelMS2 = currentBrakeForceN / safeMassKg;
+        currentAirBrakeDecelMS2 = currentBrakeDecelMS2;
+
+        currentBCPressureKPa = 0f;
+        currentTargetBCPressureKPa = 0f;
+        if (brakeCylinders == null)
+        {
             return;
         }
 
-        if (brakeNotch <= 0 && (!useTascBrakeStep || tascBrakeStep <= 0))
+        for (int i = 0; i < brakeCylinders.Length; i++)
         {
-            return;
-        }
+            BrakeCylinder cylinder = brakeCylinders[i];
+            if (cylinder == null)
+            {
+                continue;
+            }
 
-        brakeDecelerationMS2 = useTascBrakeStep
-            ? trainSpec.GetTascBrakeStepDeceleration(tascBrakeStep)
-            : trainSpec.GetBrakeDeceleration(brakeNotch);
-        brakeForceN = Mathf.Max(0f, brakeDecelerationMS2) * massKg;
+            currentBCPressureKPa = Mathf.Max(currentBCPressureKPa, cylinder.CurrentPressureKPa);
+            currentTargetBCPressureKPa = Mathf.Max(currentTargetBCPressureKPa, cylinder.TargetPressureKPa);
+        }
     }
 
     /// <summary>
@@ -325,19 +198,12 @@ public partial class TrainController
         }
 
         ConsistDefinition resolvedConsist = ResolveConsistDefinition();
-        float rawMassTotalKg = GetRawCarMassTotalKg(resolvedConsist);
-        if (rawMassTotalKg <= 0f)
-        {
-            return GetSignedGradeForceN(consistMassKg, fallbackGradientPermille, CurrentDirection);
-        }
-
-        float massScale = Mathf.Max(1f, consistMassKg) / rawMassTotalKg;
         float totalGradeResistanceForceN = 0f;
 
         for (int i = 0; i < carTrackStates.Count; i++)
         {
             CarTrackState state = carTrackStates[i];
-            float carMassKg = GetRawCarMassKg(resolvedConsist, i) * massScale;
+            float carMassKg = GetCurrentCarMassKg(resolvedConsist, i);
             float gradientPermille = fallbackGradientPermille;
             EdgeTravelDirection frontDirection = CurrentDirection;
 
@@ -356,18 +222,46 @@ public partial class TrainController
         return totalGradeResistanceForceN;
     }
 
-    private float GetRawCarMassTotalKg(ConsistDefinition resolvedConsist)
+    private float GetCurrentCarMassKg(ConsistDefinition resolvedConsist, int index)
     {
-        float totalMassKg = 0f;
-        for (int i = 0; i < carTrackStates.Count; i++)
+        if (TryGetLoadedCarMassKg(index, out float loadedMassKg))
         {
-            totalMassKg += GetRawCarMassKg(resolvedConsist, i);
+            return loadedMassKg;
         }
 
-        return totalMassKg;
+        return GetSpecCarMassKg(resolvedConsist, index);
     }
 
-    private float GetRawCarMassKg(ConsistDefinition resolvedConsist, int index)
+    private bool TryGetLoadedCarMassKg(int index, out float massKg)
+    {
+        massKg = 0f;
+
+        if (loadWeightControllers == null || loadWeightControllers.Length == 0)
+        {
+            RefreshLoadWeightControllersFromChildren();
+        }
+
+        if (loadWeightControllers == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < loadWeightControllers.Length; i++)
+        {
+            LoadWeightController load = loadWeightControllers[i];
+            if (load == null || load.CarIndex != index)
+            {
+                continue;
+            }
+
+            massKg = Mathf.Max(1f, load.MassKg);
+            return true;
+        }
+
+        return false;
+    }
+
+    private float GetSpecCarMassKg(ConsistDefinition resolvedConsist, int index)
     {
         if (resolvedConsist != null &&
             resolvedConsist.TryGetCar(index, out CarSpec carSpec) &&
@@ -440,6 +334,11 @@ public partial class TrainController
 
         if (vvvfControllers == null || vvvfControllers.Length == 0)
         {
+            RefreshVVVFControllersFromChildren();
+        }
+
+        if (vvvfControllers == null || vvvfControllers.Length == 0)
+        {
             if (tractionSystem != null)
             {
                 tractionSystem.ClearTractionOutputs();
@@ -467,7 +366,7 @@ public partial class TrainController
             tractionSystem.ApplyExternalMotorCurrents(vvvfControllers);
         }
 
-        return Mathf.Max(0f, totalMotorTractionForceN) * forceSign;
+        return totalMotorTractionForceN * forceSign;
     }
 
     private int GetReverserForceSign()

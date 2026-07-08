@@ -19,6 +19,6 @@ MonoBehaviour:
   - stationId: ST_End
     stopHere: 1
     dwellSeconds: 0
-  - stationId: ST_Mid
+  - stationId: NT03_P1
     stopHere: 1
     dwellSeconds: 0

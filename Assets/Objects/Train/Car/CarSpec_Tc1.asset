@@ -25,6 +25,6 @@ MonoBehaviour:
   maxRegenDecelMS2: 0
   bcCylinderAreaM2: 0.02
   bcCylinderCount: 4
-  brakeLeverageRatio: 5
+  brakeLeverageRatio: 6
   brakeMechanicalEfficiency: 0.9
-  bcMaxPressureKPa: 420
+  bcMaxPressureKPa: 350

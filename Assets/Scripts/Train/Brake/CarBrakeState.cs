@@ -12,29 +12,32 @@ public class CarBrakeState
     [Tooltip("現在のBC圧[kPa]")]
     public float bcPressureKPa = 0f;
 
+    [Tooltip("現在の回生上限")]
+    public float regenCapN = 0f;
+
+    [Tooltip("現在の空制上限")]
+    public float airCapN = 0f;
+
+    [Tooltip("BC圧1kPaあたりの空気ブレーキ力[N/kPa]")]
+    public float airForcePerKPa = 0f;
+
+    [Tooltip("最大BC圧[kPa]")]
+    public float maxBCPressureKPa = 0f;
+
     [Tooltip("ブレーキ操作継続中フラグ（回生失効ラッチ用）")]
     public bool regenBrakeApplicationActive = false;
 
     [Tooltip("現在のブレーキ操作で回生を使用できるか")]
     public bool regenLatchedForCurrentBrake = false;
 
-    [Tooltip("回生揺らぎノイズのシード値")]
-    public float regenNoiseSeed = 0f;
-
-    [Tooltip("回生揺らぎノイズの経過時間")]
-    public float regenNoiseTime = 0f;
-
-    /// <summary>
-    /// 役割: Reset の処理を実行します。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
     public void Reset()
     {
         regenForceN = 0f;
         airForceN = 0f;
         bcPressureKPa = 0f;
+        airForcePerKPa = 0f;
+        maxBCPressureKPa = 0f;
         regenBrakeApplicationActive = false;
         regenLatchedForCurrentBrake = false;
-        regenNoiseTime = 0f;
     }
 }

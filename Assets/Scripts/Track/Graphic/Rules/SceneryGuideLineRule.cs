@@ -1,21 +1,20 @@
 using System;
 using UnityEngine;
 
-public enum HeightMode
+public enum SceneryGuideHeightMode
 {
-    GeometryRelative,
-    Constant
+    AnchorRelative,
+    ConstantWorldY
 }
 
 [Serializable]
 public class SceneryGuideLine
 {
     public string id;
-    public SceneryAnchor anchor;
 
     public float baseOffsetM = 0f;
     public float heightM = 0f;
 
-    public HeightMode heightMode = HeightMode.GeometryRelative;
+    public SceneryGuideHeightMode heightMode = SceneryGuideHeightMode.AnchorRelative;
 
 }

@@ -4,7 +4,7 @@ public class TrainBrakeIndicatorDisplay : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private TrainController train;
-    [SerializeField] private NTIMController ntim;
+    [SerializeField] private TimsTractionForceController ntim;
     [SerializeField] private BrakeSystemController brakeSystem;
 
     [Header("Indicators")]

@@ -5,10 +5,12 @@ public partial class TrainController : MonoBehaviour
 {
     // ref
     [SerializeField] private TrainSpec trainSpec;
-    [SerializeField] private NotchManager notchManager;
+    [SerializeField] private TimsSystem tims;
     [SerializeField] private BrakeSystemController brakeSystem;
     [SerializeField] private TractionSystemController tractionSystem;
     [SerializeField] private VVVFController[] vvvfControllers;
+    [SerializeField] private BrakeCylinder[] brakeCylinders;
+    [SerializeField] private LoadWeightController[] loadWeightControllers;
     [SerializeField] private TrackGraph trackGraph;
 
     // train info
@@ -29,6 +31,12 @@ public partial class TrainController : MonoBehaviour
     private float currentCantMm = 0f;
     private float currentGradeResistanceForceN = 0f;
     private float currentTractionForceN = 0f;
+    private float currentBrakeForceN = 0f;
+    private float currentAirBrakeForceN = 0f;
+    private float currentBrakeDecelMS2 = 0f;
+    private float currentAirBrakeDecelMS2 = 0f;
+    private float currentBCPressureKPa = 0f;
+    private float currentTargetBCPressureKPa = 0f;
 
     // graph
     private TrackRuntimeResolver resolver;
@@ -66,7 +74,7 @@ public partial class TrainController : MonoBehaviour
     // 実際に動く向きは符号付き速度を反映した CurrentMovementDirection を使います。
     public EdgeTravelDirection CurrentDirection { get; private set; }
     public EdgeTravelDirection CurrentMovementDirection => GetMovementDirection();
-    public ReverserPosition Reverser => reverserPosition;
+    public ReverserPosition Reverser => GetTimsReverserPosition();
     public float DistanceM => distance;
     public string TrainId => string.IsNullOrWhiteSpace(trainId) ? name : trainId;
     public TrackGraph Graph => trackGraph;
@@ -74,23 +82,28 @@ public partial class TrainController : MonoBehaviour
     public float DistanceOnEdgeM => distanceOnEdgeM;
     public TrainSpec Spec => trainSpec;
     public bool AcceptPlayerInput => acceptPlayerInput;
-    public int PowerNotch => notchManager != null ? notchManager.ResolvedPowerNotch : 0;
-    public int BrakeNotch => notchManager != null ? notchManager.ResolvedBrakeNotch : 0;
-    public int ManualPowerNotch => notchManager != null ? notchManager.ManualPowerNotch : 0;
-    public int ManualBrakeNotch => notchManager != null ? notchManager.ManualBrakeNotch : 0;
-    public int ATCBrakeNotch => notchManager != null ? notchManager.ATCBrakeNotch : 0;
-    public int TASCBrakeStep => notchManager != null ? notchManager.TASCBrakeStep : 0;
+    public int PowerNotch => GetTimsMasterInt(new TimsTagKey("Notch", "PowerNotch"));
+    public int BrakeStep => GetTimsMasterInt(new TimsTagKey("Notch", "BrakeStep"));
+    public int BrakeNotch => ConvertBrakeStepToNotch(BrakeStep);
+    public int ManualPowerNotch => GetTimsMasterInt(new TimsTagKey("Notch", "ManualPowerNotch"));
+    public int ManualBrakeStep => GetTimsMasterInt(new TimsTagKey("Notch", "ManualBrakeStep"));
+    public int ManualBrakeNotch => ConvertBrakeStepToNotch(ManualBrakeStep);
+    public int ATCBrakeStep => GetTimsMasterInt(new TimsTagKey("Notch", "ATCBrakeStep"));
+    public int ATCBrakeNotch => ConvertBrakeStepToNotch(ATCBrakeStep);
+    public int TASCBrakeStep => 0;
     public int EmergencyBrakeNotch => trainSpec != null ? trainSpec.GetEmergencyBrakeNotch() : 9;
-    public bool IsEmergencyBrakeActive => BrakeNotch >= EmergencyBrakeNotch;
-    public float CurrentBrakeDecelMS2 => brakeSystem != null ? brakeSystem.TotalBrakeDecelMS2 : 0f;
+    public bool IsEmergencyBrakeActive =>
+        GetTimsMasterBool(new TimsTagKey("Brake", "EmergencyBrake")) ||
+        BrakeNotch >= EmergencyBrakeNotch;
+    public float CurrentBrakeDecelMS2 => currentBrakeDecelMS2;
     public float CurrentRegenBrakeDecelMS2 => brakeSystem != null ? brakeSystem.CurrentRegenDecelMS2 : 0f;
-    public float CurrentAirBrakeDecelMS2 => brakeSystem != null ? brakeSystem.CurrentAirDecelMS2 : 0f;
-    public float CurrentBrakeForceN => brakeSystem != null ? brakeSystem.TotalBrakeForceN : 0f;
+    public float CurrentAirBrakeDecelMS2 => currentAirBrakeDecelMS2;
+    public float CurrentBrakeForceN => currentBrakeForceN;
     public float CurrentRegenBrakeForceN => brakeSystem != null ? brakeSystem.CurrentRegenForceN : 0f;
-    public float CurrentAirBrakeForceN => brakeSystem != null ? brakeSystem.CurrentAirForceN : 0f;
+    public float CurrentAirBrakeForceN => currentAirBrakeForceN;
     public float CurrentTractionForceN => currentTractionForceN;
-    public float CurrentBCPressureKPa => brakeSystem != null ? brakeSystem.CurrentBCPressureKPa : 0f;
-    public float CurrentTargetBCPressureKPa => brakeSystem != null ? brakeSystem.CurrentTargetBCPressureKPa : 0f;
+    public float CurrentBCPressureKPa => currentBCPressureKPa;
+    public float CurrentTargetBCPressureKPa => currentTargetBCPressureKPa;
     public bool IsRollingPreventionActive => brakeSystem != null && brakeSystem.IsRollingPreventionActive;
     public bool IsGradientStart => brakeSystem != null && brakeSystem.IsGradientStart;
     public float CurrentAccelerationMS2 => currentAccelerationMS2;
@@ -102,6 +115,7 @@ public partial class TrainController : MonoBehaviour
     public IReadOnlyList<CarBrakeState> CurrentCarBrakeStates => brakeSystem != null ? brakeSystem.CarBrakeStates : null;
     public IReadOnlyList<CarTractionState> CurrentCarTractionStates => tractionSystem != null ? tractionSystem.CarTractionStates : null;
     public VVVFController[] VVVFControllers => vvvfControllers;
+    public BrakeCylinder[] BrakeCylinders => brakeCylinders;
     public IReadOnlyList<CarTrackState> CarTrackStates => carTrackStates;
     public ConsistDefinition ConsistDefinition => ResolveConsistDefinition();
 
@@ -123,14 +137,12 @@ public partial class TrainController : MonoBehaviour
         InitializeTrackState();
 
         SyncCarTrackStatesWithConsist();
-        notchManager.ConfigureLimits(trainSpec.maxPowerNotch, EmergencyBrakeNotch, trainSpec.GetTascBrakeSubstepsPerNotch());
     }
 
     void Update()
     {
-        // 入力、物理、線路上姿勢更新の順に固定する。
-        // ここを崩すと、ノッチ入力や逆転器変更が1フレーム遅れて姿勢計算へ反映される。
-        HandleInput();
+        // TIMS更新後の司令値を使って物理と線路上姿勢を更新する。
+        UpdateReverserFromTims();
         ApplyPhysics();
         MoveTrain();
     }
@@ -140,14 +152,9 @@ public partial class TrainController : MonoBehaviour
     /// </summary>
     private void ResolveControllerReferences()
     {
-        if (notchManager == null)
+        if (tims == null)
         {
-            notchManager = GetComponent<NotchManager>();
-        }
-
-        if (notchManager == null)
-        {
-            notchManager = gameObject.AddComponent<NotchManager>();
+            tims = GetComponent<TimsSystem>();
         }
 
         if (brakeSystem == null)
@@ -164,6 +171,16 @@ public partial class TrainController : MonoBehaviour
         {
             RefreshVVVFControllersFromChildren();
         }
+
+        if (brakeCylinders == null || brakeCylinders.Length == 0)
+        {
+            RefreshBrakeCylindersFromChildren();
+        }
+
+        if (loadWeightControllers == null || loadWeightControllers.Length == 0)
+        {
+            RefreshLoadWeightControllersFromChildren();
+        }
     }
 
     public void SetVVVFControllers(VVVFController[] controllers)
@@ -171,8 +188,87 @@ public partial class TrainController : MonoBehaviour
         vvvfControllers = controllers ?? System.Array.Empty<VVVFController>();
     }
 
+    public void SetBrakeCylinders(BrakeCylinder[] cylinders)
+    {
+        brakeCylinders = cylinders ?? System.Array.Empty<BrakeCylinder>();
+    }
+
     public void RefreshVVVFControllersFromChildren()
     {
         vvvfControllers = GetComponentsInChildren<VVVFController>(true);
+    }
+
+    public void RefreshBrakeCylindersFromChildren()
+    {
+        brakeCylinders = GetComponentsInChildren<BrakeCylinder>(true);
+    }
+
+    public void RefreshLoadWeightControllersFromChildren()
+    {
+        loadWeightControllers = GetComponentsInChildren<LoadWeightController>(true);
+    }
+
+    private int GetTimsMasterInt(TimsTagKey key)
+    {
+        if (tims == null)
+        {
+            tims = GetComponent<TimsSystem>();
+        }
+
+        return tims != null && tims.MasterBus.TryGetInt(key, out int value)
+            ? value
+            : 0;
+    }
+
+    private bool GetTimsMasterBool(TimsTagKey key)
+    {
+        if (tims == null)
+        {
+            tims = GetComponent<TimsSystem>();
+        }
+
+        return tims != null && tims.MasterBus.TryGetBool(key, out bool value) && value;
+    }
+
+    private ReverserPosition GetTimsReverserPosition()
+    {
+        if (tims == null)
+        {
+            tims = GetComponent<TimsSystem>();
+        }
+
+        if (tims != null &&
+            tims.MasterBus.TryGetInt(new TimsTagKey("Notch", "ReverserPosition"), out int rawReverserPosition))
+        {
+            return (ReverserPosition)rawReverserPosition;
+        }
+
+        return reverserPosition;
+    }
+
+    private void UpdateReverserFromTims()
+    {
+        reverserPosition = GetTimsReverserPosition();
+    }
+
+    private int ConvertBrakeStepToNotch(int brakeStep)
+    {
+        if (brakeStep <= 0)
+        {
+            return 0;
+        }
+
+        int substeps = trainSpec != null
+            ? trainSpec.GetTascBrakeSubstepsPerNotch()
+            : 1;
+
+        TimsNotchHelper.ToSubStepBrakeNotch(
+            brakeStep,
+            Mathf.Max(1, substeps),
+            out int brakeNotch,
+            out _
+        );
+
+        return Mathf.Max(0, brakeNotch);
     }
 }

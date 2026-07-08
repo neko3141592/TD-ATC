@@ -8,7 +8,7 @@ public class TrainHUD : MonoBehaviour
     [SerializeField] private TrainController train;
     [SerializeField] private ATCController atc;
     [SerializeField] private TASCController tasc;
-    [SerializeField] private NTIMController ntim;
+    [SerializeField] private TimsTractionForceController ntim;
     [SerializeField] private VVVFController[] vvvfControllers;
     [SerializeField] private StationStopController stationStop;
     [SerializeField] private BlockOccupancyManager blockOccupancyManager;

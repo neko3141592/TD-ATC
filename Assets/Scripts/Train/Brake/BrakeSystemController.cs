@@ -1,147 +1,74 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
-public class BrakeSystemController : MonoBehaviour
+public class BrakeSystemController : MonoBehaviour, ITimsDataSource
 {
     [Header("References")]
+    [SerializeField] private TimsSystem tims;
     [SerializeField] private TrainController train;
     [SerializeField] private TrainSpec trainSpec;
-    [SerializeField] private ConsistDefinition consistDefinition;
-
-    private readonly BrakeControlUnit brakeControlUnit = new BrakeControlUnit();
-    private readonly AirBrakeUnit airBrakeUnit = new AirBrakeUnit();
-
-    private readonly List<VVVFController> vvvfControllers = new();
-
-    private readonly List<CarBrakeState> carBrakeStates = new List<CarBrakeState>();
-    public IReadOnlyList<CarBrakeState> CarBrakeStates => carBrakeStates;
-    public ConsistDefinition ConsistDefinition => consistDefinition;
+    [SerializeField] private TimsCarTerminal terminal;
+    [SerializeField] private BrakeCylinder[] brakeCylinders;
 
     [Header("Rolling Prevention")]
     [SerializeField] private bool isRollingPreventionActive = false;
-    [SerializeField, Min(0f)] private float rollingPreventionEnterSpeedMS = 0.05f;
-    [SerializeField, Min(0f)] private float rollingPreventionMinBCPressureKPa = 100f;
-    public bool IsRollingPreventionActive => isRollingPreventionActive;
 
     [Header("Regen Release")]
     [SerializeField] private bool regenRelease = false;
-    public bool IsRegenReleased => regenRelease;
 
     [Header("Gradient Start")]
     [SerializeField] private bool gradientStart = false;
-    [SerializeField] private float gradientStartPressureKPa = 250f;
-    public bool IsGradientStart => gradientStart && !(train.SpeedMS > 1f);
 
-    /// <summary>
-    /// 役割: BC圧を決める候補を表します。
-    /// </summary>
-    private struct BCPressureCandidate
-    {
-        public bool isValid;
-        public string sourceLabel;
-        public float targetBCPressureKPa;
-    }
+    private readonly List<CarBrakeState> carBrakeStates = new();
 
-    /// <summary>
-    /// 役割: Awake の処理を実行します。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
+    private float targetRegenForceN;
+    private float targetAirForceN;
+    private float targetBCPressureKPa;
+    private float airCapForceN;
+    private bool emergencyBrakeCommand;
+
+    public IReadOnlyList<CarBrakeState> CarBrakeStates => carBrakeStates;
+    public ConsistDefinition ConsistDefinition => GetConsistDefinition();
+    public float TransmissionIntervalSeconds => 0.05f;
+    public bool IsRollingPreventionActive => isRollingPreventionActive;
+    public bool IsRegenReleased => regenRelease;
+    public bool IsGradientStart => gradientStart && train != null && train.SpeedMS <= 1f;
+    public float CurrentBCPressureKPa { get; private set; }
+    public float CurrentRegenForceN { get; private set; }
+    public float CurrentAirForceN { get; private set; }
+    public float TotalBrakeForceN { get; private set; }
+    public float CurrentTargetBCPressureKPa { get; private set; }
+    public float CurrentRegenDecelMS2 { get; private set; }
+    public float CurrentAirDecelMS2 { get; private set; }
+    public float TotalBrakeDecelMS2 { get; private set; }
+    public float CurrentConsistMassKg { get; private set; }
+
     private void Awake()
     {
-        if (trainSpec == null)
-        {
-            Debug.LogError("TrainSpec is not assigned.", this);
-        }
-
-        ResolveVVVFControllers();
-        InitializeCarBrakeStates();
+        ResolveReferences();
+        RefreshBrakeStateList();
     }
 
-    /// <summary>
-    /// 役割: OnValidate の処理を実行します。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
+    private void Update()
+    {
+        UpdateBrakeFromTims();
+    }
+
     private void OnValidate()
     {
-        rollingPreventionEnterSpeedMS = Mathf.Max(0f, rollingPreventionEnterSpeedMS);
-        rollingPreventionMinBCPressureKPa = Mathf.Max(0f, rollingPreventionMinBCPressureKPa);
-        if (train == null)
-        {
-            train = GetComponent<TrainController>();
-        }
-
-        InitializeCarBrakeStates();
+        ResolveBrakeCylinders();
     }
 
-    public float CurrentBCPressureKPa { get; private set; } = 0f;
-    public float CurrentRegenForceN { get; private set; } = 0f;
-    public float CurrentAirForceN { get; private set; } = 0f;
-    public float TotalBrakeForceN { get; private set; } = 0f;
-    public float CurrentTargetBCPressureKPa { get; private set; } = 0f;
-    public float CurrentRegenDecelMS2 { get; private set; } = 0f;
-    public float CurrentAirDecelMS2 { get; private set; } = 0f;
-    public float TotalBrakeDecelMS2 { get; private set; } = 0f;
-    public float CurrentConsistMassKg { get; private set; } = 0f;
-
-    /// <summary>
-    /// 役割: UpdateBrake の処理を実行します。
-    /// </summary>
-    /// <param name="brakeNotch">brakeNotch を指定します。</param>
-    /// <param name="speedMS">speedMS を指定します。</param>
-    /// <param name="deltaTime">deltaTime を指定します。</param>
-    /// <param name="isEmergency">isEmergency を指定します。</param>
-    /// <param name="useTascBrakeStep">TASC の連続ブレーキ段を使う場合は true を指定します。</param>
-    /// <param name="tascBrakeStep">TASC の連続ブレーキ段を指定します。</param>
-    /// <param name="manualPowerNotch">運転士が入力している手動力行ノッチを指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    public void UpdateBrake(int brakeNotch, float speedMS, float deltaTime, bool isEmergency, bool useTascBrakeStep = false, int tascBrakeStep = 0, int manualPowerNotch = 0)
+    private void ResolveReferences()
     {
-        // エディタ上の編成変更や初期化漏れに備え、件数を毎フレーム同期する
-        EnsureCarBrakeStateCount();
-        ResolveVVVFControllers();
-        CurrentTargetBCPressureKPa = 0f;
-
-        if (trainSpec == null)
+        if (tims == null)
         {
-            ResetOutputs();
-            return;
+            tims = GetComponentInParent<TimsSystem>();
         }
 
-        // 制動目標力 F_target = a_target * M_total のために、編成質量を先に確定
-        CurrentConsistMassKg = GetTotalConsistMassKg();
-        if (CurrentConsistMassKg <= 0f)
+        if (terminal == null)
         {
-            ResetOutputs();
-            return;
-        }
-
-        bool isEmergencyByNotch = brakeNotch >= trainSpec.GetEmergencyBrakeNotch();
-        bool emergencyActive = isEmergency || isEmergencyByNotch;
-        bool hasBrakeCommand = brakeNotch > 0 || (useTascBrakeStep && tascBrakeStep > 0);
-        float targetTotalBrakeForceN = hasBrakeCommand
-            ? GetTargetTotalBrakeForceN(brakeNotch, useTascBrakeStep, tascBrakeStep, CurrentConsistMassKg)
-            : 0f;
-
-        // 非常時は「回生OFF + 全車最大BC」の単純分岐
-        if (emergencyActive)
-        {
-            ApplyEmergencyBrake(speedMS, deltaTime);
-            RefreshOutputsFromStates(CurrentConsistMassKg);
-            return;
-        }
-
-        UpdateRollingPreventionState(speedMS, manualPowerNotch, train.ManualBrakeNotch);
-        ApplyNormalBrake(speedMS, deltaTime, hasBrakeCommand, targetTotalBrakeForceN);
-        RefreshOutputsFromStates(CurrentConsistMassKg);
-
-    }
-
-    private void ResolveVVVFControllers()
-    {
-        if (train == null)
-        {
-            train = GetComponent<TrainController>();
+            terminal = GetComponentInParent<TimsCarTerminal>();
         }
 
         if (train == null)
@@ -149,520 +76,334 @@ public class BrakeSystemController : MonoBehaviour
             train = GetComponentInParent<TrainController>();
         }
 
-        vvvfControllers.Clear();
-        VVVFController[] controllers = train != null ? train.VVVFControllers : null;
-        if (controllers == null || controllers.Length == 0)
+        if (trainSpec == null && train != null)
         {
-            controllers = GetComponentsInChildren<VVVFController>(true);
+            trainSpec = train.Spec;
         }
 
-        if (controllers == null)
+        ResolveBrakeCylinders();
+    }
+
+    private void ResolveBrakeCylinders()
+    {
+        if (brakeCylinders == null || brakeCylinders.Length == 0)
+        {
+            brakeCylinders = GetComponentsInChildren<BrakeCylinder>(true);
+        }
+    }
+
+    private void UpdateBrakeFromTims()
+    {
+        ResolveReferences();
+        RefreshBrakeStateList();
+
+        if (tims == null || terminal == null)
+        {
+            ResetOutputs();
+            return;
+        }
+
+        int carIndex = terminal.CarIndex;
+        TimsDataBus masterBus = tims.MasterBus;
+
+        emergencyBrakeCommand =
+            masterBus.TryGetBool(new TimsTagKey("Brake", "EmergencyBrake"), out bool emergency) &&
+            emergency;
+
+        targetRegenForceN = GetMasterFloatArrayValue(new TimsTagKey("Brake", "TargetRegenForcesN"), carIndex);
+        targetAirForceN = GetMasterFloatArrayValue(new TimsTagKey("Brake", "TargetAirForcesN"), carIndex);
+
+        CarSpec carSpec = GetLocalCarSpec();
+        float speedMS = train != null ? train.SpeedMS : 0f;
+
+        targetBCPressureKPa = emergencyBrakeCommand
+            ? GetEmergencyTargetBCPressureKPa(carSpec)
+            : GetTargetBCPressureKPa(carSpec, speedMS, targetAirForceN);
+
+        ApplyTargetBCPressure(targetBCPressureKPa);
+        RefreshOutputs(carSpec, speedMS);
+    }
+
+    private float GetMasterFloatArrayValue(TimsTagKey key, int index)
+    {
+        if (index < 0 || tims == null || !tims.MasterBus.TryGetFloatArray(key, out float[] values))
+        {
+            return 0f;
+        }
+
+        return index < values.Length ? Mathf.Max(0f, values[index]) : 0f;
+    }
+
+    private ConsistDefinition GetConsistDefinition()
+    {
+        if (tims == null)
+        {
+            tims = GetComponentInParent<TimsSystem>();
+        }
+
+        return tims != null ? tims.ConsistDefinition : null;
+    }
+
+    private CarSpec GetLocalCarSpec()
+    {
+        ConsistDefinition definition = GetConsistDefinition();
+        if (definition == null || terminal == null)
+        {
+            return null;
+        }
+
+        return definition.GetCar(terminal.CarIndex);
+    }
+
+    private float GetTargetBCPressureKPa(CarSpec carSpec, float speedMS, float targetAirForceN)
+    {
+        return GetTargetBCPressureKPaFromBrakeCylinders(targetAirForceN);
+    }
+
+    private float GetEmergencyTargetBCPressureKPa(CarSpec carSpec)
+    {
+        float maxPressureKPa = 0f;
+        if (brakeCylinders == null)
+        {
+            return 0f;
+        }
+
+        for (int i = 0; i < brakeCylinders.Length; i++)
+        {
+            BrakeCylinder cylinder = brakeCylinders[i];
+            if (cylinder != null && cylinder.Spec != null)
+            {
+                maxPressureKPa = Mathf.Max(maxPressureKPa, cylinder.Spec.MaxPressureKPa);
+            }
+        }
+
+        return maxPressureKPa;
+    }
+
+    private void ApplyTargetBCPressure(float pressureKPa)
+    {
+        if (brakeCylinders == null)
         {
             return;
         }
 
-        for (int i = 0; i < controllers.Length; i++)
+        for (int i = 0; i < brakeCylinders.Length; i++)
         {
-            if (controllers[i] != null)
+            if (brakeCylinders[i] != null)
             {
-                vvvfControllers.Add(controllers[i]);
+                brakeCylinders[i].SetTargetPressureKPa(pressureKPa);
             }
         }
     }
 
-    /// <summary>
-    /// 役割: ブレーキノッチまたは TASC 連続段から編成全体の目標ブレーキ力を求めます。
-    /// </summary>
-    /// <param name="brakeNotch">整数ブレーキノッチを指定します。</param>
-    /// <param name="useTascBrakeStep">TASC の連続ブレーキ段を使う場合は true を指定します。</param>
-    /// <param name="tascBrakeStep">TASC の連続ブレーキ段を指定します。</param>
-    /// <param name="massKg">編成質量[kg]を指定します。</param>
-    /// <returns>編成全体の目標ブレーキ力[N]を返します。</returns>
-    private float GetTargetTotalBrakeForceN(int brakeNotch, bool useTascBrakeStep, int tascBrakeStep, float massKg)
+    private void RefreshOutputs(CarSpec carSpec, float speedMS)
     {
-        float targetDecelerationMS2 = useTascBrakeStep
-            ? trainSpec.GetTascBrakeStepDeceleration(tascBrakeStep)
-            : trainSpec.GetBrakeDeceleration(brakeNotch);
-
-        return Mathf.Max(0f, targetDecelerationMS2) * Mathf.Max(1f, massKg);
-    }
-
-    /// <summary>
-    /// 役割: ApplyEmergencyBrake の処理を実行します。
-    /// </summary>
-    /// <param name="speedMS">speedMS を指定します。</param>
-    /// <param name="deltaTime">deltaTime を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void ApplyEmergencyBrake(float speedMS, float deltaTime)
-    {
-        // 非常時は全車とも回生を使わず、BCを最大へ向けて込める
-        for (int i = 0; i < carBrakeStates.Count; i++)
-        {
-            CarSpec carSpec = GetCarSpec(i);
-            CarBrakeState state = carBrakeStates[i];
-            if (state == null)
-            {
-                continue;
-            }
-
-            if (carSpec == null)
-            {
-                state.Reset();
-                continue;
-            }
-
-            ResetRegenState(state);
-
-            // 車両ごとの最大BC圧を目標に、遅れを通して実圧へ更新
-            float targetBCPressureKPa = Mathf.Max(0f, carSpec.bcMaxPressureKPa);
-            RecordTargetBCPressureKPa(targetBCPressureKPa);
-            state.bcPressureKPa = airBrakeUnit.UpdateBCPressureKPa(trainSpec, carSpec, state.bcPressureKPa, targetBCPressureKPa, deltaTime);
-            state.airForceN = airBrakeUnit.GetAirBrakeForceN(trainSpec, carSpec, state.bcPressureKPa, speedMS);
-        }
-    }
-
-    /// <summary>
-    /// 役割: 停止中に転動防止を有効化し、手動力行が入ったら解除します。
-    /// </summary>
-    /// <param name="speedMS">現在速度[m/s]を指定します。</param>
-    /// <param name="manualPowerNotch">運転士が入力している手動力行ノッチを指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void UpdateRollingPreventionState(float speedMS, int manualPowerNotch, int manualBrakeNotch)
-    {
-        if (manualBrakeNotch < 1)
-        {
-            isRollingPreventionActive = false;
-            return;
-        }
-
-        if (isRollingPreventionActive)
-        {
-            return;
-        }
-
-        if (Mathf.Abs(speedMS) <= rollingPreventionEnterSpeedMS)
-        {
-            isRollingPreventionActive = true;
-        }
-    }
-
-    /// <summary>
-    /// 役割: ApplyNormalBrake の処理を実行します。
-    /// </summary>
-    /// <param name="speedMS">speedMS を指定します。</param>
-    /// <param name="deltaTime">deltaTime を指定します。</param>
-    /// <param name="hasBrakeCommand">hasBrakeCommand を指定します。</param>
-    /// <param name="targetTotalBrakeForceN">targetTotalBrakeForceN を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void ApplyNormalBrake(float speedMS, float deltaTime, bool hasBrakeCommand, float targetTotalBrakeForceN)
-    {
-        int carCount = carBrakeStates.Count;
-
-        // 最大空制力を求める
-        float[] airCapsN = new float[carCount];
-        for (int i = 0; i < carCount; i++)
-        {
-            CarSpec carSpec = GetCarSpec(i);
-            CarBrakeState state = carBrakeStates[i];
-            if (state == null)
-            {
-                continue;
-            }
-
-            ResetRegenState(state);
-            if (carSpec == null)
-            {
-                state.Reset();
-                continue;
-            }
-
-            airCapsN[i] = airBrakeUnit.GetAirBrakeCapForceN(trainSpec, carSpec, speedMS);
-        }
-
-        // 最大回生力を求める
-        float[] regenCapsN = new float[carCount];
-
-        foreach (VVVFController vvvf in vvvfControllers)
-        {
-            if (vvvf == null)
-            {
-                continue;
-            }
-
-            if(vvvf.AssignedCarIndex < 0 || vvvf.AssignedCarIndex >= carCount)
-            {
-                continue;
-            }
-
-
-            CarBrakeState state = carBrakeStates[vvvf.AssignedCarIndex];
-            if (state == null)
-            {
-                continue;
-            }
-            
-
-            regenCapsN[vvvf.AssignedCarIndex] = 
-            regenRelease ? 0 : vvvf.GetRegenCapForceN(speedMS);
-        }
-
-        float actualTotalRegenForceN = 0f;
-
-        // 回生目標力
-        float[] targetRegenForceN = brakeControlUnit.AllocateEvenlyWithSaturation(regenCapsN, targetTotalBrakeForceN);
-
-        foreach (VVVFController vvvf in vvvfControllers)
-        {
-            if (vvvf == null)
-            {
-                continue;
-            }
-
-            if(vvvf.AssignedCarIndex < 0 || vvvf.AssignedCarIndex >= carCount)
-            {
-                continue;
-            }
-
-            int carIndex = vvvf.AssignedCarIndex;
-
-
-            if (targetRegenForceN[carIndex] < 0.01f)
-            {
-                continue;
-            }
-
-            CarBrakeState state = carBrakeStates[carIndex];
-            if (state == null)
-            {
-                continue;
-            }
-
-            vvvf.SetTargetTractionForce(-targetRegenForceN[carIndex]);
-
-            float actualRegenForceN = Mathf.Max(0f, -vvvf.TotalMotorTractionForceN);
-            state.regenForceN = actualRegenForceN;
-
-            actualTotalRegenForceN += actualRegenForceN;
-        }
-
-        targetTotalBrakeForceN = Mathf.Max(0f, targetTotalBrakeForceN - actualTotalRegenForceN);
-
-
-        // 空制目標力
-        float[] targetAirForcesN = brakeControlUnit.AllocateEvenlyWithSaturation(airCapsN, targetTotalBrakeForceN);
-        for (int i = 0; i < carCount; i++)
-        {
-            CarSpec carSpec = GetCarSpec(i);
-            CarBrakeState state = carBrakeStates[i];
-            if (state == null || carSpec == null)
-            {
-                continue;
-            }
-
-            float targetAirForceN = i < targetAirForcesN.Length ? targetAirForcesN[i] : 0f;
-            BCPressureCandidate normalCandidate = BuildNormalBCPressureCandidate(carSpec, targetAirForceN, speedMS, hasBrakeCommand);
-            ApplyBCPressureCandidate(carSpec, state, normalCandidate, speedMS, deltaTime);
-        }
-    }
-
-    private void ResetRegenState(CarBrakeState state)
-    {
-        if (state == null)
-        {
-            return;
-        }
-
-        state.regenForceN = 0f;
-        state.regenBrakeApplicationActive = false;
-        state.regenLatchedForCurrentBrake = false;
-        state.regenNoiseTime = 0f;
-    }
-
-    /// <summary>
-    /// 役割: 通常ブレーキ計算からBC圧候補を作ります。
-    /// </summary>
-    /// <param name="carSpec">対象車両の仕様を指定します。</param>
-    /// <param name="targetAirForceN">対象車両に要求する空気ブレーキ力[N]を指定します。</param>
-    /// <param name="speedMS">現在速度[m/s]を指定します。</param>
-    /// <param name="hasBrakeCommand">通常ブレーキ指令がある場合は true を指定します。</param>
-    /// <returns>通常ブレーキ由来のBC圧候補を返します。</returns>
-    private BCPressureCandidate BuildNormalBCPressureCandidate(CarSpec carSpec, float targetAirForceN, float speedMS, bool hasBrakeCommand)
-    {
-        return new BCPressureCandidate
-        {
-            isValid = true,
-            sourceLabel = "Normal",
-            targetBCPressureKPa = airBrakeUnit.GetTargetBCPressureKPa(
-                trainSpec,
-                carSpec,
-                targetAirForceN,
-                speedMS,
-                hasBrakeCommand
-            )
-        };
-    }
-
-    /// <summary>
-    /// 役割: 転動防止ブレーキ由来のBC圧候補を作ります。
-    /// </summary>
-    /// <param name="carSpec">対象車両の仕様を指定します。</param>
-    /// <returns>転動防止由来のBC圧候補を返します。</returns>
-    private BCPressureCandidate BuildRollingPreventionBCPressureCandidate(CarSpec carSpec)
-    {
-        if (!isRollingPreventionActive || carSpec == null)
-        {
-            return new BCPressureCandidate
-            {
-                isValid = false,
-                sourceLabel = "Rolling Prevention",
-                targetBCPressureKPa = 0f
-            };
-        }
-
-        return new BCPressureCandidate
-        {
-            isValid = true,
-            sourceLabel = "Rolling Prevention",
-            targetBCPressureKPa = Mathf.Clamp(rollingPreventionMinBCPressureKPa, 0f, carSpec.bcMaxPressureKPa)
-        };
-    }
-
-    private BCPressureCandidate BuildGradientStartCandidate(CarSpec carSpec)
-    {
-        if (!gradientStart || carSpec == null || train.SpeedMS > 1f)
-        {
-            return new BCPressureCandidate
-            {
-                isValid = false,
-                sourceLabel = "Gradient Start",
-                targetBCPressureKPa = 0f
-            };
-        }
-
-        return new BCPressureCandidate
-        {
-            isValid = true,
-            sourceLabel = "Gradient Start",
-            targetBCPressureKPa = Mathf.Clamp(gradientStartPressureKPa, 0f, carSpec.bcMaxPressureKPa)
-        };
-    }
-
-    /// <summary>
-    /// 役割: 2つのBC圧候補から高いBC圧を要求する候補を選びます。
-    /// </summary>
-    /// <param name="normalCandidate">通常ブレーキ由来のBC圧候補を指定します。</param>
-    /// <param name="rollingPreventionCandidate">転動防止由来のBC圧候補を指定します。</param>
-    /// <returns>採用するBC圧候補を返します。</returns>
-    private BCPressureCandidate ChooseHigherBCPressureCandidate(
-        BCPressureCandidate normalCandidate,
-        BCPressureCandidate rollingPreventionCandidate
-    )
-    {
-        if (!normalCandidate.isValid)
-        {
-            return rollingPreventionCandidate;
-        }
-
-        if (!rollingPreventionCandidate.isValid)
-        {
-            return normalCandidate;
-        }
-
-        return rollingPreventionCandidate.targetBCPressureKPa > normalCandidate.targetBCPressureKPa
-            ? rollingPreventionCandidate
-            : normalCandidate;
-    }
-
-    /// <summary>
-    /// 役割: BC圧候補を選択し、実BC圧と空気ブレーキ力を更新します。
-    /// </summary>
-    /// <param name="carSpec">対象車両の仕様を指定します。</param>
-    /// <param name="state">対象車両のブレーキ状態を指定します。</param>
-    /// <param name="normalCandidate">通常ブレーキ由来のBC圧候補を指定します。</param>
-    /// <param name="speedMS">現在速度[m/s]を指定します。</param>
-    /// <param name="deltaTime">前フレームからの経過時間[秒]を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void ApplyBCPressureCandidate(
-        CarSpec carSpec,
-        CarBrakeState state,
-        BCPressureCandidate normalCandidate,
-        float speedMS,
-        float deltaTime
-    )
-    {
-        BCPressureCandidate rollingCandidate = BuildRollingPreventionBCPressureCandidate(carSpec);
-        BCPressureCandidate gradientStartCandidate = BuildGradientStartCandidate(carSpec);
-        BCPressureCandidate selectedCandidate = ChooseHigherBCPressureCandidate(normalCandidate, rollingCandidate);
-        selectedCandidate = ChooseHigherBCPressureCandidate(selectedCandidate, gradientStartCandidate);
-        float targetBCPressureKPa = selectedCandidate.isValid ? selectedCandidate.targetBCPressureKPa : 0f;
-        RecordTargetBCPressureKPa(targetBCPressureKPa);
-
-        state.bcPressureKPa = airBrakeUnit.UpdateBCPressureKPa(
-            trainSpec,
-            carSpec,
-            state.bcPressureKPa,
-            targetBCPressureKPa,
-            deltaTime
-        );
-        state.airForceN = airBrakeUnit.GetAirBrakeForceN(trainSpec, carSpec, state.bcPressureKPa, speedMS);
-    }
-
-    private void RecordTargetBCPressureKPa(float targetBCPressureKPa)
-    {
-        CurrentTargetBCPressureKPa = Mathf.Max(CurrentTargetBCPressureKPa, Mathf.Max(0f, targetBCPressureKPa));
-    }
-
-    /// <summary>
-    /// 役割: RefreshOutputsFromStates の処理を実行します。
-    /// </summary>
-    /// <param name="massKg">massKg を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void RefreshOutputsFromStates(float massKg)
-    {
-        // 各車の実状態を集約して、外部公開用の値へ反映する
-        float totalRegenN = 0f;
-        float totalAirN = 0f;
-        float maxBCKPa = 0f;
-
-        for (int i = 0; i < carBrakeStates.Count; i++)
-        {
-            CarBrakeState state = carBrakeStates[i];
-            if (state == null)
-            {
-                continue;
-            }
-
-            totalRegenN += Mathf.Max(0f, state.regenForceN);
-            totalAirN += Mathf.Max(0f, state.airForceN);
-            float bc = Mathf.Max(0f, state.bcPressureKPa);
-            if (bc > maxBCKPa)
-            {
-                maxBCKPa = bc;
-            }
-        }
-
-        float safeMassKg = Mathf.Max(1f, massKg);
-        CurrentRegenForceN = totalRegenN;
-        CurrentAirForceN = totalAirN;
+        CurrentRegenForceN = GetLocalBusFloat(new TimsTagKey("BrakeSystem", "RegenForcekN")) * 1000f;
+        CurrentAirForceN = GetTotalBrakeCylinderForceN();
         TotalBrakeForceN = CurrentRegenForceN + CurrentAirForceN;
+        CurrentBCPressureKPa = GetMaxBrakeCylinderPressureKPa();
+        CurrentTargetBCPressureKPa = targetBCPressureKPa;
+        airCapForceN = GetAirBrakeCapForceN(carSpec, speedMS);
+        CurrentConsistMassKg = GetTotalConsistMassKg();
+
+        float safeMassKg = Mathf.Max(1f, CurrentConsistMassKg);
         CurrentRegenDecelMS2 = CurrentRegenForceN / safeMassKg;
         CurrentAirDecelMS2 = CurrentAirForceN / safeMassKg;
         TotalBrakeDecelMS2 = TotalBrakeForceN / safeMassKg;
-        CurrentBCPressureKPa = maxBCKPa;
+
+        UpdateLocalBrakeState(carSpec);
     }
 
-    /// <summary>
-    /// 役割: GetTotalConsistMassKg の処理を実行します。
-    /// </summary>
-    /// <returns>処理結果を返します。</returns>
+    private float GetLocalBusFloat(TimsTagKey key)
+    {
+        return terminal != null &&
+               terminal.LocalBus.TryGetFloat(key, out float value)
+            ? value
+            : 0f;
+    }
+
+    private float GetTotalBrakeCylinderForceN()
+    {
+        float total = 0f;
+        if (brakeCylinders == null)
+        {
+            return total;
+        }
+
+        for (int i = 0; i < brakeCylinders.Length; i++)
+        {
+            if (brakeCylinders[i] != null)
+            {
+                total += Mathf.Max(0f, brakeCylinders[i].BrakeForceN);
+            }
+        }
+
+        return total;
+    }
+
+    private float GetMaxBrakeCylinderPressureKPa()
+    {
+        float max = 0f;
+        if (brakeCylinders == null)
+        {
+            return max;
+        }
+
+        for (int i = 0; i < brakeCylinders.Length; i++)
+        {
+            if (brakeCylinders[i] != null)
+            {
+                max = Mathf.Max(max, brakeCylinders[i].CurrentPressureKPa);
+            }
+        }
+
+        return max;
+    }
+
+    private float GetAirBrakeCapForceN(CarSpec carSpec, float speedMS)
+    {
+        float cap = 0f;
+        if (brakeCylinders == null)
+        {
+            return cap;
+        }
+
+        for (int i = 0; i < brakeCylinders.Length; i++)
+        {
+            BrakeCylinder cylinder = brakeCylinders[i];
+            if (cylinder != null && cylinder.Spec != null)
+            {
+                cap += cylinder.CalculateBrakeForceN(cylinder.Spec.maxPressurePa);
+            }
+        }
+
+        return cap;
+    }
+
+    private float GetTargetBCPressureKPaFromBrakeCylinders(float targetAirForceN)
+    {
+        float safeTargetAirForceN = Mathf.Max(0f, targetAirForceN);
+        if (safeTargetAirForceN <= 0f || brakeCylinders == null)
+        {
+            return 0f;
+        }
+
+        float forcePerKPa = 0f;
+        float maxPressureKPa = 0f;
+        for (int i = 0; i < brakeCylinders.Length; i++)
+        {
+            BrakeCylinder cylinder = brakeCylinders[i];
+            if (cylinder == null || cylinder.Spec == null)
+            {
+                continue;
+            }
+
+            forcePerKPa += cylinder.CalculateBrakeForceN(1000f);
+            maxPressureKPa = Mathf.Max(maxPressureKPa, cylinder.Spec.MaxPressureKPa);
+        }
+
+        if (forcePerKPa <= 0f)
+        {
+            return 0f;
+        }
+
+        return Mathf.Clamp(safeTargetAirForceN / forcePerKPa, 0f, maxPressureKPa);
+    }
+
     private float GetTotalConsistMassKg()
     {
+        ConsistDefinition definition = GetConsistDefinition();
         float fallbackMassKg = trainSpec != null ? trainSpec.massKg : 1f;
-        if (consistDefinition == null)
-        {
-            return Mathf.Max(1f, fallbackMassKg);
-        }
-
-        return consistDefinition.GetTotalMassKgOrFallback(fallbackMassKg);
+        return definition != null
+            ? definition.GetTotalMassKgOrFallback(fallbackMassKg)
+            : Mathf.Max(1f, fallbackMassKg);
     }
 
-    /// <summary>
-    /// 役割: GetCarSpec の処理を実行します。
-    /// </summary>
-    /// <param name="index">index を指定します。</param>
-    /// <returns>処理結果を返します。</returns>
-    private CarSpec GetCarSpec(int index)
+    private void RefreshBrakeStateList()
     {
-        return consistDefinition != null ? consistDefinition.GetCar(index) : null;
-    }
-
-    /// <summary>
-    /// 役割: InitializeCarBrakeStates の処理を実行します。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
-    private void InitializeCarBrakeStates()
-    {
-        // 編成長に合わせて、車両ごとの実行時状態を初期生成
-        carBrakeStates.Clear();
-        int target = consistDefinition != null ? consistDefinition.CarCount : 0;
-        for (int i = 0; i < target; i++)
+        if (terminal == null)
         {
-            carBrakeStates.Add(CreateBrakeState());
+            carBrakeStates.Clear();
+            return;
         }
 
-        ResetNullCarStates();
+        while (carBrakeStates.Count <= terminal.CarIndex)
+        {
+            carBrakeStates.Add(new CarBrakeState());
+        }
     }
 
-    /// <summary>
-    /// 役割: EnsureCarBrakeStateCount の処理を実行します。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
-    private void EnsureCarBrakeStateCount()
+    private void UpdateLocalBrakeState(CarSpec carSpec)
     {
-        // 編成変更に追従して、状態リストの不足/過剰を調整
-        int target = consistDefinition != null ? consistDefinition.CarCount : 0;
-
-        while (carBrakeStates.Count < target)
-        {
-            carBrakeStates.Add(CreateBrakeState());
-        }
-
-        while (carBrakeStates.Count > target)
-        {
-            carBrakeStates.RemoveAt(carBrakeStates.Count - 1);
-        }
-
-        ResetNullCarStates();
-    }
-
-    /// <summary>
-    /// 役割: ResetNullCarStates の処理を実行します。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
-    private void ResetNullCarStates()
-    {
-        // 編成内にnull車両があっても落ちないように、そのスロットだけ初期化して無効化
-        if (consistDefinition == null || !consistDefinition.HasCars)
+        if (terminal == null || terminal.CarIndex < 0 || terminal.CarIndex >= carBrakeStates.Count)
         {
             return;
         }
 
-        int count = Mathf.Min(carBrakeStates.Count, consistDefinition.CarCount);
-        for (int i = 0; i < count; i++)
-        {
-            if (GetCarSpec(i) == null)
-            {
-                carBrakeStates[i].Reset();
-            }
-        }
+        CarBrakeState state = carBrakeStates[terminal.CarIndex];
+        state.bcPressureKPa = CurrentBCPressureKPa;
+        state.regenForceN = CurrentRegenForceN;
+        state.airForceN = CurrentAirForceN;
+        state.regenCapN = GetLocalBusFloat(new TimsTagKey("BrakeSystem", "RegenCapN"));
+        state.airCapN = airCapForceN;
+        state.airForcePerKPa = GetAirForcePerKPa();
+        state.maxBCPressureKPa = GetMaxBrakeCylinderSpecPressureKPa();
+
     }
 
-    /// <summary>
-    /// 役割: CreateBrakeState の処理を実行します。
-    /// </summary>
-    /// <returns>処理結果を返します。</returns>
-    private CarBrakeState CreateBrakeState()
+    public void WriteTimsData(TimsCarTerminal terminal)
     {
-        return new CarBrakeState();
+        if (terminal == null)
+        {
+            return;
+        }
+
+        TimsDataBus localBus = terminal.LocalBus;
+        localBus.SetBool(new TimsTagKey("BrakeSystem", "EmergencyBrake"), emergencyBrakeCommand);
+        if (HasVvvfEquipment(GetCarSpecForTerminal(terminal)))
+        {
+            localBus.SetFloat(new TimsTagKey("BrakeSystem", "TargetRegenForcekN"), targetRegenForceN / 1000f);
+        }
+        else
+        {
+            localBus.Remove(new TimsTagKey("BrakeSystem", "TargetRegenForcekN"));
+        }
+
+        localBus.SetFloat(new TimsTagKey("BrakeSystem", "TargetAirForceN"), targetAirForceN);
+        localBus.SetFloat(new TimsTagKey("BrakeSystem", "TargetBCPressureKPa"), targetBCPressureKPa);
+        localBus.SetFloat(new TimsTagKey("BrakeSystem", "BCPressureKPa"), CurrentBCPressureKPa);
+        localBus.SetFloat(new TimsTagKey("BrakeSystem", "AirForceN"), CurrentAirForceN);
+        localBus.SetFloat(new TimsTagKey("BrakeSystem", "AirCapN"), airCapForceN);
+        localBus.SetFloat(new TimsTagKey("BrakeSystem", "AirForcePerKPa"), GetAirForcePerKPa());
+        localBus.SetFloat(new TimsTagKey("BrakeSystem", "MaxBCPressureKPa"), GetMaxBrakeCylinderSpecPressureKPa());
     }
 
-    /// <summary>
-    /// 役割: ResetOutputs の処理を実行します。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
+    private CarSpec GetCarSpecForTerminal(TimsCarTerminal targetTerminal)
+    {
+        ConsistDefinition definition = GetConsistDefinition();
+        if (definition == null || targetTerminal == null)
+        {
+            return null;
+        }
+
+        return definition.GetCar(targetTerminal.CarIndex);
+    }
+
+    private static bool HasVvvfEquipment(CarSpec carSpec)
+    {
+        return carSpec != null &&
+               carSpec.carType == CarType.Motor &&
+               carSpec.motorCount > 0 &&
+               carSpec.vvvfPrefab != null;
+    }
+
     private void ResetOutputs()
     {
-        // 外部公開値と内部状態を全クリア
-        for (int i = 0; i < carBrakeStates.Count; i++)
-        {
-            CarBrakeState state = carBrakeStates[i];
-            if (state == null)
-            {
-                continue;
-            }
-            state.Reset();
-        }
-
+        targetRegenForceN = 0f;
+        targetAirForceN = 0f;
+        targetBCPressureKPa = 0f;
+        airCapForceN = 0f;
+        emergencyBrakeCommand = false;
         CurrentBCPressureKPa = 0f;
         CurrentRegenForceN = 0f;
         CurrentAirForceN = 0f;
@@ -672,6 +413,45 @@ public class BrakeSystemController : MonoBehaviour
         CurrentAirDecelMS2 = 0f;
         TotalBrakeDecelMS2 = 0f;
         CurrentConsistMassKg = 0f;
-        isRollingPreventionActive = false;
+    }
+
+    private float GetAirForcePerKPa()
+    {
+        float forcePerKPa = 0f;
+        if (brakeCylinders == null)
+        {
+            return forcePerKPa;
+        }
+
+        for (int i = 0; i < brakeCylinders.Length; i++)
+        {
+            BrakeCylinder cylinder = brakeCylinders[i];
+            if (cylinder != null && cylinder.Spec != null)
+            {
+                forcePerKPa += cylinder.CalculateBrakeForceN(1000f);
+            }
+        }
+
+        return forcePerKPa;
+    }
+
+    private float GetMaxBrakeCylinderSpecPressureKPa()
+    {
+        float maxPressureKPa = 0f;
+        if (brakeCylinders == null)
+        {
+            return maxPressureKPa;
+        }
+
+        for (int i = 0; i < brakeCylinders.Length; i++)
+        {
+            BrakeCylinder cylinder = brakeCylinders[i];
+            if (cylinder != null && cylinder.Spec != null)
+            {
+                maxPressureKPa = Mathf.Max(maxPressureKPa, cylinder.Spec.MaxPressureKPa);
+            }
+        }
+
+        return maxPressureKPa;
     }
 }

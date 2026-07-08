@@ -37,4 +37,4 @@ MonoBehaviour:
   bcReleaseRateKPaPerSec: 200
   brakeFrictionBaseMu: 0.35
   brakeFrictionOffsetKmH: 100
-  brakeFrictionSlope: 1.8
+  brakeFrictionSlope: 1.5

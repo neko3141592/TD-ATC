@@ -11,6 +11,7 @@ public class SceneryLinearPrefabRule
 
     public float spacingM = 2f;
     public float offsetM = 0f;
+    public SceneryGuideHeightMode heightMode = SceneryGuideHeightMode.AnchorRelative;
     public float heightOffsetM = 0f;
     
 

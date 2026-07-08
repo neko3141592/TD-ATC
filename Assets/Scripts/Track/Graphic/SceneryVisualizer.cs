@@ -4,15 +4,19 @@ public class SceneryVisualizer : MonoBehaviour
 {
     private const string MeshStripPrefix = "SceneryMeshStrip_";
     private const string SinglePrefabPrefix = "SinglePrefab_";
+    private const string LinearPrefabPrefix = "LinearPrefab_";
+    private const string LoftPrefix = "SceneryLoft_";
 
     [Header("作成済みの路線データ")]
     public TrackGraph graph;
 
     [Header("線路沿いメッシュ")]
     public SceneryMeshStripRule[] meshStrips;
+    public SceneryLoftRule[] lofts;
 
     [Header("単体プレハブ")]
     public ScenerySinglePrefabRule[] singlePrefabs;
+    public SceneryLinearPrefabRule[] linearPrefabs;
 
     [ContextMenu("Generate All Scenery")]
     public void GenerateAllScenery()
@@ -26,6 +30,8 @@ public class SceneryVisualizer : MonoBehaviour
         ClearGeneratedChildren();
         GenerateMeshStrips();
         GenerateSinglePrefabs();
+        GenerateLinearPrefabs();
+        GenerateLofts();
     }
 
     [ContextMenu("Clear Generated Scenery")]
@@ -64,6 +70,26 @@ public class SceneryVisualizer : MonoBehaviour
             generator.Generate(graph, rule);
         }
     }
+    private void GenerateLofts()
+    {
+        if (lofts == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < lofts.Length; i++)
+        {
+            SceneryLoftRule rule = lofts[i];
+            if (rule == null)
+            {
+                continue;
+            }
+
+            GameObject meshStripObject = CreateGeneratedChild(GetLoftObjectName(rule, i));
+            SceneryLoftGenerator generator = meshStripObject.AddComponent<SceneryLoftGenerator>();
+            generator.Generate(graph, rule);
+        }
+    }
 
     private void GenerateSinglePrefabs()
     {
@@ -85,6 +111,39 @@ public class SceneryVisualizer : MonoBehaviour
         }
     }
 
+    private void GenerateLinearPrefabs()
+    {
+        if (linearPrefabs == null)
+        {
+            return;
+        }
+
+        for(int i = 0; i < linearPrefabs.Length; i++)
+        {
+            SceneryLinearPrefabRule rule = linearPrefabs[i];
+            if (rule == null)
+            {
+                continue;
+            }
+
+            GameObject linearPrefabObject = CreateGeneratedChild(GetLinearPrefabObjectName(rule, i));
+            SceneryLinearPrefabGenerator generator = linearPrefabObject.AddComponent<SceneryLinearPrefabGenerator>();
+            generator.Generate(graph, rule);
+        }
+    }
+
+    private string GetLoftObjectName(SceneryLoftRule rule, int index)
+    {
+        return string.IsNullOrEmpty(rule.name)
+            ? LoftPrefix + index
+            : LoftPrefix + rule.name;
+    }
+    private string GetLinearPrefabObjectName(SceneryLinearPrefabRule rule, int index)
+    {
+        return string.IsNullOrEmpty(rule.name)
+            ? LinearPrefabPrefix + index
+            : LinearPrefabPrefix + rule.name;
+    }
     private string GetMeshStripObjectName(SceneryMeshStripRule rule, int index)
     {
         return string.IsNullOrEmpty(rule.name)

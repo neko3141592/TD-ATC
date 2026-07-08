@@ -11,10 +11,7 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     [SerializeField] private RectTransform formationDisplayRoot;
 
     [Header("Runtime")]
-    [SerializeField] private TrainController train;
-    [SerializeField] private BrakeSystemController brakeSystem;
-    [SerializeField] private TractionSystemController tractionSystem;
-    [SerializeField] private ConsistDefinition consistDefinition;
+    [SerializeField] private TimsSystem tims;
 
     [Header("Editor")]
     [SerializeField] private bool regenerateOnValidate = false;
@@ -46,40 +43,16 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     [SerializeField] private Color doorStatusColor = Color.white;
     [SerializeField] private bool[] doorOpenStates = new bool[0];
 
-    [Header("Current Bar")]
-    [SerializeField] private bool showCurrentBars = true;
-    [SerializeField, Min(1f)] private float currentBarMaxA = 1200f;
-    [SerializeField] private Vector2 currentBarSize = new Vector2(3f, 16f);
-    [SerializeField] private Vector2 currentBarOffset = new Vector2(0f, -28f);
-    [SerializeField] private Color currentBarBackgroundColor = new Color(1f, 1f, 1f, 0.18f);
-    [SerializeField] private Color currentBarFillColor = new Color(0.2f, 0.95f, 1f, 0.95f);
-    [SerializeField] private Color currentBarRegenFillColor = new Color(0.55f, 0.8f, 1f, 0.95f);
-    [SerializeField, Min(0f)] private float currentDirectionThresholdA = 0.5f;
-    [SerializeField] private bool showCurrentNumbers = true;
-    [SerializeField] private Vector2 currentNumberOffset = new Vector2(0f, -41f);
-    [SerializeField, Min(1f)] private float currentNumberFontSize = 5f;
-    [SerializeField] private Color currentNumberColor = new Color(0.82f, 1f, 1f, 0.95f);
-
-    [Header("Brake Pressure")]
-    [SerializeField] private bool showBrakePressureNumbers = true;
-    [SerializeField] private Vector2 brakePressureNumberOffset = new Vector2(0f, -49f);
-    [SerializeField, Min(1f)] private float brakePressureNumberFontSize = 5f;
-    [SerializeField] private Color brakePressureNumberColor = new Color(1f, 0.92f, 0.6f, 0.95f);
+    [Header("Traction State")]
+    [SerializeField] private bool showTractionRegenState = true;
 
     private const int DoorCountPerCar = 4;
-    private int CarCount => consistDefinition != null ? consistDefinition.CarCount : 0;
+    private ConsistDefinition ConsistDefinition => tims != null ? tims.ConsistDefinition : null;
+    private int CarCount => ConsistDefinition != null ? ConsistDefinition.CarCount : 0;
 
     private readonly List<Image> generatedCarImages = new List<Image>();
     private readonly List<TextMeshProUGUI> generatedCarNumberLabels = new List<TextMeshProUGUI>();
     private readonly List<Image> generatedDoorStatusImages = new List<Image>();
-    private readonly List<Image> generatedCurrentBarBackgrounds = new List<Image>();
-    private readonly List<Image> generatedCurrentBarFills = new List<Image>();
-    private readonly List<TextMeshProUGUI> generatedCurrentNumberLabels = new List<TextMeshProUGUI>();
-    private readonly List<TextMeshProUGUI> generatedBrakePressureLabels = new List<TextMeshProUGUI>();
-    private readonly List<float> displayedMotorCurrentsA = new List<float>();
-    private readonly List<float> displayedBrakePressuresKPa = new List<float>();
-    private readonly Queue<VisualSnapshot> pendingVisualSnapshots = new Queue<VisualSnapshot>();
-    private float nextTrainStateSampleTime = 0f;
 
     private struct VisualSnapshot
     {
@@ -131,9 +104,7 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     private void OnValidate()
     {
-        currentBarMaxA = Mathf.Max(1f, currentBarMaxA);
-        currentNumberFontSize = Mathf.Max(1f, currentNumberFontSize);
-        brakePressureNumberFontSize = Mathf.Max(1f, brakePressureNumberFontSize);
+        ResolveRuntimeReferences();
         doorStatusSize.x = Mathf.Max(1f, doorStatusSize.x);
         doorStatusSize.y = Mathf.Max(1f, doorStatusSize.y);
         EnsureDoorStateCache(CarCount);
@@ -237,6 +208,7 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     /// <remarks>返り値はありません。</remarks>
     public void Generate()
     {
+        ResolveRuntimeReferences();
         if (formationDisplayRoot == null)
         {
             formationDisplayRoot = transform as RectTransform;
@@ -259,10 +231,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
                 generatedCarImages.Add(null);
                 generatedCarNumberLabels.Add(null);
                 generatedDoorStatusImages.Add(null);
-                generatedCurrentBarBackgrounds.Add(null);
-                generatedCurrentBarFills.Add(null);
-                generatedCurrentNumberLabels.Add(null);
-                generatedBrakePressureLabels.Add(null);
                 continue;
             }
 
@@ -308,8 +276,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
 
         generatedCarNumberLabels.Add(CreateCarNumberLabel(rect, carNumber, mirrorX));
         generatedDoorStatusImages.Add(CreateDoorStatusImage(rect, mirrorX));
-        CreateCurrentBar(rect, mirrorX);
-        generatedBrakePressureLabels.Add(CreateBrakePressureNumberLabel(rect, mirrorX));
 
         return image;
     }
@@ -342,140 +308,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         ApplyDoorStatusLayout(image);
 
         return image;
-    }
-
-    /// <summary>
-    /// 役割: 車両下部に電流バーを作成します。
-    /// </summary>
-    /// <param name="parent">parent を指定します。</param>
-    /// <param name="parentMirroredX">parentMirroredX を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void CreateCurrentBar(RectTransform parent, bool parentMirroredX)
-    {
-        if (!showCurrentBars || parent == null)
-        {
-            generatedCurrentBarBackgrounds.Add(null);
-            generatedCurrentBarFills.Add(null);
-            generatedCurrentNumberLabels.Add(null);
-            return;
-        }
-
-        GameObject backgroundGo = new GameObject("CurrentBar", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        RectTransform backgroundRect = backgroundGo.GetComponent<RectTransform>();
-        backgroundRect.SetParent(parent, false);
-        backgroundRect.anchorMin = backgroundRect.anchorMax = new Vector2(0.5f, 0.5f);
-        backgroundRect.pivot = new Vector2(0.5f, 0.5f);
-        backgroundRect.anchoredPosition = currentBarOffset;
-        backgroundRect.sizeDelta = currentBarSize;
-
-        if (parentMirroredX)
-        {
-            backgroundRect.localScale = new Vector3(-1f, 1f, 1f);
-        }
-
-        Image backgroundImage = backgroundGo.GetComponent<Image>();
-        backgroundImage.color = currentBarBackgroundColor;
-        backgroundImage.enabled = false;
-        backgroundImage.raycastTarget = false;
-
-        GameObject fillGo = new GameObject("Fill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        RectTransform fillRect = fillGo.GetComponent<RectTransform>();
-        fillRect.SetParent(backgroundRect, false);
-        fillRect.anchorMin = fillRect.anchorMax = new Vector2(0.5f, 0f);
-        fillRect.pivot = new Vector2(0.5f, 0f);
-        fillRect.anchoredPosition = new Vector2(0f, -currentBarSize.y * 0.5f);
-        fillRect.sizeDelta = new Vector2(currentBarSize.x, 0f);
-
-        Image fillImage = fillGo.GetComponent<Image>();
-        fillImage.color = currentBarFillColor;
-        fillImage.enabled = false;
-        fillImage.raycastTarget = false;
-
-        generatedCurrentBarBackgrounds.Add(backgroundImage);
-        generatedCurrentBarFills.Add(fillImage);
-        generatedCurrentNumberLabels.Add(CreateCurrentNumberLabel(parent, parentMirroredX));
-    }
-
-    /// <summary>
-    /// 役割: 電流値の数字ラベルを作成します。
-    /// </summary>
-    /// <param name="parent">parent を指定します。</param>
-    /// <param name="parentMirroredX">parentMirroredX を指定します。</param>
-    /// <returns>作成したラベルを返します。</returns>
-    private TextMeshProUGUI CreateCurrentNumberLabel(RectTransform parent, bool parentMirroredX)
-    {
-        if (!showCurrentNumbers || parent == null)
-        {
-            return null;
-        }
-
-        GameObject textGo = new GameObject("CurrentNumber", typeof(RectTransform), typeof(TextMeshProUGUI));
-        RectTransform textRect = textGo.GetComponent<RectTransform>();
-        textRect.SetParent(parent, false);
-        textRect.anchorMin = textRect.anchorMax = new Vector2(0.5f, 0.5f);
-        textRect.pivot = new Vector2(0.5f, 0.5f);
-        textRect.anchoredPosition = currentNumberOffset;
-        textRect.sizeDelta = new Vector2(Mathf.Max(28f, spriteSize.x), Mathf.Max(8f, currentNumberFontSize + 3f));
-
-        if (parentMirroredX)
-        {
-            textRect.localScale = new Vector3(-1f, 1f, 1f);
-        }
-
-        TextMeshProUGUI tmp = textGo.GetComponent<TextMeshProUGUI>();
-        tmp.text = "";
-        tmp.fontSize = currentNumberFontSize;
-        tmp.color = currentNumberColor;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.enabled = false;
-        tmp.raycastTarget = false;
-        if (carNumberFontAsset != null)
-        {
-            tmp.font = carNumberFontAsset;
-        }
-
-        return tmp;
-    }
-
-    /// <summary>
-    /// 役割: ブレーキ圧力の数字ラベルを作成します。
-    /// </summary>
-    /// <param name="parent">parent を指定します。</param>
-    /// <param name="parentMirroredX">parentMirroredX を指定します。</param>
-    /// <returns>作成したラベルを返します。</returns>
-    private TextMeshProUGUI CreateBrakePressureNumberLabel(RectTransform parent, bool parentMirroredX)
-    {
-        if (!showBrakePressureNumbers || parent == null)
-        {
-            return null;
-        }
-
-        GameObject textGo = new GameObject("BrakePressureNumber", typeof(RectTransform), typeof(TextMeshProUGUI));
-        RectTransform textRect = textGo.GetComponent<RectTransform>();
-        textRect.SetParent(parent, false);
-        textRect.anchorMin = textRect.anchorMax = new Vector2(0.5f, 0.5f);
-        textRect.pivot = new Vector2(0.5f, 0.5f);
-        textRect.anchoredPosition = brakePressureNumberOffset;
-        textRect.sizeDelta = new Vector2(Mathf.Max(28f, spriteSize.x), Mathf.Max(8f, brakePressureNumberFontSize + 3f));
-
-        if (parentMirroredX)
-        {
-            textRect.localScale = new Vector3(-1f, 1f, 1f);
-        }
-
-        TextMeshProUGUI tmp = textGo.GetComponent<TextMeshProUGUI>();
-        tmp.text = "";
-        tmp.fontSize = brakePressureNumberFontSize;
-        tmp.color = brakePressureNumberColor;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.enabled = false;
-        tmp.raycastTarget = false;
-        if (carNumberFontAsset != null)
-        {
-            tmp.font = carNumberFontAsset;
-        }
-
-        return tmp;
     }
 
     /// <summary>
@@ -539,6 +371,11 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
             return normalTrailer;
         }
 
+        if (!showTractionRegenState)
+        {
+            return normalMotor;
+        }
+
         float driveDirection = GetCarDriveDirection(carIndex);
         bool isTraction = driveDirection > 0f;
         bool isRegen = driveDirection < 0f;
@@ -566,15 +403,15 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
 
         if (formationDisplayRoot == null || CarCount <= 0)
         {
-            pendingVisualSnapshots.Clear();
-            displayedMotorCurrentsA.Clear();
-            displayedBrakePressuresKPa.Clear();
             generatedDoorStatusImages.Clear();
-            nextTrainStateSampleTime = 0f;
             return;
         }
 
-        if (generatedCarImages.Count != CarCount || generatedCarNumberLabels.Count != CarCount || generatedDoorStatusImages.Count != CarCount || generatedCurrentBarFills.Count != CarCount || generatedCurrentNumberLabels.Count != CarCount || generatedBrakePressureLabels.Count != CarCount || HasMissingCurrentDisplays() || HasMissingDoorStatusDisplays())
+        if (generatedCarImages.Count != CarCount ||
+            generatedCarNumberLabels.Count != CarCount ||
+            generatedDoorStatusImages.Count != CarCount ||
+            HasMissingCarNumberLabels() ||
+            HasMissingDoorStatusDisplays())
         {
             RebuildGeneratedImageCache();
         }
@@ -582,21 +419,20 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         EnsureDoorStateCache(CarCount);
         RefreshTrainStateDisplayLayout();
         ApplyDoorStatusSprites();
-        UpdateTrainStateDisplaysWithSampleLag();
 
-        pendingVisualSnapshots.Clear();
         ApplyVisualSnapshot(CaptureCurrentSnapshot());
     }
 
     private void ResolveRuntimeReferences()
     {
-        train = CabReferenceResolver.ResolveTrain(this, train);
-        brakeSystem = CabReferenceResolver.ResolveTrainComponent(this, train, brakeSystem);
-        tractionSystem = CabReferenceResolver.ResolveTrainComponent(this, train, tractionSystem);
-
-        if (consistDefinition == null && train != null)
+        if (tims == null)
         {
-            consistDefinition = train.ConsistDefinition;
+            tims = GetComponentInParent<TimsSystem>();
+        }
+
+        if (tims == null)
+        {
+            tims = FindAnyObjectByType<TimsSystem>();
         }
     }
 
@@ -612,7 +448,7 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             sprites[i] = GetDisplaySpriteForCar(i);
-            activeCarNumbers[i] = IsCarInTractionOrRegen(i);
+            activeCarNumbers[i] = showTractionRegenState && IsCarInTractionOrRegen(i);
         }
 
         return new VisualSnapshot(Time.time, sprites, activeCarNumbers);
@@ -657,159 +493,16 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     }
 
     /// <summary>
-    /// 役割: 電流とブレーキ圧力を指定秒数ごとの取得値で更新します。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
-    private void UpdateTrainStateDisplaysWithSampleLag()
-    {
-        int count = CarCount;
-        EnsureDisplayedTrainStateCache(count);
-
-        float lagSeconds = 0f;
-        if (lagSeconds <= 0f || Time.time >= nextTrainStateSampleTime)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                displayedMotorCurrentsA[i] = TryGetCarMotorCurrentA(i, out float motorCurrentA)
-                    ? motorCurrentA
-                    : 0f;
-
-                displayedBrakePressuresKPa[i] = TryGetCarBrakePressureKPa(i, out float pressureKPa)
-                    ? Mathf.Max(0f, pressureKPa)
-                    : 0f;
-            }
-
-            nextTrainStateSampleTime = lagSeconds <= 0f ? Time.time : Time.time + lagSeconds;
-        }
-
-        ApplyCurrentBars(displayedMotorCurrentsA);
-        ApplyBrakePressureNumbers(displayedBrakePressuresKPa);
-    }
-
-    /// <summary>
-    /// 役割: 表示用キャッシュの個数を車両数に合わせます。
-    /// </summary>
-    /// <param name="count">必要な要素数を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void EnsureDisplayedTrainStateCache(int count)
-    {
-        while (displayedMotorCurrentsA.Count < count)
-        {
-            displayedMotorCurrentsA.Add(0f);
-        }
-
-        while (displayedBrakePressuresKPa.Count < count)
-        {
-            displayedBrakePressuresKPa.Add(0f);
-        }
-
-        if (displayedMotorCurrentsA.Count > count)
-        {
-            displayedMotorCurrentsA.RemoveRange(count, displayedMotorCurrentsA.Count - count);
-        }
-
-        if (displayedBrakePressuresKPa.Count > count)
-        {
-            displayedBrakePressuresKPa.RemoveRange(count, displayedBrakePressuresKPa.Count - count);
-        }
-    }
-
-    /// <summary>
-    /// 役割: 車両ごとの電流バー表示を更新します。
-    /// </summary>
-    /// <param name="motorCurrentsA">motorCurrentsA を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void ApplyCurrentBars(IReadOnlyList<float> motorCurrentsA)
-    {
-        if (motorCurrentsA == null)
-        {
-            return;
-        }
-
-        int count = motorCurrentsA.Count;
-        for (int i = 0; i < count; i++)
-        {
-            Image background = i < generatedCurrentBarBackgrounds.Count ? generatedCurrentBarBackgrounds[i] : null;
-            Image fill = i < generatedCurrentBarFills.Count ? generatedCurrentBarFills[i] : null;
-            TextMeshProUGUI numberLabel = i < generatedCurrentNumberLabels.Count ? generatedCurrentNumberLabels[i] : null;
-            ApplyCurrentDisplayLayout(background, fill, numberLabel);
-
-            float signedCurrentA = motorCurrentsA[i];
-            float currentA = Mathf.Abs(signedCurrentA);
-            float ratio = Mathf.Clamp01(currentA / Mathf.Max(1f, currentBarMaxA));
-            bool barVisible = showCurrentBars;
-            bool fillVisible = barVisible && currentA > 0.5f;
-
-            if (background != null)
-            {
-                background.enabled = barVisible;
-            }
-
-            if (fill != null)
-            {
-                fill.enabled = fillVisible;
-                fill.color = signedCurrentA < -Mathf.Max(0f, currentDirectionThresholdA)
-                    ? currentBarRegenFillColor
-                    : currentBarFillColor;
-                RectTransform fillRect = fill.rectTransform;
-                fillRect.sizeDelta = new Vector2(currentBarSize.x, currentBarSize.y * ratio);
-                fillRect.anchoredPosition = new Vector2(0f, -currentBarSize.y * 0.5f);
-            }
-
-            if (numberLabel != null)
-            {
-                bool numberVisible = showCurrentNumbers && (currentA > 0.5f || HasMotorCurrentDisplayAt(i));
-                numberLabel.enabled = numberVisible;
-                numberLabel.text = $"{currentA:0}";
-            }
-        }
-    }
-
-    /// <summary>
-    /// 役割: ブレーキ圧力表示を更新します。
-    /// </summary>
-    /// <remarks>返り値はありません。</remarks>
-    private void ApplyBrakePressureNumbers(IReadOnlyList<float> brakePressuresKPa)
-    {
-        if (brakePressuresKPa == null)
-        {
-            return;
-        }
-
-        int count = brakePressuresKPa.Count;
-        for (int i = 0; i < count; i++)
-        {
-            TextMeshProUGUI pressureLabel = i < generatedBrakePressureLabels.Count ? generatedBrakePressureLabels[i] : null;
-            ApplyBrakePressureDisplayLayout(pressureLabel);
-            if (pressureLabel == null)
-            {
-                continue;
-            }
-
-            pressureLabel.enabled = showBrakePressureNumbers;
-            pressureLabel.text = $"{Mathf.Max(0f, brakePressuresKPa[i]):0}";
-        }
-    }
-
-    /// <summary>
     /// 役割: Inspector の位置・サイズ変更を生成済み表示へ反映します。
     /// </summary>
     /// <remarks>返り値はありません。</remarks>
     private void RefreshTrainStateDisplayLayout()
     {
-        int count = Mathf.Max(
-            Mathf.Max(generatedCurrentBarBackgrounds.Count, generatedCurrentNumberLabels.Count),
-            Mathf.Max(generatedBrakePressureLabels.Count, generatedDoorStatusImages.Count));
+        int count = generatedDoorStatusImages.Count;
         for (int i = 0; i < count; i++)
         {
             Image doorStatus = i < generatedDoorStatusImages.Count ? generatedDoorStatusImages[i] : null;
-            Image background = i < generatedCurrentBarBackgrounds.Count ? generatedCurrentBarBackgrounds[i] : null;
-            Image fill = i < generatedCurrentBarFills.Count ? generatedCurrentBarFills[i] : null;
-            TextMeshProUGUI numberLabel = i < generatedCurrentNumberLabels.Count ? generatedCurrentNumberLabels[i] : null;
-            TextMeshProUGUI pressureLabel = i < generatedBrakePressureLabels.Count ? generatedBrakePressureLabels[i] : null;
             ApplyDoorStatusLayout(doorStatus);
-            ApplyCurrentDisplayLayout(background, fill, numberLabel);
-            ApplyBrakePressureDisplayLayout(pressureLabel);
         }
     }
 
@@ -859,104 +552,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 役割: 電流バーと数字のレイアウトを更新します。
-    /// </summary>
-    /// <param name="background">background を指定します。</param>
-    /// <param name="fill">fill を指定します。</param>
-    /// <param name="numberLabel">numberLabel を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void ApplyCurrentDisplayLayout(Image background, Image fill, TextMeshProUGUI numberLabel)
-    {
-        if (background != null)
-        {
-            RectTransform backgroundRect = background.rectTransform;
-            backgroundRect.anchorMin = backgroundRect.anchorMax = new Vector2(0.5f, 0.5f);
-            backgroundRect.pivot = new Vector2(0.5f, 0.5f);
-            backgroundRect.anchoredPosition = currentBarOffset;
-            backgroundRect.sizeDelta = currentBarSize;
-            background.color = currentBarBackgroundColor;
-        }
-
-        if (fill != null)
-        {
-            RectTransform fillRect = fill.rectTransform;
-            fillRect.anchorMin = fillRect.anchorMax = new Vector2(0.5f, 0f);
-            fillRect.pivot = new Vector2(0.5f, 0f);
-            fillRect.anchoredPosition = new Vector2(0f, -currentBarSize.y * 0.5f);
-            fill.color = currentBarFillColor;
-        }
-
-        if (numberLabel != null)
-        {
-            RectTransform numberRect = numberLabel.rectTransform;
-            numberRect.anchorMin = numberRect.anchorMax = new Vector2(0.5f, 0.5f);
-            numberRect.pivot = new Vector2(0.5f, 0.5f);
-            numberRect.anchoredPosition = currentNumberOffset;
-            numberRect.sizeDelta = new Vector2(Mathf.Max(28f, spriteSize.x), Mathf.Max(8f, currentNumberFontSize + 3f));
-            numberLabel.fontSize = currentNumberFontSize;
-            numberLabel.color = currentNumberColor;
-            numberLabel.alignment = TextAlignmentOptions.Center;
-            if (carNumberFontAsset != null)
-            {
-                numberLabel.font = carNumberFontAsset;
-            }
-        }
-    }
-
-    /// <summary>
-    /// 役割: ブレーキ圧力数字のレイアウトを更新します。
-    /// </summary>
-    /// <param name="pressureLabel">pressureLabel を指定します。</param>
-    /// <remarks>返り値はありません。</remarks>
-    private void ApplyBrakePressureDisplayLayout(TextMeshProUGUI pressureLabel)
-    {
-        if (pressureLabel == null)
-        {
-            return;
-        }
-
-        RectTransform pressureRect = pressureLabel.rectTransform;
-        pressureRect.anchorMin = pressureRect.anchorMax = new Vector2(0.5f, 0.5f);
-        pressureRect.pivot = new Vector2(0.5f, 0.5f);
-        pressureRect.anchoredPosition = brakePressureNumberOffset;
-        pressureRect.sizeDelta = new Vector2(Mathf.Max(28f, spriteSize.x), Mathf.Max(8f, brakePressureNumberFontSize + 3f));
-        pressureLabel.fontSize = brakePressureNumberFontSize;
-        pressureLabel.color = brakePressureNumberColor;
-        pressureLabel.alignment = TextAlignmentOptions.Center;
-        if (carNumberFontAsset != null)
-        {
-            pressureLabel.font = carNumberFontAsset;
-        }
-    }
-
-    /// <summary>
-    /// 役割: 電流表示の生成漏れがあるか確認します。
-    /// </summary>
-    /// <returns>再構築が必要な場合は true を返します。</returns>
-    private bool HasMissingCurrentDisplays()
-    {
-        if (!showCurrentBars)
-        {
-            return HasMissingCarNumberLabels();
-        }
-
-        for (int i = 0; i < CarCount; i++)
-        {
-            bool hasCarNumber = !showCarNumbers || (i < generatedCarNumberLabels.Count && generatedCarNumberLabels[i] != null);
-            bool hasBackground = i < generatedCurrentBarBackgrounds.Count && generatedCurrentBarBackgrounds[i] != null;
-            bool hasFill = i < generatedCurrentBarFills.Count && generatedCurrentBarFills[i] != null;
-            bool hasNumber = !showCurrentNumbers || (i < generatedCurrentNumberLabels.Count && generatedCurrentNumberLabels[i] != null);
-            bool hasPressureNumber = !showBrakePressureNumbers || (i < generatedBrakePressureLabels.Count && generatedBrakePressureLabels[i] != null);
-            if (!hasCarNumber || !hasBackground || !hasFill || !hasNumber || !hasPressureNumber)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private bool HasMissingDoorStatusDisplays()
     {
         if (!showDoorStatus)
@@ -991,21 +586,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         }
 
         return false;
-    }
-
-    /// <summary>
-    /// 役割: 指定号車がモーター電流表示の対象かを判定します。
-    /// </summary>
-    /// <param name="carIndex">carIndex を指定します。</param>
-    /// <returns>対象の場合は true を返します。</returns>
-    private bool HasMotorCurrentDisplayAt(int carIndex)
-    {
-        if (consistDefinition == null || !consistDefinition.TryGetCar(carIndex, out CarSpec carSpec))
-        {
-            return false;
-        }
-
-        return carSpec != null && carSpec.carType == CarType.Motor && carSpec.motorCount > 0;
     }
 
     private void EnsureDoorStateCache(int carCount)
@@ -1059,14 +639,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         generatedCarImages.Clear();
         generatedCarNumberLabels.Clear();
         generatedDoorStatusImages.Clear();
-        generatedCurrentBarBackgrounds.Clear();
-        generatedCurrentBarFills.Clear();
-        generatedCurrentNumberLabels.Clear();
-        generatedBrakePressureLabels.Clear();
-        pendingVisualSnapshots.Clear();
-        displayedMotorCurrentsA.Clear();
-        displayedBrakePressuresKPa.Clear();
-        nextTrainStateSampleTime = 0f;
         int childCount = formationDisplayRoot != null ? formationDisplayRoot.childCount : 0;
         for (int i = 0; i < CarCount; i++)
         {
@@ -1089,44 +661,12 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
                 }
 
                 generatedDoorStatusImages.Add(doorStatusImage);
-
-                Transform currentBar = formationDisplayRoot.GetChild(i).Find("CurrentBar");
-                if (currentBar == null && image != null)
-                {
-                    CreateCurrentBar(image.rectTransform, i == 0);
-                    generatedBrakePressureLabels.Add(CreateBrakePressureNumberLabel(image.rectTransform, i == 0));
-                }
-                else
-                {
-                    Image background = currentBar != null ? currentBar.GetComponent<Image>() : null;
-                    Image fill = currentBar != null ? currentBar.Find("Fill")?.GetComponent<Image>() : null;
-                    TextMeshProUGUI numberLabel = formationDisplayRoot.GetChild(i).Find("CurrentNumber")?.GetComponent<TextMeshProUGUI>();
-                    if (numberLabel == null && image != null)
-                    {
-                        numberLabel = CreateCurrentNumberLabel(image.rectTransform, i == 0);
-                    }
-
-                    TextMeshProUGUI pressureLabel = formationDisplayRoot.GetChild(i).Find("BrakePressureNumber")?.GetComponent<TextMeshProUGUI>();
-                    if (pressureLabel == null && image != null)
-                    {
-                        pressureLabel = CreateBrakePressureNumberLabel(image.rectTransform, i == 0);
-                    }
-
-                    generatedCurrentBarBackgrounds.Add(background);
-                    generatedCurrentBarFills.Add(fill);
-                    generatedCurrentNumberLabels.Add(numberLabel);
-                    generatedBrakePressureLabels.Add(pressureLabel);
-                }
             }
             else
             {
                 generatedCarImages.Add(null);
                 generatedCarNumberLabels.Add(null);
                 generatedDoorStatusImages.Add(null);
-                generatedCurrentBarBackgrounds.Add(null);
-                generatedCurrentBarFills.Add(null);
-                generatedCurrentNumberLabels.Add(null);
-                generatedBrakePressureLabels.Add(null);
             }
         }
     }
@@ -1141,14 +681,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         generatedCarImages.Clear();
         generatedCarNumberLabels.Clear();
         generatedDoorStatusImages.Clear();
-        generatedCurrentBarBackgrounds.Clear();
-        generatedCurrentBarFills.Clear();
-        generatedCurrentNumberLabels.Clear();
-        generatedBrakePressureLabels.Clear();
-        pendingVisualSnapshots.Clear();
-        displayedMotorCurrentsA.Clear();
-        displayedBrakePressuresKPa.Clear();
-        nextTrainStateSampleTime = 0f;
         if (formationDisplayRoot == null)
         {
             return;
@@ -1176,13 +708,14 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
     /// <returns>処理結果を返します。</returns>
     private bool TryGetCarTypeAt(int carIndex, out CarType carType)
     {
-        if (consistDefinition == null)
+        ConsistDefinition definition = ConsistDefinition;
+        if (definition == null)
         {
             carType = CarType.Trailer;
             return false;
         }
 
-        return consistDefinition.TryGetCarType(carIndex, out carType);
+        return definition.TryGetCarType(carIndex, out carType);
     }
 
     /// <summary>
@@ -1196,42 +729,6 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
         return TryGetCarTypeAt(carIndex, out CarType carType) ? carType : fallback;
     }
 
-    /// <summary>
-    /// 役割: TryGetCarMotorCurrentA の処理を実行します。
-    /// </summary>
-    /// <param name="carIndex">carIndex を指定します。</param>
-    /// <param name="motorCurrentA">motorCurrentA を指定します。</param>
-    /// <returns>処理結果を返します。</returns>
-    private bool TryGetCarMotorCurrentA(int carIndex, out float motorCurrentA)
-    {
-        motorCurrentA = 0f;
-
-        if (train == null)
-        {
-            return false;
-        }
-
-        if (TryGetCarVvvfSignedMotorCurrentA(carIndex, out motorCurrentA))
-        {
-            return true;
-        }
-
-        var states = train.CurrentCarTractionStates;
-        if (states == null || carIndex < 0 || carIndex >= states.Count)
-        {
-            return false;
-        }
-
-        CarTractionState state = states[carIndex];
-        if (state == null)
-        {
-            return false;
-        }
-
-        motorCurrentA = GetSignedCarCurrentA(state);
-        return true;
-    }
-
     private bool IsCarInTractionOrRegen(int carIndex)
     {
         return GetCarDriveDirection(carIndex) != 0f;
@@ -1239,198 +736,36 @@ public class TrainFormationDisplayBuilder : MonoBehaviour
 
     private float GetCarDriveDirection(int carIndex)
     {
-        float currentThresholdA = Mathf.Max(0f, currentDirectionThresholdA);
-        if (TryGetCarMotorCurrentA(carIndex, out float signedCurrentA) &&
-            Mathf.Abs(signedCurrentA) > currentThresholdA)
+        if (TryGetCarTractionForceN(carIndex, out float tractionForceN) &&
+            Mathf.Abs(tractionForceN) > 1f)
         {
-            return Mathf.Sign(signedCurrentA);
-        }
-
-        if (TryGetCarVvvfTractionForceN(carIndex, out float vvvfTractionForceN) &&
-            Mathf.Abs(vvvfTractionForceN) > 1f)
-        {
-            return Mathf.Sign(vvvfTractionForceN);
+            return Mathf.Sign(tractionForceN);
         }
 
         return 0f;
     }
 
-    private bool TryGetCarVvvfSignedMotorCurrentA(int carIndex, out float signedCurrentA)
-    {
-        signedCurrentA = 0f;
-
-        if (train == null || carIndex < 0)
-        {
-            return false;
-        }
-
-        VVVFController[] vvvfControllers = train.VVVFControllers;
-        if (vvvfControllers == null || vvvfControllers.Length == 0)
-        {
-            return false;
-        }
-
-        bool found = false;
-        for (int i = 0; i < vvvfControllers.Length; i++)
-        {
-            VVVFController vvvf = vvvfControllers[i];
-            if (vvvf == null || vvvf.AssignedCarIndex != carIndex)
-            {
-                continue;
-            }
-
-            MotorModel[] motors = vvvf.Motors;
-            if (motors == null)
-            {
-                found = true;
-                continue;
-            }
-
-            for (int j = 0; j < motors.Length; j++)
-            {
-                signedCurrentA += GetSignedMotorCurrentA(motors[j]);
-            }
-            found = true;
-        }
-
-        return found;
-    }
-
-    private static float GetSignedMotorCurrentA(MotorModel motor)
-    {
-        if (motor == null)
-        {
-            return 0f;
-        }
-
-        float currentA = Mathf.Max(0f, motor.MotorCurrentRmsA);
-        if (currentA <= 0f)
-        {
-            return 0f;
-        }
-
-        float signSource = Mathf.Abs(motor.InputActivePowerW) > 0.01f
-            ? motor.InputActivePowerW
-            : motor.MotorTorqueNm;
-        if (Mathf.Abs(signSource) <= 0.0001f)
-        {
-            return 0f;
-        }
-
-        return Mathf.Sign(signSource) * currentA;
-    }
-
-    private static float GetSignedCarCurrentA(CarTractionState state)
-    {
-        if (state == null)
-        {
-            return 0f;
-        }
-
-        float currentA = Mathf.Max(0f, state.motorCurrentA);
-        if (currentA <= 0f)
-        {
-            return 0f;
-        }
-
-        if (Mathf.Abs(state.tractionForceN) <= 0.0001f)
-        {
-            return currentA;
-        }
-
-        return Mathf.Sign(state.tractionForceN) * currentA;
-    }
-
-    private bool TryGetCarVvvfTractionForceN(int carIndex, out float tractionForceN)
+    private bool TryGetCarTractionForceN(int carIndex, out float tractionForceN)
     {
         tractionForceN = 0f;
 
-        if (train == null || carIndex < 0)
+        TimsDataBus localBus = GetLocalBus(carIndex);
+        if (localBus == null)
         {
             return false;
         }
 
-        VVVFController[] vvvfControllers = train.VVVFControllers;
-        if (vvvfControllers == null || vvvfControllers.Length == 0)
-        {
-            return false;
-        }
-
-        bool found = false;
-        for (int i = 0; i < vvvfControllers.Length; i++)
-        {
-            VVVFController vvvf = vvvfControllers[i];
-            if (vvvf == null || vvvf.AssignedCarIndex != carIndex)
-            {
-                continue;
-            }
-
-            tractionForceN += vvvf.TotalMotorTractionForceN;
-            found = true;
-        }
-
-        return found;
+        return localBus.TryGetFloat(new TimsTagKey("VVVF", "TotalMotorTractionForceN"), out tractionForceN);
     }
 
-    /// <summary>
-    /// 役割: TryGetCarBrakePressureKPa の処理を実行します。
-    /// </summary>
-    /// <param name="carIndex">carIndex を指定します。</param>
-    /// <param name="pressureKPa">pressureKPa を指定します。</param>
-    /// <returns>処理結果を返します。</returns>
-    private bool TryGetCarBrakePressureKPa(int carIndex, out float pressureKPa)
+    private TimsDataBus GetLocalBus(int carIndex)
     {
-        pressureKPa = 0f;
-
-        if (train == null)
+        if (tims == null || tims.Terminals == null || carIndex < 0 || carIndex >= tims.Terminals.Count)
         {
-            return false;
+            return null;
         }
 
-        var states = train.CurrentCarBrakeStates;
-        if (states == null || carIndex < 0 || carIndex >= states.Count)
-        {
-            return false;
-        }
-
-        CarBrakeState state = states[carIndex];
-        if (state == null)
-        {
-            return false;
-        }
-
-        pressureKPa = state.bcPressureKPa;
-        return true;
-    }
-
-    /// <summary>
-    /// 役割: TryGetCarRegenForceN の処理を実行します。
-    /// </summary>
-    /// <param name="carIndex">carIndex を指定します。</param>
-    /// <param name="regenForceN">regenForceN を指定します。</param>
-    /// <returns>処理結果を返します。</returns>
-    private bool TryGetCarRegenForceN(int carIndex, out float regenForceN)
-    {
-        regenForceN = 0f;
-
-        if (train == null)
-        {
-            return false;
-        }
-
-        var states = train.CurrentCarBrakeStates;
-        if (states == null || carIndex < 0 || carIndex >= states.Count)
-        {
-            return false;
-        }
-
-        CarBrakeState state = states[carIndex];
-        if (state == null)
-        {
-            return false;
-        }
-
-        regenForceN = state.regenForceN;
-        return true;
+        TimsCarTerminal terminal = tims.Terminals[carIndex];
+        return terminal != null ? terminal.LocalBus : null;
     }
 }

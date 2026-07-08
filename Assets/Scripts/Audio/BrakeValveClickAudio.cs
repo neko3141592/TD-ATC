@@ -95,7 +95,7 @@ public class BrakeValveClickAudio : MonoBehaviour
             };
 
             float elapsed = Mathf.Max(0.0001f, now - oldSample.time);
-            float pressureRate = Mathf.Abs(currentPressure - oldSample.pressureKPa) / elapsed;
+            float pressureRate = (currentPressure - oldSample.pressureKPa) / elapsed;
 
             if (pressureRate > maxPressureRate)
             {

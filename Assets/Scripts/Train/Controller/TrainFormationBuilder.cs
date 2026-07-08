@@ -291,7 +291,7 @@ public class TrainFormationBuilder : MonoBehaviour
 
         trainController.SetVVVFControllers(controllers);
 
-        NTIMController ntim = trainController.GetComponentInChildren<NTIMController>(true);
+        TimsTractionForceController ntim = trainController.GetComponentInChildren<TimsTractionForceController>(true);
         if (ntim != null)
         {
             ntim.SetVVVFControllers(controllers);
